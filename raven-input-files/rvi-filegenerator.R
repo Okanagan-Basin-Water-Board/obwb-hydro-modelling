@@ -1,0 +1,193 @@
+#############################################################################################################################
+##
+## This script reads in "RVI-Template.csv" and generates required *.rvi file for ingestion to Raven.
+##
+#############################################################################################################################
+
+## Load required packages
+library(cloudml)
+
+####################################################################
+## Read in required files
+##
+template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
+
+soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
+
+
+
+
+## Add colon to all parameter calls - this is required by Raven
+template$PARAMETER <- paste(":", template$PARAMETER, sep = '')
+
+subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+
+## replce space in watershed name with "_"
+subbasin.codes$GNIS_NAME <- gsub("\\s", "_", subbasin.codes$GNIS_NAME)
+
+
+watersheds <- unique(subbasin.codes$GNIS_NAME)
+
+model.watershed <- "Whiteman_Creek"
+
+disabled.watersheds <- watersheds[!watersheds %in% model.watershed]
+
+disabled.watersheds <- matrix(nrow = length(disabled.watersheds), ncol = 2, data = c(rep(":DisableHRUGroup", length(disabled.watersheds)),
+                                                                   disabled.watersheds))
+
+####################################################################
+##
+## Separate out group of parameters for writing to file
+
+time <- template[template$GROUP == "Time", c("PARAMETER", "DEFINITION")]
+
+timestep <- time$DEFINITION[time$PARAMETER == ":TimeStep"]
+
+time$DEFINITION <- paste(as.Date(time$DEFINITION, format = "%m/%d/%Y"), "00:00:00", sep = ' ')
+
+time$DEFINITION[time$PARAMETER == ":TimeStep"] <- as.character(timestep)
+
+
+filecontrol <- template[template$GROUP == "FileControl", c("PARAMETER", "DEFINITION")]
+
+methods <- template[template$GROUP == "Methods", c("PARAMETER", "DEFINITION")]
+
+routing <- template[template$GROUP == "Routing", c("PARAMETER", "DEFINITION")]
+
+options <- template[template$GROUP == "Options", c("PARAMETER", "DEFINITION")]
+
+processes <- template[template$GROUP == "HydrologicalProcesses", c("PARAMETER", "DEFINITION", "FROM", "TO")]
+
+output <- template[template$GROUP == "OutputOptions", c("PARAMETER", "DEFINITION")]
+
+
+####################################################################
+##
+## Generate Soil Layer Alias' Table
+
+
+soil.alias <- soil.codes[complete.cases(soil.codes),]
+
+soil.alias <- soil.alias[ , grepl("ALIAS", names(soil.alias) ) ]
+
+soil.alias <- unique(unlist(soil.alias))
+
+# soil.classes <- matrix(nrow = length(soil.horizons), ncol = 1, data = soil.horizons)
+
+soil.alias.table <- matrix(nrow = length(soil.alias), ncol = 3, data = c(alias = rep(":Alias", length(soil.alias)),
+                                                                        alias.name = paste(soil.alias),
+                                                                        soil.layer = c("SOIL[0]",
+                                                                                       "SOIL[1]",
+                                                                                       "SOIL[2]",
+                                                                                       "SOIL[3]"
+                                                                                       )))
+
+############################################################################################################################
+##
+## Generate *.rvi file
+##
+############################################################################################################################
+
+RVIoutFile <- "/var/obwb-hydro-modelling/simulations/test/test.rvi"
+
+cat(file = RVIoutFile, append = F, sep = "",
+    
+    "#########################################################################","\n",
+    ":FileType rvi Raven 2.8","\n",
+    "# DataType         Raven Input file","\n",
+    ":Application       R","\n",
+    ":WrittenBy         Lawrence Bird","\n",
+    ":CreationDate  ",    paste(Sys.time()),"\n",
+    ":NoisyMode", "\n",
+    "#---------------------------------------------------------", "\n",
+    "#---------------------------------------------------------", "\n",
+    "# ---- Temporal Specifications ---------------------------", "\n",
+    "\n"
+)
+
+  write.table(time, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+
+cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- File Control --------------------------------------", "\n",
+      "\n"
+)  
+
+  write.table(filecontrol, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  
+  
+cat(file = RVIoutFile, append = T, sep = "",
+    "\n",
+    "#---------------------------------------------------------", "\n",
+    "# ---- Method Specifications -----------------------------", "\n",
+    "\n"
+)
+
+  write.table(methods, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  
+cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Routing Specifications ----------------------------", "\n",
+      "\n"
+)
+
+  write.table(routing, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  
+cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Options Specifications ----------------------------", "\n",
+      "\n"
+)
+
+  write.table(options, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+
+cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Soil Layer Alias Definitions ----------------------", "\n",
+      "\n"
+)
+  
+  write.table(soil.alias.table, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+
+
+cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Process Specifications ----------------------------", "\n",
+      ":HydrologicProcesses", "\n",
+      "\n"
+)
+  
+  write.table(processes, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+
+
+## Specify HRU Groups to be disabled.
+cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      ":EndHydrologicProcesses", "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Define HRU Groups ---------------------------------", "\n",
+      ":DefineHRUGroups ", paste(watersheds, collapse = ","), "\n"
+    
+)
+
+cat(file = RVIoutFile, append = T, sep = "",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Specify HRU Groups to Disable  --------------------", "\n"
+)
+
+write.table(disabled.watersheds, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+
+cat(file = RVIoutFile, append = T, sep = "",
+    "\n",
+    "#---------------------------------------------------------", "\n",
+    "# ---- Output Options ------------------------------------", "\n",
+    "\n"
+)  
+
+write.table(output, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  
