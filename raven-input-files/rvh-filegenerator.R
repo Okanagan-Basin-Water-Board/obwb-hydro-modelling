@@ -10,13 +10,7 @@
 require(raster)
 
 ## Generate required functions
-
-# function to find mode
-getmode <- function(v) {
-  uniqv <- unique(v)
-  uniqv[which.max(tabulate(match(v, uniqv)))]
-}
-
+source("/var/obwb-hydro-modelling/src/functions.R")
 
 #################################################3
 ##
@@ -29,6 +23,16 @@ load("/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.RData"
 HRU.table <- as.data.frame(DT)
 
 rm(DT, DT.revert)
+
+#################################################3
+##
+## Adda "vegetation" column to allow breakdown of vegetation types. This will be determined from "value" of landcover dataset
+##
+#################################################3
+
+# currently just duplicating the "landcover" column. This is an unnecessary step, but is nice for cosistency/visual interpretation
+HRU.table$vegetation <- HRU.table$landcover
+
 
 ##################################################################################################
 ##
@@ -74,7 +78,7 @@ for(i in 1:length(unique.HRU)){
   
   HRU.output[i, "LAND_USE_CLASS"] <- unique(HRU.table[index, "landcover.bin"])
   
-  HRU.output[i, "VEG_CLASS"] <- unique(HRU.table[index, "landcover.bin"]) # Assign veg class the same as landcover class for now
+  HRU.output[i, "VEG_CLASS"] <- getmode(HRU.table[index, "vegetation"])
   
   HRU.output[i, "SOIL_PROFILE"] <- getmode(HRU.table[index, "soils"])
   
@@ -103,7 +107,6 @@ aquifer.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-co
 
 landcover.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/landcover_codes.csv")
 
-## note that vegetation codes are the same as landcover codes for now, but this structure allows them to be different in future
 vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
 
 for(i in 1:nrow(HRU.output)){
@@ -114,7 +117,8 @@ for(i in 1:nrow(HRU.output)){
   
   HRU.output[i, "LAND_USE_CLASS"] <- ifelse(is.na(HRU.output[i, "LAND_USE_CLASS"]), "[NONE]", as.character(landcover.codes$Bin_type)[HRU.output[i, "LAND_USE_CLASS"] == landcover.codes$Bin_Value])
   
-  HRU.output[i, "VEG_CLASS"] <- ifelse(is.na(HRU.output[i, "VEG_CLASS"]), "[NONE]", as.character(vegetation.codes$Bin_type)[HRU.output[i, "VEG_CLASS"] == vegetation.codes$Bin_Value])
+  ## note that vegetation type is determined based on the "Value", rather than the "Bin_Value". Bin value refers to the landcover bin, rather than the specific vegetation bin.
+  HRU.output[i, "VEG_CLASS"] <- ifelse(is.na(HRU.output[i, "VEG_CLASS"]), "[NONE]", as.character(vegetation.codes$Bin_type)[HRU.output[i, "VEG_CLASS"] == vegetation.codes$Value])
   
   print(i)
 
@@ -240,18 +244,3 @@ for(i in 1:length(watersheds)){
 
 # require(cloudml)
 # gs_copy("/home/lawrence/var/Data/Processed/test.rvh", "gs://associated-environmental/hru-generation/processed")
-
-##################################################################################################
-##
-## Read *.rvh file back in to generate subbasin network plot & cofirm correct structure
-##
-##################################################################################################
-require(RavenR)
-
-HRUs <- rvh.read(RVHoutFile)
-
-clean <- rvh.cleanHRUs(HRUs$HRUtable, HRUs$SBtable, merge = FALSE, area_tol = 0.01)
-
-rvh.overwrite("cleantest.rvh", "test.rvh", HRUs$SBtable, clean$HRUtable)
-
-plot(HRUs$SBnetwork)
