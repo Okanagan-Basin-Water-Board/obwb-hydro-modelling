@@ -1,3 +1,4 @@
+# function to obtain WSC flow data and convert to Raven required rvt files.
 ECflow.rvt.tidy.master <- function(ff,master,dir,prd=NULL,stnNames=NULL,write.redirect=F,flip.number=F) {
   
   
@@ -132,4 +133,10 @@ ECflow.rvt.tidy.master <- function(ff,master,dir,prd=NULL,stnNames=NULL,write.re
   
   return(TRUE)
   
+}
+
+# function to find mode.
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
 }
