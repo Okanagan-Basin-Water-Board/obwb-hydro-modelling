@@ -28,9 +28,9 @@ subbasin.codes$GNIS_NAME <- gsub("\\s", "_", subbasin.codes$GNIS_NAME)
 
 watersheds <- unique(subbasin.codes$GNIS_NAME)
 
-model.watershed <- "Whiteman_Creek"
+model.watersheds <- paste(include.watersheds, "_Creek", sep = "")
 
-disabled.watersheds <- watersheds[!watersheds %in% model.watershed]
+disabled.watersheds <- watersheds[!watersheds %in% model.watersheds]
 
 disabled.watersheds <- matrix(nrow = length(disabled.watersheds), ncol = 2, data = c(rep(":DisableHRUGroup", length(disabled.watersheds)),
                                                                    disabled.watersheds))
@@ -88,7 +88,7 @@ soil.alias.table <- matrix(nrow = length(soil.alias), ncol = 3, data = c(alias =
 ##
 ############################################################################################################################
 
-RVIoutFile <- "/var/obwb-hydro-modelling/simulations/test/test.rvi"
+RVIoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
 
 cat(file = RVIoutFile, append = F, sep = "",
     
@@ -111,10 +111,11 @@ cat(file = RVIoutFile, append = T, sep = "",
       "\n",
       "#---------------------------------------------------------", "\n",
       "# ---- File Control --------------------------------------", "\n",
-      "\n"
+      "\n",
+      ":RunName ", paste(ws.interest, run.number, sep = "-"), "\n"
 )  
 
-  write.table(filecontrol, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  # write.table(filecontrol, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
   
   
 cat(file = RVIoutFile, append = T, sep = "",

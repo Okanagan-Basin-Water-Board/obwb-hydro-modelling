@@ -14,7 +14,7 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- 2
+run.number <- 1
 
 ## Create a directory within "Simulations" for the model input/output files to be stored
 dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), recursive = T)
@@ -53,15 +53,15 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/raven
 ##
 #####################################################################
 
-source("/var/obwb-hydro-modelling/src/raven-input-files-2/rvc-filegenerator.R")
+source("/var/obwb-hydro-modelling/src/raven-input-files/rvc-filegenerator.R")
 
-source("/var/obwb-hydro-modelling/src/raven-input-files-2/rvh-filegenerator.R")
+source("/var/obwb-hydro-modelling/src/raven-input-files/rvh-filegenerator.R")
 
-source("/var/obwb-hydro-modelling/src/raven-input-files-2/rvi-filegenerator.R")
+source("/var/obwb-hydro-modelling/src/raven-input-files/rvi-filegenerator.R")
 
-source("/var/obwb-hydro-modelling/src/raven-input-files-2/rvp-filegenerator.R")
+source("/var/obwb-hydro-modelling/src/raven-input-files/rvp-filegenerator.R")
 
-source("/var/obwb-hydro-modelling/src/raven-input-files-2/rvt-filegenerator.R")
+source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
 
 #####################################################################

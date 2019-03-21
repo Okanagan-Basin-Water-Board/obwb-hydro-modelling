@@ -98,7 +98,7 @@ landuse.parameter.table <- matrix(nrow = length(layers), ncol = length(landuse.p
         landuse.parameter.table[,i+1] <- as.matrix(extract[,"VALUE"])
       }
   
-  landuse.units[i] <- para[,"UNITS"]
+  landuse.units[i] <- unique(para[,"UNITS"])
     
   }
 
@@ -136,7 +136,7 @@ for(i in 1:length(soil.parameter.names)){
     soil.parameter.table[,i+1] <- as.matrix(extract[,"VALUE"])
   }
   
-  soil.units[i] <- para[,"UNITS"]
+  soil.units[i] <- unique(para[,"UNITS"])
   
 }
 
@@ -163,7 +163,7 @@ surveypoints <- channel[channel$PARAMETER == "SurveyPoints", c("DEFINITION", "VA
 ## Generate *.rvp file
 ############################################################################################################################
 
-RVPoutFile = "/var/obwb-hydro-modelling/simulations/test/test.rvp"
+RVPoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvp", sep = ""))
 
 
 cat(file = RVPoutFile, append = F, sep = "",
@@ -268,20 +268,15 @@ cat(file = RVPoutFile, append = T, sep = "",
       paste(channel[channel$PARAMETER == "RoughnessZones", "VALUE"]), "\n",
     ":EndRoughnessZones", "\n",
     ":EndChannelProfile", "\n"
-    
-    
 )
 
-
-##################################################################################################
+############################################################################################################################
 ##
-## Copy rvp file to GCP bucket
+## Generate Ostrich Template file for same conditions
 ##
-##################################################################################################
+############################################################################################################################
 
-# require(cloudml)
-# gs_copy("/home/lawrence/var/Data/Processed/test.rvp", "gs://associated-environmental/hru-generation/processed")
 
-    
+
 
 

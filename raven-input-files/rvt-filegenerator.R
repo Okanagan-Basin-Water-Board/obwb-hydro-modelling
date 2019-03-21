@@ -15,6 +15,12 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 library(tidyhydat)
 library(RavenR)
 
+ws.interest <- ws.interest
+
+include.watersheds <- include.watersheds
+
+run.number <- run.number
+
 ## Specify the location where the HYDAT database is saved
 hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
 
@@ -22,11 +28,11 @@ hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
 download.list <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/WSC_download_list.csv")
 
 ## Specify the location RAVEN *.rvt files should be saved
-output.location <- "/var/obwb-hydro-modelling/simulations/test"
+output.location <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"))
 
 ## Extract all WSC station numbers for use in hy_daily_flows to retrieve datasets for all
-station.no <- download.list$Station_No
-
+station.no <- download.list[download.list$Watershed %in% paste(include.watersheds, "_Creek", sep = ''), "Station_No"]
+  
 ## Retrieve all available data for all required stations and save in one large tibble.
 tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here)
 
@@ -37,7 +43,7 @@ tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here)
 #   *.rvt files for each WSC gauge within the select watershed
 # - Creates INDIVIDUAL "subid_wscname.rvt" file for each WSC station and the associated subbasin.
 
-ECflow.rvt.tidy.master(tmp, download.list, output.location, write.redirect = T, flip.number = T)
+ECflow.rvt.tidy.single(tmp, download.list, output.location, include.watersheds, run.number, write.redirect = T, flip.number = T)
 
 
 
@@ -48,7 +54,7 @@ ECflow.rvt.tidy.master(tmp, download.list, output.location, write.redirect = T, 
 ################################################################################################
 
 ## read in RVH file to compute the number of HRUs
-HRUs <- rvh.read("/var/obwb-hydro-modelling/simulations/test/test.rvh")
+HRUs <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
 
 nHRU <- nrow(HRUs$HRUtable)
 
@@ -66,7 +72,7 @@ weights <- matrix(nrow = nHRU, ncol = 3, data = c(HRU = HRUs$HRUtable$ID,
                                                   Station = HRUs$HRUtable$ID,
                                                   weight = rep(1, nHRU)), byrow = F)
 
-RVToutFile <- file.path(output.location, "flow_stn_redirect_Whiteman_Creek.rvt")
+RVToutFile <- file.path(output.location, paste(ws.interest, "-", run.number, ".rvt", sep = ""))
 
 cat(file = RVToutFile, append = T, sep = "",
     "\n",
@@ -123,6 +129,6 @@ write.table(weights, RVToutFile, append = T, col.names = F, row.names = F, sep =
 
 cat(file = RVToutFile, append = T, sep = "",
     ":EndGridWeights", "\n",
-    ":EndStationForcing","\n"
+    ":EndStationForcing","\n",
+    "\n"
 )
-
