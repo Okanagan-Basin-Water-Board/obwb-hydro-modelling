@@ -14,22 +14,16 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- 1
+run.number <- 4
+
+## Specify whether Ostrich templates and input files should be written for this run
+run.ostrich <- TRUE
+
+## Should the global rvh file be regenerated?
+recreate.rvh <- FALSE
 
 ## Create a directory within "Simulations" for the model input/output files to be stored
 dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), recursive = T)
-
-#####################################################################
-##
-## Check that OSTRICH softlink exists in the watershed parent directory
-##
-#####################################################################
-
-if("Ostrich" %in% list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest))){print("Ostrich already exists in this directory...")
-  } else { 
-    file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest))
-    print("Ostrich softlink created to executable at /var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2...")
-    }
 
 #####################################################################
 ##
@@ -39,6 +33,8 @@ if("Ostrich" %in% list.files(file.path("/var/obwb-hydro-modelling/simulations", 
 ##  - Min. Temperature netCDF file
 ##
 ##  - Raven Executable
+##
+##  - Ostrich executable and save_best.sh script
 #####################################################################
 
 file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.DRAFT.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
@@ -46,6 +42,15 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/cl
 file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 
 file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/raven_rev.exe"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+
+if("Ostrich" %in% list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))){print("Ostrich files already exist in this directory...")
+} else { 
+  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  print(paste("Ostrich required softlinks created in ", ws.interest, "-", run.number, " directory...", sep = ''))
+}
+
+
 
 #####################################################################
 ##
@@ -55,7 +60,19 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/raven
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvc-filegenerator.R")
 
-source("/var/obwb-hydro-modelling/src/raven-input-files/rvh-filegenerator.R")
+## Only recreate the rvh file if necessary. Otherwise "Master.rvh" is copied from parent /simulations directory
+if(recreate.rvh == TRUE){
+  print("Regenerating master *.rvh file...")
+  
+  source("/var/obwb-hydro-modelling/src/raven-input-files/rvh-filegenerator.R")
+  
+  file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+  
+} else {print("Existing rvh file is being used for this model run...")
+        file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+        file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+        }
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvi-filegenerator.R")
 
@@ -63,6 +80,9 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvp-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
+if(run.ostrich == TRUE){
+  source("/var/obwb-hydro-modelling/src/ostrich-file-generator.R")
+}
 
 #####################################################################
 ##
@@ -73,4 +93,19 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 
 system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
-       
+
+#####################################################################
+##
+## Run Ostrich
+##
+#####################################################################
+
+system2("./Ostrich")
+
+#####################################################################
+##
+## Run Raven executable with improved parameter values
+##
+#####################################################################
+
+system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
