@@ -5,12 +5,12 @@
 #############################################################################################################################
 
 ## Load required packages
-library(cloudml)
+# library(cloudml)
 
 ####################################################################
 ## Read in required files
 ##
-template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
+RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
 
 soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
 
@@ -18,7 +18,7 @@ soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes
 
 
 ## Add colon to all parameter calls - this is required by Raven
-template$PARAMETER <- paste(":", template$PARAMETER, sep = '')
+RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
 
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
@@ -39,7 +39,7 @@ disabled.watersheds <- matrix(nrow = length(disabled.watersheds), ncol = 2, data
 ##
 ## Separate out group of parameters for writing to file
 
-time <- template[template$GROUP == "Time", c("PARAMETER", "DEFINITION")]
+time <- RVI.template[RVI.template$GROUP == "Time", c("PARAMETER", "DEFINITION")]
 
 timestep <- time$DEFINITION[time$PARAMETER == ":TimeStep"]
 
@@ -48,17 +48,17 @@ time$DEFINITION <- paste(as.Date(time$DEFINITION, format = "%m/%d/%Y"), "00:00:0
 time$DEFINITION[time$PARAMETER == ":TimeStep"] <- as.character(timestep)
 
 
-filecontrol <- template[template$GROUP == "FileControl", c("PARAMETER", "DEFINITION")]
+filecontrol <- RVI.template[RVI.template$GROUP == "FileControl", c("PARAMETER", "DEFINITION")]
 
-methods <- template[template$GROUP == "Methods", c("PARAMETER", "DEFINITION")]
+methods <- RVI.template[RVI.template$GROUP == "Methods", c("PARAMETER", "DEFINITION")]
 
-routing <- template[template$GROUP == "Routing", c("PARAMETER", "DEFINITION")]
+routing <- RVI.template[RVI.template$GROUP == "Routing", c("PARAMETER", "DEFINITION")]
 
-options <- template[template$GROUP == "Options", c("PARAMETER", "DEFINITION")]
+options <- RVI.template[RVI.template$GROUP == "Options", c("PARAMETER", "DEFINITION")]
 
-processes <- template[template$GROUP == "HydrologicalProcesses", c("PARAMETER", "DEFINITION", "FROM", "TO")]
+processes <- RVI.template[RVI.template$GROUP == "HydrologicalProcesses", c("PARAMETER", "DEFINITION", "FROM", "TO")]
 
-output <- template[template$GROUP == "OutputOptions", c("PARAMETER", "DEFINITION")]
+output <- RVI.template[RVI.template$GROUP == "OutputOptions", c("PARAMETER", "DEFINITION")]
 
 
 ####################################################################
