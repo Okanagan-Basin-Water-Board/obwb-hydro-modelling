@@ -8,11 +8,11 @@
 
 library(RavenR)
 
-location <- "/var/obwb-hydro-modelling/simulations"
+location <- "/var/obwb-hydro-modelling/simulations/Whiteman"
 
 setwd(location)
 
-runname <- "test"
+runname <- "Whiteman-4"
 
 
 ######################################################
@@ -34,7 +34,7 @@ forcings.plot(forcings$forcings)
 ##
 ## Read-in and plot hydrograph data
 
-hydrograph <- hyd.read(file.path(location, runname, paste(runname, "Hydrographs.csv", sep = "_")))
+hydrograph.2 <- hyd.read(file.path(location, runname, paste(runname, "Hydrographs.csv", sep = "_")))
 
 subs <- colnames(hydrograph$hyd)
 
@@ -63,4 +63,12 @@ for(i in 2:length(subs)){
 dev.off()
 
 
+
+plot(hydrograph.1$hyd$Whiteman_Creek7, type = "l", col = 'red')
+lines(hydrograph.2$hyd$Whiteman_Creek7, col = "blue")
+
+lines(hydrograph.1$hyd$Whiteman_Creek7_obs, col = 'black')
+
+plot(hydrograph.2$hyd$Whiteman_Creek7, type = "l", col = "blue")
+lines(hydrograph.2$hyd$Whiteman_Creek7_obs, col = 'red', lwd = 2)
 
