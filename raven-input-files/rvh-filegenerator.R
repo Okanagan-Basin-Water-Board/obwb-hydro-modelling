@@ -177,8 +177,8 @@ Subbasin.output[, 6] <- 1
 ##
 ###########################################################################
 
-RVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
-
+# RVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
+RVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations/Master.rvh")
 
 cat(file=RVHoutFile, append=F, sep="",
     
