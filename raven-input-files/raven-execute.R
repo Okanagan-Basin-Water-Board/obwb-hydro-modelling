@@ -7,6 +7,9 @@
 ## Mar-18-2019 LAB
 ################################################################################################################
 
+## Start timer
+ptm <- proc.time()
+
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
 ws.interest <- "Whiteman"
 
@@ -14,10 +17,10 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- 4
+run.number <- 5
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
@@ -99,8 +102,9 @@ system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws
 ## Run Ostrich
 ##
 #####################################################################
-
-system2("./Ostrich")
+if(run.ostrich == TRUE){
+  
+  system2("./Ostrich")
 
 #####################################################################
 ##
@@ -108,4 +112,9 @@ system2("./Ostrich")
 ##
 #####################################################################
 
-system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
+  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
+
+} else {print("Ostrich was not used for model calibration during this run...")}
+
+## end timer
+proc.time() - ptm
