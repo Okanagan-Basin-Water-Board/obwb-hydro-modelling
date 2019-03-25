@@ -17,7 +17,7 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- 5
+run.number <- 9
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -27,6 +27,22 @@ recreate.rvh <- FALSE
 
 ## Create a directory within "Simulations" for the model input/output files to be stored
 dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), recursive = T)
+
+## Create a README file with a summary of the run
+file.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"))
+
+cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"), append = FALSE, sep = "",
+    
+      paste("- Run completed on ", Sys.time()), "\n",
+      paste("- Run completed by ", Sys.getenv("LOGNAME")), "\n",
+      if(recreate.rvh == FALSE){paste("- *.rvh file generated on ", file.info("/var/obwb-hydro-modelling/simulations/Master.rvh")$mtime, " was used for this model run")}
+    else {"- New *.rvh file generated"}, "\n",
+      if(run.ostrich == FALSE){"- Ostrich was not used for model calibration"} else {"- Ostrich was used for model calibration"}, "\n",
+      "- Run completed using climate data last modified as follows:", "\n",
+      paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
+      paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.DRAFT.nc")$mtime), "\n",
+      paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n"
+    )
 
 #####################################################################
 ##
@@ -118,3 +134,34 @@ if(run.ostrich == TRUE){
 
 ## end timer
 proc.time() - ptm
+
+
+#####################################################################
+##
+## Plot simulated vs. Observed flows where observed flows exist
+##
+#####################################################################
+require(RavenR)
+
+hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+
+pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
+
+par(mfrow = c(1,1))
+x <- hyd.extract(subs = c("Whiteman_Creek7"), hydrographs)
+hyd.plot(x$sim, x$obs)
+
+
+
+ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+
+par(mfrow = c(4, 1), mar= c(2,4,2,2))
+
+for(i in 4:ncol(ws.storage)){
+  
+   plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
+  
+}
+
+dev.off()
+

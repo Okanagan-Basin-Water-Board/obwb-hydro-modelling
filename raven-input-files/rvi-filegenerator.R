@@ -48,7 +48,7 @@ time$DEFINITION <- paste(as.Date(time$DEFINITION, format = "%m/%d/%Y"), "00:00:0
 time$DEFINITION[time$PARAMETER == ":TimeStep"] <- as.character(timestep)
 
 
-filecontrol <- RVI.template[RVI.template$GROUP == "FileControl", c("PARAMETER", "DEFINITION")]
+# filecontrol <- RVI.template[RVI.template$GROUP == "FileControl", c("PARAMETER", "DEFINITION")]
 
 methods <- RVI.template[RVI.template$GROUP == "Methods", c("PARAMETER", "DEFINITION")]
 
