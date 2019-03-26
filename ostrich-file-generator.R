@@ -191,7 +191,7 @@ cat(file = OSTInFile, append = T, sep = "",
     "\n",
     "Begin DDSAlg", "\n",
     "PerturbationValue 0.20", "\n",
-    "MaxIterations 500", "\n",
+    "MaxIterations 100", "\n",
     "UseRandomParamValues", "\n",
     "EndDDSAlg", "\n"
 )
@@ -210,6 +210,10 @@ cat(file = OSTRAVENFile, append = F, sep = "",
     paste("./raven_rev.exe", paste(ws.interest, run.number, sep = "-"), sep = " "), "\n",
     "exit 0"
 )
+
+## Specify file permission for Ost-RAVEN.sh to allow it to be executable
+Sys.chmod(path = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ost-RAVEN.sh"),
+          mode = "777")
 
 ###################################################################
 ##
