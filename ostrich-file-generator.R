@@ -189,10 +189,11 @@ cat(file = OSTInFile, append = T, sep = "",
     "#---------------------------------------------------------", "\n",
     "# ---- Begin Algorithm ----------------------------------", "\n",
     "\n",
-    "Begin DDSAlg", "\n",
-    "PerturbationValue 0.20", "\n",
-    "MaxIterations 100", "\n",
+    "BeginDDSAlg", "\n",
+    "PerturbationValue 1", "\n",
+    "MaxIterations 20", "\n",
     "UseRandomParamValues", "\n",
+    "UseInitialParamValues", "\n",
     "EndDDSAlg", "\n"
 )
 
