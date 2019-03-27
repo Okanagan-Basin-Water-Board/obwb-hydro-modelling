@@ -20,6 +20,8 @@ landcover.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-
 
 vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
 
+annual.runoff <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/annual_runoff.csv")
+
 ############################################################################################################################
 ##
 ## Generate required tables (in format required by RAVEN), specifically:
@@ -148,6 +150,15 @@ for(i in 1:length(soil.parameter.names)){
 global <- RVP.template[RVP.template$GROUP == "GlobalParameter", c("PARAMETER", "DEFINITION", "VALUE")]
 
 global$PARAMETER <- paste(":", global$PARAMETER, sep = '')
+
+## convert all columns to character
+global[,] <- lapply(global[, ], as.character)
+
+
+## add annual runoff value to global table from annual.runoff master list
+avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == ws.interest, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
+
+global[global$DEFINITION == "AVG_ANNUAL_RUNOFF", "VALUE"] <- as.character(avg.annual.runoff)
 
 ##########################################################
 ## Channel Parameters Table:
