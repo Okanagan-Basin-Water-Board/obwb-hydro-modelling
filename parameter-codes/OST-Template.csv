@@ -1,0 +1,8 @@
+VARIABLE,TYPE,DEFINITION
+Essential,ProgramType,DDS
+Essential,ObjectiveFunction,GCOP
+Essential,ModelExecutable,./Ost-RAVEN.sh
+Useful,PreserveModelOutput,yes
+Useful,OstrichWarmStart,no
+Useful,TelescopingStrategy,linear
+Response,ResponseVariable,NS
