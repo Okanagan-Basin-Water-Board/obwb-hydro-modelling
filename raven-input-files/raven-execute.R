@@ -17,11 +17,10 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- 9
+run.number <- 12
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
-
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
 
@@ -105,32 +104,30 @@ if(run.ostrich == TRUE){
 
 #####################################################################
 ##
-## Run Raven executable
-##
-#####################################################################
-
-setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-
-system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
-
-#####################################################################
-##
-## Run Ostrich
+## Run Ostrich and/or Raven
 ##
 #####################################################################
 if(run.ostrich == TRUE){
   
+  print("Beginning Ostrich Calibration...")
+  
   system2("./Ostrich")
-
+  
 #####################################################################
 ##
-## Run Raven executable with improved parameter values
+## Run Raven executable with improved parameter values, or with base value is run.ostrich == FALSE
 ##
 #####################################################################
 
+} else {
+  
+  setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  
   system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
-
-} else {print("Ostrich was not used for model calibration during this run...")}
+  
+  print("Ostrich was not used for model calibration during this run...")
+  
+  }
 
 ## end timer
 proc.time() - ptm
@@ -149,7 +146,7 @@ pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.int
 
 par(mfrow = c(1,1))
 x <- hyd.extract(subs = c("Whiteman_Creek7"), hydrographs)
-hyd.plot(x$sim, x$obs)
+hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
 
 
 
@@ -164,4 +161,32 @@ for(i in 4:ncol(ws.storage)){
 }
 
 dev.off()
+
+##########################################################################################################################################
+##
+## Generate a hydrograph plot with all run iterations
+##
+##########################################################################################################################################
+# require(gtools)
+# 
+# if(run.ostrich == TRUE){
+# 
+# runs <- mixedsort(list.dirs(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), full.names = TRUE, recursive = FALSE))
+# 
+# hydrograph.files <- paste(runs, "/", paste(ws.interest, run.number, sep = "-"), "_Hydrographs.csv", sep = "")
+# 
+# for(i in 1:3){
+# 
+#   data <- read.csv(hydrograph.files[i])
+#   
+#   if(i == 1){plot(data$Whiteman_Creek7..observed...m3.s., type = "l")
+#               lines(data$Whiteman_Creek7..m3.s., col = 'red')} else {
+#                 
+#                 lines(data$Whiteman_Creek7..m3.s.)
+#               }
+# 
+# }
+# 
+# 
+# }
 
