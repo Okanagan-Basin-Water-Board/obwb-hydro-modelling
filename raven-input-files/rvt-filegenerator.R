@@ -39,11 +39,19 @@ tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here)
 ## Execute my custom function which does the follows:
 # - A bunch of QA/QC tests written by Rob Chlumsky
 # - Isolates all stations for each Watershed
-# - Creates ONE "flow_stn_redirect_XXX.rvt" file for each watershed. This file contains the file names for individual 
+# - Creates ONE "WatershednName-RunNumber.rvt" file for the select watershed. This file contains the file names for individual 
 #   *.rvt files for each WSC gauge within the select watershed
 # - Creates INDIVIDUAL "subid_wscname.rvt" file for each WSC station and the associated subbasin.
 
-ECflow.rvt.tidy.single(tmp, download.list, output.location, include.watersheds, run.number, write.redirect = T, flip.number = T)
+ECflow.rvt.tidy.single.obs(ff = tmp,
+                       master = download.list,
+                       dir = output.location,
+                       include.watersheds = include.watersheds,
+                       run.number = run.number,
+                       calibration.start = calibration.start,
+                       calibration.end = calibration.end,
+                       write.redirect = T,
+                       flip.number = T)
 
 
 
