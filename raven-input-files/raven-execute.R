@@ -13,16 +13,22 @@ ptm <- proc.time()
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
 ws.interest <- "Whiteman"
 
-## Specify the watersheds to be modelled. IF multiple, generate a string using c("WS1", "WS2"...WSn")
+## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- 12
+run.number <- 20
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
+
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
+
+## Define the period of calibration
+calibration.start <- "1996-01-01"
+
+calibration.end <- "2010-12-31"
 
 ## Create a directory within "Simulations" for the model input/output files to be stored
 dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), recursive = T)
