@@ -1,5 +1,5 @@
 GROUP,PARAMETER,DEFINITION,FROM,TO
-Time,StartDate,1/1/1996,,
+Time,StartDate,1/1/1990,,
 Time,EndDate,12/31/2010,,
 Time,TimeStep,1,,
 FileControl,RunName,,,
@@ -21,7 +21,8 @@ Options,SoilModel,SOIL_MULTILAYER 4,,
 Options,MonthlyInterpolationMethod,MONTHINT_LINEAR_MID,,
 HydrologicalProcesses,SnowAlbedoEvolve,SNOALB_UBCWM,,
 HydrologicalProcesses,SnowBalance,SNOBAL_SIMPLE_MELT,SNOW,SNOW_LIQ
-HydrologicalProcesses,-->Overflow,RAVEN_DEFAULT,SNOW_LIQ,SURFACE_WATER
+HydrologicalProcesses,-->Overflow,RAVEN_DEFAULT,SNOW_LIQ,PONDED_WATER
+HydrologicalProcesses,Flush,RAVEN_DEFAULT,PONDED_WATER,SURFACE_WATER
 HydrologicalProcesses,Precipitation,PRECIP_RAVEN,ATMOS_PRECIP,MULTIPLE
 HydrologicalProcesses,SoilEvaporation,SOILEVAP_UBC,MULTIPLE,ATMOSPHERE
 HydrologicalProcesses,Infiltration,INF_UBC,PONDED_WATER,MULTIPLE
@@ -29,8 +30,10 @@ HydrologicalProcesses,Flush,RAVEN_DEFAULT,PONDED_WATER,INT_SOIL
 HydrologicalProcesses,Percolation,PERC_LINEAR_ANALYTIC,TOP_SOIL,INT_SOIL
 HydrologicalProcesses,Percolation,PERC_LINEAR_ANALYTIC,INT_SOIL,INT_SOIL2
 HydrologicalProcesses,Percolation,PERC_LINEAR_ANALYTIC,INT_SOIL2,DEEP_SOIL
-HydrologicalProcesses,Baseflow,BASE_LINEAR,TOP_SOIL,SURFACE_WATER
+HydrologicalProcesses,Percolation,PERC_LINEAR_ANALYTIC,DEEP_SOIL,GROUNDWATER
 HydrologicalProcesses,Baseflow,BASE_LINEAR,INT_SOIL,SURFACE_WATER
+HydrologicalProcesses,Baseflow,BASE_LINEAR,INT_SOIL2,SURFACE_WATER
+HydrologicalProcesses,Baseflow,BASE_LINEAR,DEEP_SOIL,SURFACE_WATER
 OutputOptions,DebugMode,yes,,
 OutputOptions,EvaluationMetrics,NASH_SUTCLIFFE,,
 OutputOptions,EvaluationMetrics,RMSE,,

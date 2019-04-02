@@ -8,7 +8,7 @@ GlobalParameter,GlobalParameter,UBC_ALBASE,8.259276E-01,,0.8,1
 GlobalParameter,GlobalParameter,UBC_ALBREC,8.276279E-01,,0.8,1
 GlobalParameter,GlobalParameter,UBC_MAX_CUM_MELT,8.624496E-01,,0.8,1
 GlobalParameter,GlobalParameter,UBC_ALBSNW,8.016701E-01,,0.8,1
-GlobalParameter,GlobalParameter,UBC_GW_SPLIT,6.700295E-01,,0,0.75
+GlobalParameter,GlobalParameter,UBC_GW_SPLIT,6.700295E-01,,0,1
 ChannelParameter,ChannelProfile,,DEFAULT_TRAP,,,
 ChannelParameter,Bedslope,,0.001,,,
 ChannelParameter,SurveyPoints,0,5,,,
@@ -19,6 +19,6 @@ ChannelParameter,RoughnessZones,0,0.04,,,
 LandUseParameter,CC_DECAY_COEFF,[DEFAULT],2.074624E+03,1/d,800,10000
 SoilParameter,UBC_EVAP_SOIL_DEF,[DEFAULT],9.978788E+01,mm,80,100
 SoilParameter,UBC_INFIL_SOIL_DEF,[DEFAULT],8.228588E+01,mm,80,100
-SoilParameter,MAX_PERC_RATE,[DEFAULT],5.195399E+01,mm_per_d,15,75
-SoilParameter,PERC_COEFF,[DEFAULT],1.825434E-01,1/d,0,2
-SoilParameter,BASEFLOW_COEFF,[DEFAULT],1.082159E-02,1/d,0,2
+SoilParameter,MAX_PERC_RATE,[DEFAULT],5.195399E+01,mm_per_d,0,100
+SoilParameter,PERC_COEFF,[DEFAULT],1.825434E-01,1/d,0,5
+SoilParameter,BASEFLOW_COEFF,[DEFAULT],1.082159E-02,1/d,0,5
