@@ -53,9 +53,12 @@ soil.classes <- matrix(nrow = length(soil.horizons), ncol = 1, data = soil.horiz
 
 ##########################################################
 ## Soil Profiles Table:
-# Remove columns 1, 2, and 3 (i.e., OID, Value, Count)
+# Remove columns OID, Value, Count
+# Remove columns with "LAYER" in the column name
 
-soil.profiles <- soil.codes[,-c(1,2,3)]
+soil.profiles <- soil.codes[,-which(names(soil.codes) %in% c("OID", "Value", "Count"))]
+
+soil.profiles <- soil.profiles[,-which(grepl("LAYER", names(soil.profiles)))]
 
 ##########################################################
 ## Vegetation Classes Table:
@@ -410,6 +413,11 @@ if(!all(is.na(global.parameters$CAL_MAX))){
   global.parameters.calibrate$CAL_VAR[which(is.na(global.parameters.calibrate$CAL_MAX))] <- as.character(global.parameters.calibrate$VALUE[which(is.na(global.parameters.calibrate$CAL_MAX))])
 
   global.parameters.calibrate <- global.parameters.calibrate[, c("PARAMETER", "DEFINITION", "CAL_VAR")]  
+  
+  ## add annual runoff value to global table from annual.runoff master list
+  avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == ws.interest, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
+  
+  global.parameters.calibrate[global.parameters.calibrate$DEFINITION == "AVG_ANNUAL_RUNOFF", "CAL_VAR"] <- as.character(avg.annual.runoff)
 
   global.parameters.calibrate$PARAMETER <- paste(":", global.parameters.calibrate$PARAMETER, sep = "")
     
