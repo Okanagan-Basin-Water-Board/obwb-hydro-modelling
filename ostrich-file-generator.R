@@ -25,7 +25,7 @@ print(paste(length(OST.template.files), "Ostrich template file(s) found in speci
 
   } else {
   
-    print("No Ostrich template files found in specified directory, dummy...")
+    print("No Ostrich template files found in specified directory ...")
   
   }
 
@@ -190,8 +190,8 @@ cat(file = OSTInFile, append = T, sep = "",
     "# ---- Begin Algorithm ----------------------------------", "\n",
     "\n",
     "BeginDDSAlg", "\n",
-    "PerturbationValue 1", "\n",
-    "MaxIterations 20", "\n",
+    "PerturbationValue 0.5", "\n",
+    "MaxIterations 100", "\n",
     "UseRandomParamValues", "\n",
     "UseInitialParamValues", "\n",
     "EndDDSAlg", "\n"
