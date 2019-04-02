@@ -17,11 +17,10 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- 20
+run.number <- "UBC-Cal-2"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
-
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
 
@@ -114,6 +113,10 @@ if(run.ostrich == TRUE){
 ##
 #####################################################################
 if(run.ostrich == TRUE){
+  
+  setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  
+  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
   
   print("Beginning Ostrich Calibration...")
   
