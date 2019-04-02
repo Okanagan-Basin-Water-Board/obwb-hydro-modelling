@@ -66,21 +66,21 @@ output <- RVI.template[RVI.template$GROUP == "OutputOptions", c("PARAMETER", "DE
 ## Generate Soil Layer Alias' Table
 
 
-soil.alias <- soil.codes[complete.cases(soil.codes),]
+soil.alias.names <- soil.codes[complete.cases(soil.codes),]
 
-soil.alias <- soil.alias[ , grepl("ALIAS", names(soil.alias) ) ]
+soil.alias <- soil.alias.names[ , grepl("ALIAS", names(soil.alias.names) ) ]
 
 soil.alias <- unique(unlist(soil.alias))
+
+soil.layers <- soil.alias.names[ , grepl("LAYER", names(soil.alias.names) ) ]
+
+soil.layers <- unique(unlist(soil.layers))
 
 # soil.classes <- matrix(nrow = length(soil.horizons), ncol = 1, data = soil.horizons)
 
 soil.alias.table <- matrix(nrow = length(soil.alias), ncol = 3, data = c(alias = rep(":Alias", length(soil.alias)),
                                                                         alias.name = paste(soil.alias),
-                                                                        soil.layer = c("SOIL[0]",
-                                                                                       "SOIL[1]",
-                                                                                       "SOIL[2]",
-                                                                                       "SOIL[3]"
-                                                                                       )))
+                                                                        soil.layer = paste(soil.layers)))
 
 ############################################################################################################################
 ##
