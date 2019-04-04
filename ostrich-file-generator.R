@@ -14,6 +14,10 @@ useful.var <- OST.template[OST.template$VARIABLE == "Useful", c("TYPE", "DEFINIT
 
 response.var <- OST.template[OST.template$VARIABLE == "Response", c("TYPE", "DEFINITION")]
 
+algorithm.defs <- OST.template[OST.template$VARIABLE == "Algorithm", c("TYPE", "DEFINITION")]
+
+seed.var <- OST.template[OST.template$VARIABLE == "Seed", c("TYPE", "DEFINITION")]
+
 ### Determine File Pairs
 OST.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = ".tpl")
 
@@ -180,20 +184,22 @@ cat(file = OSTInFile, append = T, sep = "",
     "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Define Set Seed -----------------------------------", "\n",
-    "\n",
-    paste("RandomSeed", 10111982), "\n"
+    "\n"
 )
+
+write.table(seed.var, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F )
 
 cat(file = OSTInFile, append = T, sep = "",
     "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Begin Algorithm ----------------------------------", "\n",
     "\n",
-    "BeginDDSAlg", "\n",
-    "PerturbationValue 0.5", "\n",
-    "MaxIterations 100", "\n",
-    "UseRandomParamValues", "\n",
-    "UseInitialParamValues", "\n",
+    "BeginDDSAlg", "\n"
+)
+
+write.table(algorithm.defs, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F )
+
+cat(file = OSTInFile, append = T, sep = "",
     "EndDDSAlg", "\n"
 )
 
@@ -237,4 +243,7 @@ cat(file = SaveBestFile, append = F, sep = "",
     
     "exit 0", "\n"
 )
+
+Sys.chmod(path = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "save_best.sh"),
+          mode = "777")
 
