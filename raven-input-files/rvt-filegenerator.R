@@ -159,22 +159,51 @@ if(include.water.demand == TRUE){
   
   owdm$date <- paste(owdm$year, owdm$day, sep = "-")
   
+  owdm$tiso <- as.Date(owdm$date, format = "%Y-%j")
+  
+  model.period.start <- as.Date(time$DEFINITION[time$PARAMETER == ":StartDate"])
+  
+  model.period.end <- as.Date(time$DEFINITION[time$PARAMETER == ":EndDate"])
+  
   if(nrow(owdm.sub) > 0){
     
     subs <- unique(owdm.sub$subbasin_id)
     
     for(i in 1:length(subs)){
       
+      ## isolate extractionf or one subbasin
       tmp <- owdm[owdm$subbasin_id == subs[i],]
       
+      warmup.demand.period <- tmp$tiso[1] - model.period.start
+      
+      # If the model is to be run prior to water demand being included, create "empty"/Zero demand for the warmup period
+      if(warmup.demand.period > 0){
+        date.fills <- seq(model.period.start, length.out = warmup.demand.period, by = 1)
+      
+        warmup.demand <- data.frame(matrix(NA, ncol = ncol(tmp), nrow = length(date.fills)))
+        
+        colnames(warmup.demand) <- colnames(tmp)
+        
+        warmup.demand$tiso <- date.fills
+        
+        warmup.demand$extraction.total <- 0
+      
+        tmp <- rbind(warmup.demand, tmp)
+        
+      }
+      
+      ## make extraction total negative to represent "extraction" rather than addition to flow
       tmp$extraction.total <- tmp$extraction.total * -1
+      
+      ## convert extraction total to m3/s from m3/day
+      tmp$extraction.total <- tmp$extraction.total / (60*60*24)
   
       tmp$extraction.total <- ifelse(tmp$extraction.total == -0, 0, tmp$extraction.total)
       
       fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
       
       writeLines(sprintf(':BasinInflowHydrograph2 %i # %s',subs[i], paste(subs[i], "owdm.rvt", sep = "_")), fc)
-      writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(as.POSIXct(tmp$date[1], format = "%Y-%j")),nrow(tmp)), fc)
+      writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(tmp$tiso[1]),nrow(tmp)), fc)
       
       for (k in 1:nrow(tmp)) {
         writeLines(sprintf('%g',tmp[k,"extraction.total"]), fc)
