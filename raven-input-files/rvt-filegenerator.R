@@ -140,3 +140,55 @@ cat(file = RVToutFile, append = T, sep = "",
     ":EndStationForcing","\n",
     "\n"
 )
+
+############################################################################################################################
+##
+## Grab, process, and generate Raven files for OWDM files for Whiteman Creek
+##
+############################################################################################################################
+
+if(include.water.demand == TRUE){
+  ## Read in OWDM data (could be one master file for all watersheds/subbasins)
+  owdm <- read.csv("/var/obwb-hydro-modelling/input-data/raw/owdm/Whiteman.csv")
+  
+  owdm$extraction.total <- rowSums(owdm[,c("indoor", "outdoor_domestic", "outdoor_animal", "outdoor_other_irrigation")])
+  
+  owdm$watershed <- gsub( " .*$", "", owdm$subbasin)
+  
+  owdm.sub <- owdm[owdm$watershed == include.watersheds,]
+  
+  owdm$date <- paste(owdm$year, owdm$day, sep = "-")
+  
+  if(nrow(owdm.sub) > 0){
+    
+    subs <- unique(owdm.sub$subbasin_id)
+    
+    for(i in 1:length(subs)){
+      
+      tmp <- owdm[owdm$subbasin_id == subs[i],]
+      
+      tmp$extraction.total <- tmp$extraction.total * -1
+  
+      tmp$extraction.total <- ifelse(tmp$extraction.total == -0, 0, tmp$extraction.total)
+      
+      fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
+      
+      writeLines(sprintf(':BasinInflowHydrograph2 %i # %s',subs[i], paste(subs[i], "owdm.rvt", sep = "_")), fc)
+      writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(as.POSIXct(tmp$date[1], format = "%Y-%j")),nrow(tmp)), fc)
+      
+      for (k in 1:nrow(tmp)) {
+        writeLines(sprintf('%g',tmp[k,"extraction.total"]), fc)
+      }
+      
+      writeLines(':EndBasinInflowHydrograph2',fc)
+      close(fc)
+      
+      cat(file = RVToutFile, append = T, sep = "",
+          ":RedirectToFile ", paste(subs[i], "owdm.rvt", sep = "_"), "\n"
+      )
+      
+    }
+    
+  } else {print("No OWDM data exists for currently included watershed(s)...")}
+
+} else {print("Water demand was not included in this model run...")}

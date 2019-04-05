@@ -21,8 +21,12 @@ run.number <- "code-updates"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
+
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
+
+## Should water demand information be included in the model run?
+include.water.demand <- TRUE
 
 ## Define the period of calibration
 calibration.start <- "1996-01-01"
