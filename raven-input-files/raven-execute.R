@@ -17,7 +17,7 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- "code-updates"
+run.number <- "code-updates-with-demand"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -45,11 +45,17 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
       paste("- Run completed by ", Sys.getenv("LOGNAME")), "\n",
       if(recreate.rvh == FALSE){paste("- *.rvh file generated on ", file.info("/var/obwb-hydro-modelling/simulations/Master.rvh")$mtime, " was used for this model run")}
     else {"- New *.rvh file generated"}, "\n",
-      if(run.ostrich == FALSE){"- Ostrich was not used for model calibration"} else {"- Ostrich was used for model calibration"}, "\n",
+      if(run.ostrich == FALSE){"- Ostrich was not used for model calibration"}
+    else {"- Ostrich was used for model calibration"}, "\n",
+      if(include.water.demand == FALSE){"- Water demand data were not included in this model run"}
+    else {"- Water demand data were included in this model run"}, "\n",
+      
       "- Run completed using climate data last modified as follows:", "\n",
       paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
       paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.DRAFT.nc")$mtime), "\n",
-      paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n"
+      paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
+      
+      paste("- Calibration was completed for the period", calibration.start, "to", calibration.end), "\n"
     )
 
 #####################################################################
