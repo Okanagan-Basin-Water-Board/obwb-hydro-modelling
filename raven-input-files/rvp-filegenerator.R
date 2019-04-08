@@ -40,25 +40,40 @@ annual.runoff <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-co
 soil.codes <- soil.codes[ , !grepl("ALIAS", names(soil.codes))]
 
 ## remove the "LAKE" as 'NA' is not needed in soil horizons
-soil.horizons <- soil.codes[complete.cases(soil.codes),]
+soil.codes.sub <- soil.codes[complete.cases(soil.codes),]
 
 ## Exttract the names of soil layers
-soil.horizons <- soil.horizons[ , grepl("NAME", names(soil.horizons) ) ]
+soil.horizons <- soil.codes.sub[ , grepl("NAME", names(soil.codes.sub) ) ]
+
+## Extract all columns which define soil class types
+soil.classes <- soil.codes.sub[ , grepl("CLASS", names(soil.codes.sub))]
 
 ## unlist to make a character vector
 soil.horizons <- unique(unlist(soil.horizons))
 
-## make a matrix of soil names
-soil.classes <- matrix(nrow = length(soil.horizons), ncol = 1, data = soil.horizons)
+## Extract unique value from all columns (note that all values are the same in each column by way of data input structure)
+soil <- lapply(soil.classes, unique)
+
+## convert list to number vector
+soil <- do.call(rbind, soil)
+
+## make a matrix of soil classes
+soil.classes <- matrix(nrow = length(soil.horizons), ncol = 4, data = soil, byrow = TRUE)
+
+## Add soil names to soil.class matrix
+soil.classes <- cbind(as.character(soil.horizons), soil.classes)
 
 ##########################################################
 ## Soil Profiles Table:
 # Remove columns OID, Value, Count
 # Remove columns with "LAYER" in the column name
+# Remove columns with "CLASS" in the column name
 
 soil.profiles <- soil.codes[,-which(names(soil.codes) %in% c("OID", "Value", "Count"))]
 
 soil.profiles <- soil.profiles[,-which(grepl("LAYER", names(soil.profiles)))]
+
+soil.profiles <- soil.profiles[,-which(grepl("CLASS", names(soil.profiles)))]
 
 ##########################################################
 ## Vegetation Classes Table:
@@ -192,8 +207,8 @@ cat(file = RVPoutFile, append = F, sep = "",
     "# ---- Soil Classes --------------------------------------", "\n",
     
     ":SoilClasses","\n",
-    "     :Attributes,", "\n",
-    "     :Units,", "\n"
+    "     :Attributes,", "%SAND, %CLAY, %SILT, %ORGANIC", "\n",
+    "     :Units,", "none, none, noen, none", "\n"
 )
     
     write.table(soil.classes, RVPoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F)
