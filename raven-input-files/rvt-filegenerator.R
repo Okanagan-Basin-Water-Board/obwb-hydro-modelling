@@ -148,18 +148,28 @@ cat(file = RVToutFile, append = T, sep = "",
 ############################################################################################################################
 
 if(include.water.demand == TRUE){
+  
+  RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
+  
+  RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
+  
+  time <- RVI.template[RVI.template$GROUP == "Time", c("PARAMETER", "DEFINITION")]
+  
+  time$DEFINITION <- paste(as.Date(time$DEFINITION, format = "%m/%d/%Y"), "00:00:00", sep = ' ')
+  
   ## Read in OWDM data (could be one master file for all watersheds/subbasins)
   owdm <- read.csv("/var/obwb-hydro-modelling/input-data/raw/owdm/Whiteman.csv")
   
-  owdm$extraction.total <- rowSums(owdm[,c("indoor", "outdoor_domestic", "outdoor_animal", "outdoor_other_irrigation")])
-  
   owdm$watershed <- gsub( " .*$", "", owdm$subbasin)
   
+  ## Isolate specified watershed
   owdm.sub <- owdm[owdm$watershed == include.watersheds,]
   
-  owdm$date <- paste(owdm$year, owdm$day, sep = "-")
+  owdm.sub$extraction.total <- rowSums(owdm.sub[,c("indoor", "outdoor_domestic", "outdoor_animal", "outdoor_other_irrigation")])
   
-  owdm$tiso <- as.Date(owdm$date, format = "%Y-%j")
+  owdm.sub$date <- paste(owdm.sub$year, owdm.sub$day, sep = "-")
+  
+  owdm.sub$tiso <- as.Date(owdm.sub$date, format = "%Y-%j")
   
   model.period.start <- as.Date(time$DEFINITION[time$PARAMETER == ":StartDate"])
   
@@ -172,7 +182,7 @@ if(include.water.demand == TRUE){
     for(i in 1:length(subs)){
       
       ## isolate extractionf or one subbasin
-      tmp <- owdm[owdm$subbasin_id == subs[i],]
+      tmp <- owdm.sub[owdm.sub$subbasin_id == subs[i],]
       
       warmup.demand.period <- tmp$tiso[1] - model.period.start
       
