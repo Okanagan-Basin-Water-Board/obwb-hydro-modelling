@@ -17,7 +17,7 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- "code-updates-with-demand"
+run.number <- "code-updates-soil"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -26,7 +26,7 @@ run.ostrich <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- TRUE
+include.water.demand <- FALSE
 
 ## Define the period of calibration
 calibration.start <- "1996-01-01"
