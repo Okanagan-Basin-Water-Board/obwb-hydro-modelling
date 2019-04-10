@@ -14,8 +14,6 @@ RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-cod
 
 soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
 
-aquifer.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/aquifer_codes.csv")
-
 landcover.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/landcover_codes.csv")
 
 vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
@@ -43,7 +41,7 @@ soil.codes <- soil.codes[ , !grepl("ALIAS", names(soil.codes))]
 soil.codes.sub <- soil.codes[complete.cases(soil.codes),]
 
 ## Exttract the names of soil layers
-soil.horizons <- soil.codes.sub[ , grepl("NAME", names(soil.codes.sub) ) ]
+soil.horizons <- soil.codes.sub[ , grepl("NAME", names(soil.codes.sub))]
 
 ## Extract all columns which define soil class types
 soil.classes <- soil.codes.sub[ , grepl("CLASS", names(soil.codes.sub))]
@@ -208,7 +206,7 @@ cat(file = RVPoutFile, append = F, sep = "",
     
     ":SoilClasses","\n",
     "     :Attributes,", "%SAND, %CLAY, %SILT, %ORGANIC", "\n",
-    "     :Units,", "none, none, noen, none", "\n"
+    "     :Units,", "none, none, none, none", "\n"
 )
     
     write.table(soil.classes, RVPoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F)
