@@ -14,13 +14,11 @@ RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-cod
 
 soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
 
-
+subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
 
 ## Add colon to all parameter calls - this is required by Raven
 RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
-
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
 ## replce space in watershed name with "_"
 subbasin.codes$GNIS_NAME <- gsub("\\s", "_", subbasin.codes$GNIS_NAME)
