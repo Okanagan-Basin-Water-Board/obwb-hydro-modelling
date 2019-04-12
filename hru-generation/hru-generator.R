@@ -1,9 +1,6 @@
 ###########################################################################################
 ##
-## This script generates initial Hydrologic Response Units (HRUs) for the Whiteman Creek
-## watershed. The following GIS layers were provided by Dan Austin on Dec 19, 2018:
-## - Provincially mapped watershed and sub-basin boundaries (i.e., XXX)
-## - Provincially mapped landcover (i.e., XXXX)
+## This script generates initial Hydrologic Response Units (HRUs) for the Okanagan Basin
 ## 
 ## Feb-15-2019 LAB
 ###########################################################################################
@@ -17,83 +14,68 @@ library(raster)
 library(data.table)
 library(rgdal)
 library(proj4)
-
 library(cloudml)
 
-# ## Load in updated raw data from bucket
-# gs_rsync("gs://associated-environmental/hru-generation/raw/", "/home/lawrence/var/Data/Raw/")
 
 ###########################################################################################
 ##
+##  Specify bc.albers coordinate reference system to ensure everything is consistent
+##
 ## Read-in required sptial datasets:
-##  - Okanagan basin DEM (20 m Resolution): DEM_alb.tif
+##  - Okanagan-overlapping DEM (20 m Resolution): DEM_alb.tif (Overlapping Okanagan required to allow correct calculation of slope/aspect before clipping)
 ##  - Okanagan Landcover Raster (30 m Resolution - Resampled to 20 m Resolution to match DEM): EOSD_alb_Snap.tif
-##  - Okanagan Basin Shapefile: Okanagan_River.shp
-##  - Okanagan named watersheds: Okanagan_Watersheds.shp
-##  - Okanagan subbasins: Okanagan_subbasins.shp
+##  - Okanagan Parent Soils Raster (resampled to 20m resolution): Soils_PM1.tif
+##  - Okanagan Aquifers Shapefile (OBWB Aquifers): OBWB_Aquifer.tif
+##  - Model domain subbasins (as delineated by Associated): WS_Raster3.tif
+##
+##  - Okanagan Basin Shapefile: FW_Atlas_OK_Basin.shp
+##  - Named/mapped watersheds included in model domain: EFN_WS.shp
 ###########################################################################################
+
+print("reading in spatial data...")
 
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
 
 
-dem <- raster("/home/lawrence/var/Data/Raw/DEM_alb.tif", crs = bc.albers)
+dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/dem_alb_fill.tif", crs = bc.albers)
 
-landcover <- raster("/home/lawrence/var/Data/Raw/EOSD_alb_Snap.tif", crs = bc.albers)
+landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/EOSD_alb_Snap.tif", crs = bc.albers)
 
-soils <- raster("/home/lawrence/var/Data/Raw/Soils_PM1.tif", crs = bc.albers)
+soils <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Soils_PM1.tif", crs = bc.albers)
 
-aquifers <- raster("/home/lawrence/var/Data/Raw/OBWB_Aquifer.tif", crs = bc.albers)
+aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquifer.tif", crs = bc.albers)
 
-subbasin <- raster("/home/lawrence/var/Data/Raw/WS_Raster3.tif", crs = bc.albers)
+subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster3.tif", crs = bc.albers)
 
 
 
-okanagan.basin <- st_read("/home/lawrence/var/Data/Raw/FW_Atlas_OK_Basin.shp", crs = bc.albers)
+okanagan.basin <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/FW_Atlas_OK_Basin.shp", crs = bc.albers)
 
-model.watersheds <- st_read("/home/lawrence/var/Data/Raw/EFN_WS.shp", crs = bc.albers)
+model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/EFN_WS.shp", crs = bc.albers)
 
 ## New version of raster package does not seem to support "sf" objects for cropping/masking. So shapefile must be converted to spatialpolygon
 model.watersheds.shape <- as(model.watersheds, "Spatial")
 
-# whiteman <- model.watersheds[model.watersheds$GNIS_NAME == "Whiteman Creek",]
-# ###########################################################################################
-# ##
-# ## Read-in subbasins for Whiteman Creek
-# ##
-# ###########################################################################################
-# 
-# ## filepath to geodatabase with all subbasins
-# geodatabase <- "//VER-AUSTIN/mapping/_projects/2019/Raven/Watersheds_subbasins.gdb"
-# 
-# ## list all available layers in geodatabase
-# layer.list <- ogrListLayers(geodatabase)
-# 
-# ## print the layer list
-# print(layer.list)
-# 
-# ## read in layer list
-# subbasin <- readOGR(dsn = geodatabase, layer = layer.list[1])
-# 
-# ## convert spatial polygons dataframe to sf object
-# subbasin <- st_as_sf(subbasin, crs = bc.albers)
-# 
-# whiteman.shape <- subbasin[subbasin$NAMED_WATERSHED_ID == 6346,]
-# # 
+print("done reading in all data...")
 
 ###########################################################################################
 ##
 ## Crop dem, landcover, and subbsain to Okanagan extent
 ##
 ###########################################################################################
+print("calculating slope and aspect...")
 
+## Calculate slope and aspect for all of BC, and seperate to individual objects
 slope.aspect <- terrain(dem, opt = c('slope','aspect'), unit = 'degrees')
 
 slope <- subset(slope.aspect, subset = 'slope')
 
 aspect <- subset(slope.aspect, subset = 'aspect')
 
+print("cropping shit to the Okanagan...")
 
+## Crop all components to match model watersheds
 slope.ok <- mask(crop(slope, model.watersheds.shape), model.watersheds.shape)
 
 aspect.ok <- mask(crop(aspect, model.watersheds.shape), model.watersheds.shape)
@@ -137,10 +119,11 @@ aquifer.values <- values(aquifers.ok)
 
 ## Remove unneeded items from workspace
 rm(aquifers, aquifers.ok, dem, dem.ok, landcover, landcover.ok, slope.aspect, slope, aspect, slope.ok, aspect.ok,
-   soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape)
+   soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape, okanagan.basin)
 
 gc()
 
+## Put together data table
 DT <- data.table(
   coords = coords,
   # coords.subbasin = coords.subbasin,
@@ -153,11 +136,21 @@ DT <- data.table(
   subbasin = subbasin.values
 )
 
+## By default, R assigns an aspect of 90-deg to areas with a slope of 0. Herein, we reassign a value of -999 to areas with 0 slope.
+## NOTE: RAVEN ONLY ACCEPTS ASPECT BETWEEN 0-360. LEAVE ASPECT AS DEFAULT BEHAVIOUR (I.E., FLAT = 90-DEGREES)
+# DT[DT$slope == 0]$aspect <- -999
+
+## Reassign aspect.values based on this new subset
+# aspect.values <- DT$aspect
+
+
 ###########################################################################################
 ##
 ## Generate bins to be used to determine HRUS
 ##
 ###########################################################################################
+
+print("Generating binned values for elevation, landcover, and aspect...")
 
 ## Determine elevation bands
 
@@ -173,7 +166,7 @@ DT$elevation.bin <- ifelse(elevation.values <= 200, 200,
                     ifelse(elevation.values > 1800 & elevation.values <= 2000, 210,
                     ifelse(elevation.values > 2000, 211, 212)))))))))))
 
-## Determine landcover classes
+## Determine landcover bins
 
 DT$landcover.bin <- ifelse(landcover.values <= 11, 300, # No data / Unclassified / Cloud 
                     ifelse(landcover.values == 12, 301, # Shadow
@@ -187,27 +180,42 @@ DT$landcover.bin <- ifelse(landcover.values <= 11, 300, # No data / Unclassified
                     ifelse(landcover.values >200, 309, 300)))))))))) # Forest-Trees / Coniferous / Coniferous Dense / Coniferous Open / Coniferous Sparse
                                                                   # Broadleaf / Broadleaf / Broadleaf Dense / Broadleaf Open / Broadleaf Sparse
                                                                   # Mixedwood / Mixedwood Dense / Mixedwood Open / Mixedwood Sparse
-
+## Determine aspect bins
 
 # DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
 #                        ifelse(aspect.values >= 0 & aspect.values < 135, 401, # North
 #                        ifelse(aspect.values >= 45 & aspect.values < 135, 402, # East
-#                        ifelse(aspect.values >= 135 & aspect.values < 225, 403, # Weast
+#                        ifelse(aspect.values >= 135 & aspect.values < 225, 403, # West
 #                        ifelse(aspect.values >= 225 & aspect.values < 315, 404, 0))))) #South (0 = -999)
 
 DT$aspect.bin <- ifelse(aspect.values >= 270, 400, # north
                  ifelse(aspect.values >= 0 & aspect.values < 90, 400, # north
-                 ifelse(aspect.values >= 90 & aspect.values < 270, 401, 0))) # south (0 = -999)
+                 ifelse(aspect.values >= 90 & aspect.values < 270, 401, 999))) # south (999 = something went wrong)
+
+## Determine slope bins
+
+# DT$slope.bin <- ifelse(slope.values <= 5, 1,
+#                       ifelse(slope.values > 5 & slope.values <= 20, 2,
+#                       ifelse(slope.values > 20 & slope.values <= 40, 3,
+#                       ifelse(slope.values > 40 & slope.values <= 60, 4,
+#                       ifelse(slope.values > 60, 5, 0)))))
+
 
 ########################################
 ##
 ## Remove NA values to reduce size of DT (maintain "DT.revert" just in case...)
-##
+## NOTE: Cannot use complete.cases as aquifers as empty under lakes, so it removed HRUs from Kal & Wood lakes
 ########################################
 
-DT.revert <- DT
 
-DT <- DT[complete.cases(DT), ]
+
+DT.revert <- DT
+# 
+# DT <- DT[complete.cases(DT), ]
+
+# NOTE: Remove all cells with empty elevation data
+DT <- DT[!is.na(DT$elevation)]
+
 
 
 ########################################
@@ -215,6 +223,7 @@ DT <- DT[complete.cases(DT), ]
 ## Generate unique IDs for all grid cells to be used in HRU development
 ##
 ########################################
+print("generating unique ID values for HRUs")
 
 DT$ID <- paste(DT$landcover.bin,
                DT$elevation.bin,
@@ -222,6 +231,7 @@ DT$ID <- paste(DT$landcover.bin,
                DT$subbasin,
                sep = '')
 
+print(paste("There are", length(unique(DT$ID)), "unique HRUs within the model domain"))
 ########################################
 ##
 ## Generate Rasters to plot
@@ -240,102 +250,112 @@ elevation.bin <- DT$elevation.bin
 
 aspect.bin <- DT$aspect.bin
 
-ID <- as.numeric(DT$ID)
+raw.ID <- as.numeric(DT$ID)
 
 
+print("Writing spatial layers to file...")
 
-# ## write landcover bin to raster
-# m.landcover.bin <- matrix(nrow = length(landcover.bin), ncol = 3, data = c(x = x,
-#                                                       y = y,
-#                                                       z = landcover.bin))
-# 
-# r.landcover.bin <- rasterFromXYZ(m.landcover.bin, crs = bc.albers)
-# 
-# 
-# writeRaster(r.landcover.bin, "/home/lawrence/var/Data/Processed/landcover-bin.tif", overwrite = T)
-# 
-# 
-# 
-# ## write subbasin to raster
-# m.subbasin <- matrix(nrow = length(subbasin), ncol = 3, data = c(x = x,
-#                                                           y = y,
-#                                                           z = subbasin))
-# 
-# r.subbasin <- rasterFromXYZ(m.subbasin, crs = bc.albers)
-# 
-# 
-# writeRaster(r.subbasin, "/home/lawrence/var/Data/Processed/subbasin.tif", overwrite = T)
-# 
-# 
-# 
-# ## write elevation bin to raster
-# m.elevation.bin <- matrix(nrow = length(elevation.bin), ncol = 3, data = c(x = x,
-#                                                                y = y,
-#                                                                z = elevation.bin))
-# 
-# r.elevation.bin <- rasterFromXYZ(m.elevation.bin, crs = bc.albers)
-# 
-# writeRaster(r.elevation.bin, "/home/lawrence/var/Data/Processed/elevation-bin.tif", overwrite = T)
-# 
-# 
-# ## write elevation bin to raster
-# m.aspect.bin <- matrix(nrow = length(aspect.bin), ncol = 3, data = c(x = x,
-#                                                                            y = y,
-#                                                                            z = aspect.bin))
-# 
-# r.aspect.bin <- rasterFromXYZ(m.aspect.bin, crs = bc.albers)
-# 
-# writeRaster(r.aspect.bin, "/home/lawrence/var/Data/Processed/aspect-bin-2bins.tif", overwrite = T)
-# 
-# 
-# ## write raw ID to raster
-# m.ID <- matrix(nrow = length(ID), ncol = 3, data = c(x = x,
-#                                                     y = y,
-#                                                     z = ID))
-# 
-# 
-# r.ID <- rasterFromXYZ(m.ID, crs = bc.albers)
-# 
-# writeRaster(r.ID, "/home/lawrence/var/Data/Processed/ID-raw.tif", overwrite = T)
-# 
+## write landcover bin to raster
+m.landcover.bin <- do.call(cbind, list(x, y, landcover.bin))
+
+r.landcover.bin <- rasterFromXYZ(m.landcover.bin, crs = bc.albers)
+
+writeRaster(r.landcover.bin, "/var/obwb-hydro-modelling/input-data/processed/spatial/landcover-bin.tif", overwrite = T)
+
+
+## write subbasin to raster
+m.subbasin <- do.call(cbind, list(x, y, subbasin))
+
+r.subbasin <- rasterFromXYZ(m.subbasin, crs = bc.albers)
+
+writeRaster(r.subbasin, "/var/obwb-hydro-modelling/input-data/processed/spatial/subbasin.tif", overwrite = T)
+
+
+## write elevation bin to raster
+m.elevation.bin <- do.call(cbind, list(x, y, elevation.bin))
+
+r.elevation.bin <- rasterFromXYZ(m.elevation.bin, crs = bc.albers)
+
+writeRaster(r.elevation.bin, "/var/obwb-hydro-modelling/input-data/processed/spatial/elevation-bin.tif", overwrite = T)
+
+
+## write aspect bin to raster
+m.aspect.bin <- do.call(cbind, list(x, y, aspect.bin))
+
+r.aspect.bin <- rasterFromXYZ(m.aspect.bin, crs = bc.albers)
+
+writeRaster(r.aspect.bin, "/var/obwb-hydro-modelling/input-data/processed/spatial/aspect-bin.tif", overwrite = T)
+
+
+## write raw ID to raster
+raw.m.ID <- do.call(cbind, list(x, y, raw.ID))
+
+raw.r.ID <- rasterFromXYZ(raw.m.ID, crs = bc.albers)
+
+writeRaster(raw.r.ID, "/var/obwb-hydro-modelling/input-data/processed/spatial/raw-HRU-id.tif", overwrite = T)
+
+print("Done writing spatial layers...")
 
 ########################################
 ##
-## Reassign ID's so that they start from 1, rather than 3 million
+## Reassign ID's so that they start from 1, rather than stupid large numbers
 ##
 ########################################
+print("Tidying HRU IDs...")
 
-unique.ID <- unique(ID)
-replace.ID <- 1:length(unique(ID))
+unique.ID <- unique(raw.ID)
+replace.ID <- 1:length(unique(raw.ID))
+
 
 
 for(i in 1:length(unique.ID)){
-  place <- which(ID == unique.ID[i])  
-  ID[place] <- replace.ID[i]
+  place <- which(raw.ID == unique.ID[i])  
+  raw.ID[place] <- replace.ID[i]
   print(i)
 }
 
 
-## Reassign tidy IDs to DT
-DT$ID <- ID
+## Add tidy IDs to DT
+DT$Tidy.ID <- raw.ID
+
+print("Writing Tidy HRU layer to file...")
 
 # ## write tidy ID to raster
-# m.ID <- matrix(nrow = length(DT$ID), ncol = 3, data = c(x = x,
-#                                                      y = y,
-#                                                      z = ID))
-# 
-# 
-# r.ID <- rasterFromXYZ(m.ID, crs = bc.albers)
-# 
-# writeRaster(r.ID, "/home/lawrence/var/Data/Processed/ID-tidy.tif", overwrite = T)
-# 
-# 
-# ## Plot tidy ID
-# ncolors=length(unique.ID)
-# colpalette<-rgb(runif(ncolors),runif(ncolors ),runif(ncolors ))
-# 
-# plot(r.ID, col = colpalette)
+tidy.m.ID <- do.call(cbind, list(x, y, DT$Tidy.ID))
 
+tidy.r.ID <- rasterFromXYZ(tidy.m.ID, crs = bc.albers)
+
+writeRaster(tidy.r.ID, "/var/obwb-hydro-modelling/input-data/processed/spatial/tidy-HRU-id.tif", overwrite = T)
+
+print("Done writing TIdy HRU layer to file...")
+
+########################################
+##
+## Plot all spatial layers used in HRU generation
+##
+########################################
+
+print("Saving all spatial plots to file...")
+
+# ## Plot tidy ID
+pdf("/var/obwb-hydro-modelling/input-data/processed/spatial/HRU-output.pdf", height = 17, width = 11)
+
+ncolors=length(raw.ID)
+colpalette<-rgb(runif(ncolors),runif(ncolors ),runif(ncolors ))
+
+plot(raw.r.ID, col = colpalette, main = "Raw HRUs")
+
+plot(tidy.r.ID, col = colpalette, main = "Tidy HRUs")
+
+plot(r.subbasin, col = colpalette, main = "Subbasins")
+
+plot(r.elevation.bin, col = colpalette, main = "Elevation bins")
+
+plot(r.landcover.bin, col = colpalette, main = "Landcover bins")
+
+plot(r.aspect.bin, col = colpalette, main = "Aspect bins")
+
+dev.off()
 
 ########################################
 ##
@@ -343,6 +363,7 @@ DT$ID <- ID
 ## Write csv of final HRUs
 ##
 ########################################
+print("reprojecting coordinates to lat/lon...")
 
 ## create new coords object drom the reduced DT (i.e., excluding NAs)
 coords.reduced <- matrix(nrow = nrow(DT), ncol = 2, data = c(x = DT$coords.x,
@@ -359,10 +380,13 @@ DT$Y <- HRUlatlon[,2]
 ## Remove unneeded items from workspace and save results to RData object and csv file
 ##
 ########################################
+print("Saving output to file...")
 
-
+# rm(list = ls()[! ls() %in% c("DT", "DT.revert")])
 rm(list = ls()[! ls() %in% c("DT", "DT.revert")])
 
-save.image(file = "/home/lawrence/var/Data/Processed/okanagan_hru.RData")
+save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.RData")
 
-write.csv(DT, "/home/lawrence/var/Data/Processed/okanagan_HRU.csv")
+write.csv(DT, "/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.csv")
+
+print("Done!")
