@@ -17,8 +17,11 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 ## Read-in required datasets and variables
 ##
 #################################################3
+print("loading okanagan_hru.RData")
 
 load("/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.RData")
+
+print("all loaded")
 
 HRU.table <- as.data.frame(DT)
 
@@ -56,13 +59,16 @@ colnames(HRU.output) <- c("ID",
                           "SLOPE",
                           "ASPECT")
 
-unique.HRU <- unique(HRU.table$ID)
+unique.HRU <- unique(HRU.table$Tidy.ID)
 
 ## Populate table with summary of all HRUs
+print("generating HRU-table...")
+
+ptm <- proc.time()
 
 for(i in 1:length(unique.HRU)){
   
-  index <- which(HRU.table$ID == unique.HRU[i])
+  index <- which(HRU.table$Tidy.ID == unique.HRU[i])
   
   HRU.output[i, "ID"] <- unique.HRU[i]
   
@@ -93,6 +99,9 @@ for(i in 1:length(unique.HRU)){
   print(i)
 }
 
+proc.time() - ptm
+
+print("HRU table built")
 ###########################################################################
 ##
 ## Assign names to soil profiles, aquifer profiles, and land use classes
@@ -242,6 +251,8 @@ for(i in 1:length(watersheds)){
 ## Copy rvh file to GCP bucket
 ##
 ##################################################################################################
+
+print("ALL DONE!")
 
 # require(cloudml)
 # gs_copy("/home/lawrence/var/Data/Processed/test.rvh", "gs://associated-environmental/hru-generation/processed")
