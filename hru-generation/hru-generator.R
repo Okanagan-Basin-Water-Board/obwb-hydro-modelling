@@ -37,8 +37,9 @@ print("reading in spatial data...")
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
 
-
 dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/dem_alb_fill.tif", crs = bc.albers)
+
+# dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/archive/DEM_alb.tif", crs = bc.albers)
 
 landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/EOSD_alb_Snap.tif", crs = bc.albers)
 
@@ -210,11 +211,17 @@ DT$aspect.bin <- ifelse(aspect.values >= 270, 400, # north
 
 
 DT.revert <- DT
+
+## Assign cells with no aquifer information (i.e., under lakes) with 0 so that they're not removed
+DT[is.na(DT$aquifer), "aquifer"] <- 0
+
+DT <- DT[complete.cases(DT),]
+
 # 
 # DT <- DT[complete.cases(DT), ]
 
 # NOTE: Remove all cells with empty elevation data
-DT <- DT[!is.na(DT$elevation)]
+# DT <- DT[!is.na(DT$slope)]
 
 
 
