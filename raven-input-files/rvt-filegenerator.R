@@ -14,6 +14,7 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 ## Load required packages
 library(tidyhydat)
 library(RavenR)
+library(ncdf4)
 
 ws.interest <- ws.interest
 
@@ -32,7 +33,11 @@ output.location <- file.path("/var/obwb-hydro-modelling/simulations", ws.interes
 
 ## Extract all WSC station numbers for use in hy_daily_flows to retrieve datasets for all
 station.no <- download.list[download.list$Watershed %in% paste(include.watersheds, "_Creek", sep = ''), "Station_No"]
-  
+
+
+## If there are no WSC stations within the ws.interest (i.e., station.no is zero), no redirects are written and the model will not be calibrated to WSC data
+if(length(station.no) > 0) {
+
 ## Retrieve all available data for all required stations and save in one large tibble.
 tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here)
 
@@ -43,15 +48,23 @@ tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here)
 #   *.rvt files for each WSC gauge within the select watershed
 # - Creates INDIVIDUAL "subid_wscname.rvt" file for each WSC station and the associated subbasin.
 
-ECflow.rvt.tidy.single.obs(ff = tmp,
-                       master = download.list,
-                       dir = output.location,
-                       include.watersheds = include.watersheds,
-                       run.number = run.number,
-                       calibration.start = calibration.start,
-                       calibration.end = calibration.end,
-                       write.redirect = T,
-                       flip.number = T)
+
+
+  ECflow.rvt.tidy.single.obs(ff = tmp,
+                         master = download.list,
+                         dir = output.location,
+                         include.watersheds = include.watersheds,
+                         run.number = run.number,
+                         calibration.start = calibration.start,
+                         calibration.end = calibration.end,
+                         write.redirect = T,
+                         flip.number = T)
+  
+} else {print("No WSC stations are included for calibration...")
+  ## Create empty file so remaining commands can be appended.
+  RVToutFile <- file(file.path(output.location, paste(ws.interest, "-", run.number, ".rvt", sep = '')), open = "a+")
+  close(RVToutFile)
+  }
 
 
 
@@ -64,17 +77,24 @@ ECflow.rvt.tidy.single.obs(ff = tmp,
 ## read in RVH file to compute the number of HRUs
 HRUs <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
 
-nHRU <- nrow(HRUs$HRUtable)
-
-nGridCell <- 2601
-
-ntime <- 24837
-
 precip.forcing.filename <- "pr.HRU.timeseries.DRAFT.nc"
 
 tasmax.forcing.filename <- "tasmax.HRU.timeseries.DRAFT.nc"
 
 tasmin.forcing.filename <- "tasmin.HRU.timeseries.DRAFT.nc"
+
+
+## Get dimensions of netcdf file - only uses tasmin since all are the same dimensions
+tasmin.nc.file <- nc_open(file.path("/var/obwb-hydro-modelling/input-data/processed/climate", tasmin.forcing.filename))
+
+tasmin <- ncvar_get(tasmin.nc.file, "tasmin")
+
+nGridCell <- dim(tasmin)[1]
+
+ntime <- dim(tasmin)[2]
+
+nHRU <- nrow(HRUs$HRUtable)
+
 
 weights <- matrix(nrow = nHRU, ncol = 3, data = c(HRU = HRUs$HRUtable$ID,
                                                   Station = HRUs$HRUtable$ID,
@@ -231,3 +251,4 @@ if(include.water.demand == TRUE){
   } else {print("No OWDM data exists for currently included watershed(s)...")}
 
 } else {print("Water demand was not included in this model run...")}
+
