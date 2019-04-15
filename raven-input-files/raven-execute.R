@@ -11,13 +11,13 @@
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Whiteman"
+ws.interest <- "Inkaneep"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- "code-updates-soil"
+run.number <- "Primary-test"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
