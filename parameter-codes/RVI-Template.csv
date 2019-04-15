@@ -34,7 +34,7 @@ HydrologicalProcesses,Percolation,PERC_LINEAR_ANALYTIC,DEEP_SOIL,GROUNDWATER
 HydrologicalProcesses,Baseflow,BASE_LINEAR,INT_SOIL,SURFACE_WATER
 HydrologicalProcesses,Baseflow,BASE_LINEAR,INT_SOIL2,SURFACE_WATER
 HydrologicalProcesses,Baseflow,BASE_LINEAR,DEEP_SOIL,SURFACE_WATER
-OutputOptions,DebugMode,yes,,
+OutputOptions,DebugMode,no,,
 OutputOptions,EvaluationMetrics,NASH_SUTCLIFFE,,
 OutputOptions,EvaluationMetrics,RMSE,,
 OutputOptions,EvaluationMetrics,PCT_BIAS,,
