@@ -11,16 +11,16 @@
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Inkaneep"
+ws.interest <- "Whiteman"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- "Primary-test"
+run.number <- "Jeremys-Run2"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
@@ -79,7 +79,7 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/raven
 if("Ostrich" %in% list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))){print("Ostrich files already exist in this directory...")
 } else { 
   file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.copy(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   print(paste("Ostrich required softlinks created in ", ws.interest, "-", run.number, " directory...", sep = ''))
 }
 
