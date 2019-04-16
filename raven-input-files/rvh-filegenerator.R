@@ -1,6 +1,6 @@
 ############################################################################################################################
 ##
-## This script takes output from "HRU_Generator_26022019.R" and generates the required *.rvh file for input into Raven.
+## This script takes output from "hru-generator.R" and generates the required *.rvh file for input into Raven.
 ##
 ## Feb-28-2019
 ##
