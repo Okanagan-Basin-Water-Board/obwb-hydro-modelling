@@ -36,8 +36,9 @@ print("reading in spatial data...")
 
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
+dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/DEM_Fix2.tif", crs = bc.albers)
 
-dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/dem_alb_fill.tif", crs = bc.albers)
+# dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/dem_alb_fill.tif", crs = bc.albers)
 
 # dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/archive/DEM_alb.tif", crs = bc.albers)
 
@@ -155,17 +156,29 @@ print("Generating binned values for elevation, landcover, and aspect...")
 
 ## Determine elevation bands
 
-DT$elevation.bin <- ifelse(elevation.values <= 200, 200,
-                    ifelse(elevation.values > 200 & elevation.values <= 400, 202,
-                    ifelse(elevation.values > 400 & elevation.values <= 600, 203,
-                    ifelse(elevation.values > 600 & elevation.values <= 800, 204,
-                    ifelse(elevation.values > 800 & elevation.values <= 1000, 205, 
-                    ifelse(elevation.values > 1000 & elevation.values <= 1200, 206,
-                    ifelse(elevation.values > 1200 & elevation.values <= 1400, 207,
-                    ifelse(elevation.values > 1400 & elevation.values <= 1600, 208,
-                    ifelse(elevation.values > 1600 & elevation.values <= 1800, 209,
-                    ifelse(elevation.values > 1800 & elevation.values <= 2000, 210,
-                    ifelse(elevation.values > 2000, 211, 212)))))))))))
+DT$elevation.bin <- ifelse(elevation.values <= 100, 200,
+                    ifelse(elevation.values > 200 & elevation.values <= 300, 201,
+                    ifelse(elevation.values > 300 & elevation.values <= 400, 202,
+                    ifelse(elevation.values > 400 & elevation.values <= 500, 203,
+                    ifelse(elevation.values > 500 & elevation.values <= 600, 204, 
+                    ifelse(elevation.values > 600 & elevation.values <= 700, 205,
+                    ifelse(elevation.values > 700 & elevation.values <= 800, 206,
+                    ifelse(elevation.values > 800 & elevation.values <= 900, 207,
+                    ifelse(elevation.values > 900 & elevation.values <= 1000, 208,
+                    ifelse(elevation.values > 1000 & elevation.values <= 1100, 209,
+                    ifelse(elevation.values > 1100 & elevation.values <= 1200, 210,
+                    ifelse(elevation.values > 1200 & elevation.values <= 1300, 211,
+                    ifelse(elevation.values > 1300 & elevation.values <= 1400, 212,
+                    ifelse(elevation.values > 1400 & elevation.values <= 1500, 213,
+                    ifelse(elevation.values > 1500 & elevation.values <= 1600, 214,
+                    ifelse(elevation.values > 1600 & elevation.values <= 1700, 215,
+                    ifelse(elevation.values > 1700 & elevation.values <= 1800, 216,
+                    ifelse(elevation.values > 1800 & elevation.values <= 1900, 217,
+                    ifelse(elevation.values > 1900 & elevation.values <= 2000, 218,
+                    ifelse(elevation.values > 2000, 219, 999))))))))))))))))))))
+
+
+
 
 ## Determine landcover bins
 
@@ -183,15 +196,15 @@ DT$landcover.bin <- ifelse(landcover.values <= 11, 300, # No data / Unclassified
                                                                   # Mixedwood / Mixedwood Dense / Mixedwood Open / Mixedwood Sparse
 ## Determine aspect bins
 
-# DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
-#                        ifelse(aspect.values >= 0 & aspect.values < 135, 401, # North
-#                        ifelse(aspect.values >= 45 & aspect.values < 135, 402, # East
-#                        ifelse(aspect.values >= 135 & aspect.values < 225, 403, # West
-#                        ifelse(aspect.values >= 225 & aspect.values < 315, 404, 0))))) #South (0 = -999)
+DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
+                       ifelse(aspect.values >= 0 & aspect.values < 135, 401, # North
+                       ifelse(aspect.values >= 45 & aspect.values < 135, 402, # East
+                       ifelse(aspect.values >= 135 & aspect.values < 225, 403, # West
+                       ifelse(aspect.values >= 225 & aspect.values < 315, 404, 999))))) #South (999 = something went wrong)
 
-DT$aspect.bin <- ifelse(aspect.values >= 270, 400, # north
-                 ifelse(aspect.values >= 0 & aspect.values < 90, 400, # north
-                 ifelse(aspect.values >= 90 & aspect.values < 270, 401, 999))) # south (999 = something went wrong)
+# DT$aspect.bin <- ifelse(aspect.values >= 270, 400, # north
+#                  ifelse(aspect.values >= 0 & aspect.values < 90, 400, # north
+#                  ifelse(aspect.values >= 90 & aspect.values < 270, 401, 999))) # south (999 = something went wrong)
 
 ## Determine slope bins
 
