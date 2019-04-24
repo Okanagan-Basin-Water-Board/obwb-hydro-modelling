@@ -172,9 +172,10 @@ global[,] <- lapply(global[, ], as.character)
 
 
 ## add annual runoff value to global table from annual.runoff master list
-avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == ws.interest, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
+## If multiple watersheds included, the mean annual runoff from all is included
+avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == include.watersheds, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
 
-global[global$DEFINITION == "AVG_ANNUAL_RUNOFF", "VALUE"] <- as.character(avg.annual.runoff)
+global[global$DEFINITION == "AVG_ANNUAL_RUNOFF", "VALUE"] <- as.character(mean(avg.annual.runoff))
 
 ##########################################################
 ## Channel Parameters Table:
@@ -428,9 +429,9 @@ if(!all(is.na(global.parameters$CAL_MAX))){
   global.parameters.calibrate <- global.parameters.calibrate[, c("PARAMETER", "DEFINITION", "CAL_VAR")]  
   
   ## add annual runoff value to global table from annual.runoff master list
-  avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == ws.interest, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
+  avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == include.watersheds, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
   
-  global.parameters.calibrate[global.parameters.calibrate$DEFINITION == "AVG_ANNUAL_RUNOFF", "CAL_VAR"] <- as.character(avg.annual.runoff)
+  global.parameters.calibrate[global.parameters.calibrate$DEFINITION == "AVG_ANNUAL_RUNOFF", "CAL_VAR"] <- as.character(mean(avg.annual.runoff))
 
   global.parameters.calibrate$PARAMETER <- paste(":", global.parameters.calibrate$PARAMETER, sep = "")
     
