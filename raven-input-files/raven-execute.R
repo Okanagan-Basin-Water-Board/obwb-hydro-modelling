@@ -7,6 +7,10 @@
 ## Mar-18-2019 LAB
 ################################################################################################################
 
+require(doParallel)
+
+cores <- detectCores() - 1
+
 ## Start timer
 ptm <- proc.time()
 
@@ -17,7 +21,7 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- "Jeremys-Run2"
+run.number <- "Apr-24-19"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- TRUE
@@ -78,7 +82,7 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/raven
 
 if("Ostrich" %in% list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))){print("Ostrich files already exist in this directory...")
 } else { 
-  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/OstrichMPI"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   file.copy(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   print(paste("Ostrich required softlinks created in ", ws.interest, "-", run.number, " directory...", sep = ''))
 }
@@ -130,7 +134,7 @@ if(run.ostrich == TRUE){
   
   print("Beginning Ostrich Calibration...")
   
-  system2("./Ostrich")
+  system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
   
 #####################################################################
 ##
@@ -181,30 +185,10 @@ for(i in 4:ncol(ws.storage)){
 
 dev.off()
 
-##########################################################################################################################################
+###########################################
 ##
-## Generate a hydrograph plot with all run iterations
-##
-##########################################################################################################################################
-# require(gtools)
-# 
-# if(run.ostrich == TRUE){
-# 
-# runs <- mixedsort(list.dirs(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), full.names = TRUE, recursive = FALSE))
-# 
-# hydrograph.files <- paste(runs, "/", paste(ws.interest, run.number, sep = "-"), "_Hydrographs.csv", sep = "")
-# 
-# for(i in 1:3){
-# 
-#   data <- read.csv(hydrograph.files[i])
-#   
-#   if(i == 1){plot(data$Whiteman_Creek7..observed...m3.s., type = "l")
-#               lines(data$Whiteman_Creek7..m3.s., col = 'red')} else {
-#                 
-#                 lines(data$Whiteman_Creek7..m3.s.)
-#               }
-# 
-# }
-# 
-# 
-# }
+## 
+
+# hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("processor_2/model/Whiteman-Apr-24-19_Hydrographs.csv", sep = "")))
+
+# ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("processor_2/model/Whiteman-Apr-24-19_WatershedStorage.csv", sep = "")))
