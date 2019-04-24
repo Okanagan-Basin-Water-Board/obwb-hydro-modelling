@@ -97,7 +97,7 @@ nHRU <- nrow(HRUs$HRUtable)
 
 
 weights <- matrix(nrow = nHRU, ncol = 3, data = c(HRU = HRUs$HRUtable$ID,
-                                                  Station = HRUs$HRUtable$ID,
+                                                  Station = seq(0, max(as.numeric(HRUs$HRUtable$ID) -1), 1),
                                                   weight = rep(1, nHRU)), byrow = F)
 
 RVToutFile <- file.path(output.location, paste(ws.interest, "-", run.number, ".rvt", sep = ""))
