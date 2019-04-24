@@ -72,7 +72,7 @@ for(i in 1:length(unique.HRU)){
   
   HRU.output[i, "ID"] <- unique.HRU[i]
   
-  HRU.output[i,"AREA"] <- round((length(index) * 19.80255838 * 19.80255838) / (1000*1000), 2)
+  HRU.output[i,"AREA"] <- round((length(index) * 19.80255838 * 19.80255838) / (1000*1000), 4)
   
   HRU.output[i, "ELEVATION"] <- round(median(HRU.table[index,"elevation"]), 2)
   
@@ -238,6 +238,12 @@ for(i in 1:length(watersheds)){
   corresponding.HRU.location <- which(HRU.output.clean[, "BASIN_ID"] %in% corresponding.ID)
   
   corresponding.HRUs.ID <- HRU.output.clean[corresponding.HRU.location, "ID"]
+  
+  ## Generate a sequence for splitting HRU group entries over multiple lines - 20 HRUs per line
+  split <- seq(20, length(corresponding.HRUs.ID), by= 20)
+  
+  ## Add "\n" to each 20th HRU - this forces a line break
+  corresponding.HRUs.ID[split] <- paste(corresponding.HRUs.ID[split], "\n", sep = "")
   
   cat(file = RVHoutFile, append = T, sep = "",
       paste(":HRUGroup", watersheds[i], sep = ' '), "\n",
