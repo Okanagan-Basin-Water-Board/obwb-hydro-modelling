@@ -102,19 +102,23 @@ cat(file = OSTInFile, append = F, sep = "",
     "#CreationDate  ",    paste(Sys.time()),"\n",
     "#---------------------------------------------------------", "\n",
     "#---------------------------------------------------------", "\n",
-    "# ---- Essential Variables -------------------------------", "\n"
+    "# ---- Essential Variables -------------------------------", "\n",
+    "\n"
 )
 
 write.table(essential.var, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
 
 cat(file = OSTInFile, append = T, sep = "",
+    "\n",
     "#---------------------------------------------------------", "\n",
-    "# ---- Useful Variables ----------------------------------", "\n"
+    "# ---- Useful Variables ----------------------------------", "\n",
+    "\n"
 )
 
 write.table(useful.var, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
 
 cat(file = OSTInFile, append = T, sep = "",
+    "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Define File Pairs ---------------------------------", "\n",
     "\n",
@@ -125,6 +129,13 @@ write.table(file.pairs, OSTInFile, append = T, col.names = F, row.names = F, sep
 
 cat(file = OSTInFile, append = T, sep = "",
     "EndFilePairs", "\n",
+    "\n",
+    "#---------------------------------------------------------", "\n",
+    "# ---- Define Extra Directories ---------------------------------", "\n",
+    "\n",
+    "BeginExtraDirs", "\n",
+    "model", "\n",
+    "EndExtraDirs", "\n",
     "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Define Parameters ---------------------------------", "\n",
@@ -215,7 +226,11 @@ OSTRAVENFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, 
 
 cat(file = OSTRAVENFile, append = F, sep = "",
     "set -e", "\n",
+    "\n",
+    paste("cp ", paste(ws.interest, "-",  run.number, ".rvp   ", sep = ""), paste("model/", paste(ws.interest, "-",  run.number, ".rvp", sep = ""), sep = ""), sep = ""), "\n",
+    paste("cd model"), "\n",
     paste("./raven_rev.exe", paste(ws.interest, run.number, sep = "-"), sep = " "), "\n",
+    "\n",
     "exit 0"
 )
 
