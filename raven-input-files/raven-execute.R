@@ -5,9 +5,11 @@
 ## This script generates all required input data files, and executes Raven for given watershed(s).
 ##
 ## Mar-18-2019 LAB
-################################################################################################################
+###################r#############################################################################################
 
 require(doParallel)
+require(tools)
+require(filesstrings)
 
 cores <- detectCores() - 1
 
@@ -15,16 +17,16 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Whiteman"
+ws.interest <- "Mission"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- "Apr-24-19"
+run.number <- "Apr-29-19"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
@@ -128,9 +130,26 @@ if(run.ostrich == TRUE){
 #####################################################################
 if(run.ostrich == TRUE){
   
+  ## set working directory to current model run directory
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   
+  ## execute RAVEN
   system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
+  
+  print("Moving model files to model sub-directory to begin Ostrich calibration...")
+  
+  ## Generate a list of all files in the current model directory
+  files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), full.names = TRUE)
+  
+  ## Remove rvp and tpl files from the list
+  move.files <- files[file_ext(files) != "rvp" & file_ext(files) != "tpl" & file_ext(files) != "sh" & file_ext(files) != "txt" & file_ext(files) != "" &
+                        files != file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))]
+  
+  ## create a "model" sub-directory
+  dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
+  
+  ## move all files except rvp and tpl files to "model" sub-directory
+  file.move(move.files, file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
   
   print("Beginning Ostrich Calibration...")
   
@@ -165,11 +184,23 @@ require(RavenR)
 
 hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
 
+## Identify which columns have obsrved data available
+subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
+
+## remove the "_obs" characters to allow successful extraction
+my.subs <- gsub("_obs", "", subs.obs)
+
+
 pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
 
 par(mfrow = c(1,1))
-x <- hyd.extract(subs = c("Whiteman_Creek7"), hydrographs)
-hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
+
+## Generate a plot for all subbasins which have observed data available
+for(i in 1:length(my.subs)){
+  x <- hyd.extract(subs = my.subs[i], hydrographs)
+  hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
+  title(my.subs[i])
+}
 
 
 
