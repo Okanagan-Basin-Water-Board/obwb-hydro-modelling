@@ -1,9 +1,10 @@
 VARIABLE,TYPE,DEFINITION
-Essential,ProgramType,DDS
+Essential,ProgramType,ParallelDDS
 Essential,ObjectiveFunction,GCOP
 Essential,ModelExecutable,./Ost-RAVEN.sh
+Useful,ModelSubDir,processor_
 Useful,PreserveModelOutput,no
-Useful,PreseverBestModel,./save_best.sh
+Useful,PreserveBestModel,./save_best.sh
 Useful,OstrichWarmStart,no
 Useful,TelescopingStrategy,linear
 Algorithm,PerturbationValue,0.2
