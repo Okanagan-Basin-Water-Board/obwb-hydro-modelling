@@ -76,7 +76,15 @@ soil.profiles <- soil.profiles[,-which(grepl("CLASS", names(soil.profiles)))]
 ##########################################################
 ## Vegetation Classes Table:
 # - identify unique vegetation types (i.e., unique rows) and exclude columns 1, 2, and 4 (i.e., value, Cover_type, and Bin_Value)
-vegetation.classes <- unique(vegetation.codes[,c(3, 5:ncol(vegetation.codes))])
+vegetation.classes <- unique(vegetation.codes[,-which(names(vegetation.codes) %in% c("Value","Cover_type", "Bin_Value"))])
+
+seasonal.LAI <- vegetation.classes[,which(names(vegetation.classes) %in% c("Bin_type", paste("LAI", month.abb, sep = "_")))]
+
+seasonal.HT <- vegetation.classes[,which(names(vegetation.classes) %in% c("Bin_type", paste("HT", month.abb, sep = "_")))]
+
+if(ncol(as.data.frame(seasonal.HT)) > 1 | ncol(as.data.frame(seasonal.LAI)) > 1){
+vegetation.classes <- vegetation.classes[,-(which(names(vegetation.classes) %in% c(paste("LAI", month.abb, sep = "_"), paste("HT", month.abb, sep = "_"))))]
+}
 
 ##########################################################
 ## Land Use Classes Table:
@@ -235,7 +243,36 @@ cat(file = RVPoutFile, append = T, sep = "",
     write.table(vegetation.classes, RVPoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F)
 
 cat(file = RVPoutFile, append = T, sep = "",
-    ":EndVegetationClasses", "\n",
+    ":EndVegetationClasses", "\n")
+
+if(ncol(as.data.frame(seasonal.LAI)) > 1){
+  cat(file = RVPoutFile, append = T, sep = "",
+      "#------Seaonal Canopy LAI Changes-------------------", "\n",
+      ":SeasonalCanopyLAI","\n"
+)
+  
+  write.table(seasonal.LAI, RVPoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+  
+  cat(file = RVPoutFile, append = T, sep = "",
+      ":EndSeasonalCanopyLAI", "\n",
+      "\n")
+}
+
+if(ncol(as.data.frame(seasonal.HT)) > 1){
+  cat(file = RVPoutFile, append = T, sep = "",
+      "#------Seaonal Canopy Height Changes-------------------", "\n",
+      ":SeasonalCanopyHeight","\n"
+  )
+  
+  write.table(seasonal.HT, RVPoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+  
+  cat(file = RVPoutFile, append = T, sep = "",
+      ":EndSeasonalCanopyHeight", "\n",
+      "\n")
+}
+
+
+cat(file = RVPoutFile, append = T, sep = "",
     "#---------------------------------------------------------", "\n",
     "# ---- Soil Profiles -------------------------------------", "\n",
     ":SoilProfiles", "\n",
