@@ -60,29 +60,41 @@ data.all <- inner_join(data, vegetation.codes, by = c("landcover" = "Value"))
 results.mean <- data.all %>% group_by(Bin_type) %>% summarise_at(.vars = c(lai.var.names),
                                                             .funs = c(mean="mean"), na.rm = T)
 
+## Calculate maximum LAI for all
 results.max <- data.all %>% group_by(Bin_type) %>% summarise_at(.vars = c(lai.var.names),
                                                                   .funs = c(max="max"), na.rm = T)
 
+## Identify the maximum annual value for each vegetation type
 max <- data.frame("Bin_type" = results.max$Bin_type, "MAX_LAI" = apply(results.max[,grepl("lai", names(results.max))], 1, max))
 
+## Identify vegetation bins which should not have variable LAI
 exclusions <- c("NO_DATA", "NON_VEGETATED", "SHADOW", "SNOW_ICE", "WATER")
 
+## Set maximum to zero for appropriate excluded vegetation bins
 max[max$Bin_type %in% exclusions, "MAX_LAI"] <- 0
 
 
 
+## Calculate fractional reduction for monthly LAI from maximum for each vegetation type
 LAI <- results.mean[,grepl("lai", names(results.mean))] / max$MAX_LAI
 
-is.na(LAI)<-sapply(LAI, is.infinite)
+## Add Bin_Type column to front of LAI dataframe
+LAI <- data.frame(Bin_Type = results.mean$Bin_type, LAI)
 
-LAI[is.na(LAI)]<-0
-
-LAI$Bin_type <- results.mean$Bin_type
-
-## Plot monthly LAI across different bin types
-require(reshape)
-require(ggplot2)
+## Set all exclusions to 0
+LAI[LAI$Bin_Type %in% exclusions, grepl("lai", names(LAI))] <- 0
 
 
-results.melted <- melt(as.data.frame(results.mean, id.vars = "Bin_type"))
-ggplot(results.melted, aes(x = variable, y = value)) + geom_line(aes(color = Bin_type, group = Bin_type))
+write.csv(max, "/var/obwb-hydro-modelling/input-data/processed/spatial/lai/max-lai.csv", row.names = FALSE)
+
+write.csv(LAI, "/var/obwb-hydro-modelling/input-data/processed/spatial/lai/seasonal-lai.csv", row.names = FALSE)
+
+
+
+# ## Plot monthly LAI across different bin types
+# require(reshape)
+# require(ggplot2)
+# 
+# 
+# results.melted <- melt(as.data.frame(results.mean, id.vars = "Bin_type"))
+# ggplot(results.melted, aes(x = variable, y = value)) + geom_line(aes(color = Bin_type, group = Bin_type))
