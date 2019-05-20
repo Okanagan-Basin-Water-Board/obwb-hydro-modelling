@@ -29,7 +29,7 @@ rm(DT, DT.revert)
 
 #################################################3
 ##
-## Adda "vegetation" column to allow breakdown of vegetation types. This will be determined from "value" of landcover dataset
+## Add a "vegetation" column to allow breakdown of vegetation types. This will be determined from "value" of landcover dataset
 ##
 #################################################3
 
@@ -110,7 +110,8 @@ print("HRU table built")
 ##
 ###########################################################################
 
-soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
+# soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
+soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-attributes.csv")
 
 aquifer.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/aquifer_codes.csv")
 
@@ -120,7 +121,8 @@ vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter
 
 for(i in 1:nrow(HRU.output)){
 
-  HRU.output[i, "SOIL_PROFILE"] <- ifelse(is.na(HRU.output[i, "SOIL_PROFILE"]), "[NONE]", as.character(soil.codes$PM1_1)[HRU.output[i,"SOIL_PROFILE"] == soil.codes$Value])
+  # HRU.output[i, "SOIL_PROFILE"] <- ifelse(is.na(HRU.output[i, "SOIL_PROFILE"]), "[NONE]", as.character(soil.codes$PM1_1)[HRU.output[i,"SOIL_PROFILE"] == soil.codes$Value])
+  HRU.output[i, "SOIL_PROFILE"] <- ifelse(is.na(HRU.output[i, "SOIL_PROFILE"]), "[NONE]", as.character(soil.codes$soil_type)[HRU.output[i,"SOIL_PROFILE"] == soil.codes$Value])
   
   HRU.output[i, "AQUIFER_PROFILE"] <- ifelse(is.na(HRU.output[i, "AQUIFER_PROFILE"]), "[NONE]", as.character(aquifer.codes$Aquifer_ty)[HRU.output[i,"AQUIFER_PROFILE"] == aquifer.codes$Value])
   
