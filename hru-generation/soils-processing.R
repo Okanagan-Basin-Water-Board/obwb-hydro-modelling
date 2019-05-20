@@ -5,6 +5,8 @@
 ##
 #######################################################################################################################################
 
+source("/var/obwb-hydro-modelling/src/functions.R")
+
 library(sf)
 library(plyr)
 
@@ -27,6 +29,7 @@ ok.soils.layers <- soils.layers[soils.layers$Soil_Symbol %in% ok.soils,]
 ok.soils.layers$TSAND[ok.soils.layers$TSAND == -9] <- 0
 ok.soils.layers$TSILT[ok.soils.layers$TSILT == -9] <- 0
 ok.soils.layers$TCLAY[ok.soils.layers$TCLAY == -9] <- 0
+ok.soils.layers$KSAT[ok.soils.layers$KSAT == -9] <- 0
 
 
 ## Specify which horizons should be included in the thickness calculations
@@ -150,13 +153,13 @@ for(i in 1:length(ok.soils)){
   
 }
 
-length(unique(output$soil_type))
+print(paste("There are", length(unique(output$soil_type)), "unique soil types identified"))
 
 ##########################################################################
 ## Address custom soil types
 
 
-output[output$Soil_Symbol == "BCZZZ~~~~~N", "soil_type"] <- "OPEN_WATER" # OPEN WATER
+output[output$Soil_Symbol == "BCZZZ~~~~~N", "soil_type"] <- "LAKE" # OPEN WATER
 
 output[output$Soil_Symbol == "BCUUU~~~~~N", "soil_type"] <- "URBAN" ## Unclassified Urban
 
@@ -166,7 +169,7 @@ output[output$Soil_Symbol == "BC$DK~~~~~N", "soil_type"] <- "DIKE" ## Dike
 
 output[output$Soil_Symbol == "BC$CF~~~~~N", "soil_type"] <- "CUT_FILL" ## Cut and Fill
 
-output[output$Soil_Symbol == "BC$BR~~~~~N" | output$Soil_Symbol == "BC$UR~~~~~N" | output$Soil_Symbol == "BC$AR~~~~~N", "soil_type"] <- "BEDROCK" ## Bedrock Basic; Undifferentiated Bedrock; Bedrock Acidic
+output[output$Soil_Symbol == "BC$BR~~~~~N" | output$Soil_Symbol == "BC$UR~~~~~N" | output$Soil_Symbol == "BC$AR~~~~~N", "soil_type"] <- "ROCK" ## Bedrock Basic; Undifferentiated Bedrock; Bedrock Acidic
 
 output[output$Soil_Symbol == "BC$MA~~~~~N", "soil_type"] <- "MARL" ## MARL
 
@@ -175,8 +178,8 @@ output[output$Soil_Symbol == "BCWGL~~~~~N" | output$Soil_Symbol == "BCDKLca~~~N"
 
 
 
-
-# write.csv(output, "C:/Users/birdl/Desktop/soils-output.csv")
+## Write out master soils CSV for remapping soils tif. This must be imported to ArcGIS, and a raster generated using the new soil_type parameters
+write.csv(output, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soils-output.csv")
 
 ####################################################################################################################################################
 ####################################################################################################################################################
@@ -234,3 +237,97 @@ for(i in 1:length(soil_type)){
 }
 
 results[is.na(results)] <- 0
+
+write.csv(results, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soils-parameters.csv")
+
+#########################################################################################################
+##
+## Overwrite custom soil types
+##
+#########################################################################################################
+
+## Remove the rows for "special cases" (i.e., Lake, Rock, Wetland, Glacier)
+special.cases <- c("LAKE", "ROCK")
+
+results <- results[!grepl(paste(special.cases, collapse = "|"), results$soil_type),]
+
+## Create individual vectors for special cases, as needed by RAVEN (i.e., lake = 0 horizons; rock = zero horizons)
+lake <- as.vector(c("LAKE", 0))
+
+rock <- as.vector(c("ROCK", 0))
+
+
+#########################################################################################################
+##
+## Generate the required data structure for Raven soil parameters tables
+##
+#########################################################################################################
+require(tidyr)
+
+## Create unique soil class names for each soil layer
+results$soil_class_name <- paste(results$soil_type, results$model.horizon, sep = "_")
+
+###################################
+##
+## Generate the SoilProfiles Table
+##
+###################################
+
+## Isolate the required columns
+profiles <- results[,c("soil_type", "soil_class_name", "mean_thickness")]
+
+## Indentify all unique soil types
+soil_type <- unique(profiles$soil_type)
+
+## Create empty recipient for soil profiles information
+soil_profiles <- matrix(NA, nrow = 0, ncol = 8)
+
+## Loop through each soil type and restructure data to required raven format. rbind it bottom of soil_profiles
+for(i in 1:length(soil_type)){
+  
+  tmp <- profiles[profiles$soil_type == soil_type[i],]
+  
+  tmp2 <- as.vector(t(tmp[2:3]))
+  
+  tmp3 <- c(soil_type[i], 3, tmp2)
+  
+  soil_profiles <- rbind(soil_profiles, tmp3)
+  
+}
+
+## Add special cases to the bottom of the table - NA's are places as filler where required.
+lake <- c(lake, rep(NA, ncol(soil_profiles) - length(lake)))
+
+rock <- c(rock, rep(NA, ncol(soil_profiles) - length(rock)))
+
+soil_profiles <- do.call("rbind", list(soil_profiles, lake, rock))
+
+
+## Write soil_profiles to csv to be read-in to rvp-filegenertor.R. The format is as required by Raven
+write.csv(soil_profiles, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table.csv",
+          na = "", row.names = FALSE)
+
+
+###################################
+##
+## Generate the SoilClasses Table
+##
+###################################
+
+## Isolate the required columns
+classes <- results[,c("soil_class_name", "mean_sand", "mean_clay", "mean_silt")]
+
+## Remove the rows that are all zeros - no information is available for these
+classes <- classes[!rowSums(classes[,c("mean_sand", "mean_clay", "mean_silt")]) == 0,]
+
+## Redistribute values which do not sum exactly to 100%
+for(i in 1:nrow(classes)){
+  
+  classes[i,c("mean_sand", "mean_clay", "mean_silt")] <- round_percent(classes[i,c("mean_sand", "mean_clay", "mean_silt")]) / 100
+  
+}
+
+
+## Write classes to csv to be read-in to rvp-filegenerator.R. The format is as required by Raven
+write.csv(classes, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-class-table.csv",
+          na = "", row.names = FALSE)
