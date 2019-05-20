@@ -44,7 +44,9 @@ dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/DEM_Fix2.tif", c
 
 landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/EOSD_alb_Snap.tif", crs = bc.albers)
 
-soils <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Soils_PM1.tif", crs = bc.albers)
+# soils <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Soils_PM1.tif", crs = bc.albers)
+
+soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soils.tif", crs = bc.albers)
 
 aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquifer.tif", crs = bc.albers)
 
