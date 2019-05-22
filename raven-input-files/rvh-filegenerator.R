@@ -111,7 +111,8 @@ print("HRU table built")
 ###########################################################################
 
 # soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
-soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-attributes.csv")
+soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-attributes.csv",
+                       col.names = c("OID", "Value", "Count", "soil_type"))
 
 aquifer.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/aquifer_codes.csv")
 
