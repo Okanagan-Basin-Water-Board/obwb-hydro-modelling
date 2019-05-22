@@ -9,6 +9,7 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 
 library(sf)
 library(plyr)
+library(stringr)
 
 ## Read in GIS information
 soils.layers <- st_read(dsn = "/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BC_Soil_Map.gdb", layer = "BCSLF_Soil_Layer_File")
@@ -19,33 +20,31 @@ soils.poly <- st_read(dsn = "/var/obwb-hydro-modelling/input-data/raw/spatial/so
 # soils.poly <- read.csv("P:/20188215/00_HYDRO_MODELING/Environmental_Sciences/04.00_Environmental_Assessments/02_Model Setup/Data/Raw/Updated soils/BC_Soil_Surveys_selection.csv")
 # soils.layers <- read.csv("P:/20188215/00_HYDRO_MODELING/Environmental_Sciences/04.00_Environmental_Assessments/02_Model Setup/Data/Raw/Updated soils/BCSLF_Soil_Layer_File.csv")
 
-## Isolate unique soil symbols within the Okanagan
-ok.soils <- as.character(unique(soils.poly$SOILSYM_1))
+## Isolate unique soil symbols within BC
+bc.soils <- as.character(unique(soils.poly$SOILSYM_1))
 
-## Isolate only the relevant soils layers within the Okanagan
-ok.soils.layers <- soils.layers[soils.layers$Soil_Symbol %in% ok.soils,]
+## Isolate only records with soil symbol mapped/attached
+bc.soils.layers <- soils.layers[soils.layers$Soil_Symbol %in% bc.soils,]
+
+## Redefine which soil symbols should be queried
+bc.soils <- as.character(unique(bc.soils.layers$Soil_Symbol))
 
 ## Replace -9 (i.e., NA) with 0 values so they're not included in totals
-ok.soils.layers$TSAND[ok.soils.layers$TSAND == -9] <- 0
-ok.soils.layers$TSILT[ok.soils.layers$TSILT == -9] <- 0
-ok.soils.layers$TCLAY[ok.soils.layers$TCLAY == -9] <- 0
-ok.soils.layers$KSAT[ok.soils.layers$KSAT == -9] <- 0
+bc.soils.layers$TSAND[bc.soils.layers$TSAND == -9] <- 0
+bc.soils.layers$TSILT[bc.soils.layers$TSILT == -9] <- 0
+bc.soils.layers$TCLAY[bc.soils.layers$TCLAY == -9] <- 0
+bc.soils.layers$KSAT[bc.soils.layers$KSAT == -9] <- 0
 
 
 ## Specify which horizons should be included in the thickness calculations
 horizons <- c("B", "BC", "AB", "BA", "A", "AC")
 
-
-
-## Redefine which soil symbols should be queried - there are 2 missing from the original list
-ok.soils <- as.character(unique(ok.soils.layers$Soil_Symbol))
-
 ## Create empty dataframe to bind results to
-output <- data.frame(matrix(NA, ncol = ncol(ok.soils.layers)+5, nrow = 0))
+output <- data.frame(matrix(NA, ncol = ncol(bc.soils.layers)+5, nrow = 0))
 
-for(i in 1:length(ok.soils)){
+for(i in 1:length(bc.soils)){
   
-  tmp <- ok.soils.layers[ok.soils.layers$Soil_Symbol == ok.soils[i],]
+  tmp <- bc.soils.layers[bc.soils.layers$Soil_Symbol == bc.soils[i],]
   
   tsand <- sum(tmp$TSAND)
   
@@ -123,7 +122,8 @@ for(i in 1:length(ok.soils)){
   if(total == 0){depth <- sum(tmp$HZN_THICK)
   } else {
     
-    thickness <- sum(tmp$HZN_THICK[which(tmp$HZN_MAS %in% horizons)])
+    ## sum the thickness of specified horizons. Note that str_trim is needed to trim false white space (i.e., random spaces) from the tmp object
+    thickness <- sum(tmp$HZN_THICK[which(str_trim(as.character(tmp$HZN_MAS), side = "both") %in% horizons)])
     
     if(thickness > 0 & thickness <= 75){depth <- "shallow"}
     if(thickness > 75 & thickness <= 150){depth <- "medium"}
@@ -186,9 +186,9 @@ write.csv(output, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/
 ####################################################################################################################################################
 
 
-# output$soil_type[is.na(output$soil_type)] <- "IGNORE"
-
 soil_type <- unique(output$soil_type)
+
+soil_type <- soil_type[!is.na(soil_type)]
 
 results <- data.frame(matrix(NA, ncol = 11, nrow = 0))
 
@@ -235,6 +235,9 @@ for(i in 1:length(soil_type)){
   results <- rbind(results, group)
   
 }
+
+
+results <- results[!is.na(results$soil_type),]
 
 results[is.na(results)] <- 0
 
@@ -318,11 +321,13 @@ write.csv(soil_profiles, "/var/obwb-hydro-modelling/input-data/processed/spatial
 classes <- results[,c("soil_class_name", "mean_sand", "mean_clay", "mean_silt")]
 
 ## Remove the rows that are all zeros - no information is available for these
-classes <- classes[!rowSums(classes[,c("mean_sand", "mean_clay", "mean_silt")]) == 0,]
+# classes <- classes[!rowSums(classes[,c("mean_sand", "mean_clay", "mean_silt")]) == 0,]
 
 ## Redistribute values which do not sum exactly to 100%
 for(i in 1:nrow(classes)){
   
+  # tryCatch(round_percent(classes[i,c("mean_sand", "mean_clay", "mean_silt")]))
+  # classes[i,c("mean_sand", "mean_clay", "mean_silt")] <- 
   classes[i,c("mean_sand", "mean_clay", "mean_silt")] <- round_percent(classes[i,c("mean_sand", "mean_clay", "mean_silt")]) / 100
   
 }
