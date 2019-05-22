@@ -12,13 +12,21 @@
 
 RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv")
 
-soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
+# soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
+
+soil.profiles <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table.csv")
+
+soil.classes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-class-table.csv")
 
 landcover.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/landcover_codes.csv")
 
 vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
 
 annual.runoff <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/annual_runoff.csv")
+
+seasonal.LAI <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/lai/seasonal-lai.csv")
+
+max.LAI <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/lai/max-lai.csv")
 
 ############################################################################################################################
 ##
@@ -30,59 +38,62 @@ annual.runoff <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-co
 ##
 ############################################################################################################################
 
-##########################################################
-## Soil Classes Table:
-# - at the moment, only the soil horizon name is included - this can be extended to include %SAND, #CLAY, %SILT, %ORGANIC if available
-
-## remove the "ALIAS_NAME" columns as this information is not needed in the *.rvp file
-soil.codes <- soil.codes[ , !grepl("ALIAS", names(soil.codes))]
-
-## remove the "LAKE" as 'NA' is not needed in soil horizons
-soil.codes.sub <- soil.codes[complete.cases(soil.codes),]
-
-## Exttract the names of soil layers
-soil.horizons <- soil.codes.sub[ , grepl("NAME", names(soil.codes.sub))]
-
-## Extract all columns which define soil class types
-soil.classes <- soil.codes.sub[ , grepl("CLASS", names(soil.codes.sub))]
-
-## unlist to make a character vector
-soil.horizons <- unique(unlist(soil.horizons))
-
-## Extract unique value from all columns (note that all values are the same in each column by way of data input structure)
-soil <- lapply(soil.classes, unique)
-
-## convert list to number vector
-soil <- do.call(rbind, soil)
-
-## make a matrix of soil classes
-soil.classes <- matrix(nrow = length(soil.horizons), ncol = 4, data = soil, byrow = TRUE)
-
-## Add soil names to soil.class matrix
-soil.classes <- cbind(as.character(soil.horizons), soil.classes)
-
-##########################################################
-## Soil Profiles Table:
-# Remove columns OID, Value, Count
-# Remove columns with "LAYER" in the column name
-# Remove columns with "CLASS" in the column name
-
-soil.profiles <- soil.codes[,-which(names(soil.codes) %in% c("OID", "Value", "Count"))]
-
-soil.profiles <- soil.profiles[,-which(grepl("LAYER", names(soil.profiles)))]
-
-soil.profiles <- soil.profiles[,-which(grepl("CLASS", names(soil.profiles)))]
+# ##########################################################
+# ## Soil Classes Table:
+# # - at the moment, only the soil horizon name is included - this can be extended to include %SAND, #CLAY, %SILT, %ORGANIC if available
+# 
+# ## remove the "ALIAS_NAME" columns as this information is not needed in the *.rvp file
+# soil.codes <- soil.codes[ , !grepl("ALIAS", names(soil.codes))]
+# 
+# ## remove the "LAKE" as 'NA' is not needed in soil horizons
+# soil.codes.sub <- soil.codes[complete.cases(soil.codes),]
+# 
+# ## Exttract the names of soil layers
+# soil.horizons <- soil.codes.sub[ , grepl("NAME", names(soil.codes.sub))]
+# 
+# ## Extract all columns which define soil class types
+# soil.classes <- soil.codes.sub[ , grepl("CLASS", names(soil.codes.sub))]
+# 
+# ## unlist to make a character vector
+# soil.horizons <- unique(unlist(soil.horizons))
+# 
+# ## Extract unique value from all columns (note that all values are the same in each column by way of data input structure)
+# soil <- lapply(soil.classes, unique)
+# 
+# ## convert list to number vector
+# soil <- do.call(rbind, soil)
+# 
+# ## make a matrix of soil classes
+# soil.classes <- matrix(nrow = length(soil.horizons), ncol = 4, data = soil, byrow = TRUE)
+# 
+# ## Add soil names to soil.class matrix
+# soil.classes <- cbind(as.character(soil.horizons), soil.classes)
+# 
+# ##########################################################
+# ## Soil Profiles Table:
+# # Remove columns OID, Value, Count
+# # Remove columns with "LAYER" in the column name
+# # Remove columns with "CLASS" in the column name
+# 
+# soil.profiles <- soil.codes[,-which(names(soil.codes) %in% c("OID", "Value", "Count"))]
+# 
+# soil.profiles <- soil.profiles[,-which(grepl("LAYER", names(soil.profiles)))]
+# 
+# soil.profiles <- soil.profiles[,-which(grepl("CLASS", names(soil.profiles)))]
 
 ##########################################################
 ## Vegetation Classes Table:
 # - identify unique vegetation types (i.e., unique rows) and exclude columns 1, 2, and 4 (i.e., value, Cover_type, and Bin_Value)
 vegetation.classes <- unique(vegetation.codes[,-which(names(vegetation.codes) %in% c("Value","Cover_type", "Bin_Value"))])
 
-seasonal.LAI <- vegetation.classes[,which(names(vegetation.classes) %in% c("Bin_type", paste("LAI", month.abb, sep = "_")))]
+## Replace MAX_LAI with values from max.LAI dataframe
+vegetation.classes$MAX_LAI <- max.LAI[match(vegetation.classes$Bin_type, max.LAI$Bin_type), "MAX_LAI"]
+
+# seasonal.LAI <- vegetation.classes[,which(names(vegetation.classes) %in% c("Bin_type", paste("LAI", month.abb, sep = "_")))]
 
 seasonal.HT <- vegetation.classes[,which(names(vegetation.classes) %in% c("Bin_type", paste("HT", month.abb, sep = "_")))]
 
-if(ncol(as.data.frame(seasonal.HT)) > 1 | ncol(as.data.frame(seasonal.LAI)) > 1){
+if(ncol(as.data.frame(seasonal.HT)) > 1){
 vegetation.classes <- vegetation.classes[,-(which(names(vegetation.classes) %in% c(paste("LAI", month.abb, sep = "_"), paste("HT", month.abb, sep = "_"))))]
 }
 
@@ -617,3 +628,4 @@ cat(file = OstrichRVPTemplateFile, append = T, sep = "",
 
 
 } else {print("No Ostrich files are being generated for this model run...")}
+
