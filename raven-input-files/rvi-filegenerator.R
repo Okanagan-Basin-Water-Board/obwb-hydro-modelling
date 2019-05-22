@@ -12,7 +12,7 @@
 ##
 RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
 
-soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
+# soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
 
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
@@ -64,21 +64,21 @@ output <- RVI.template[RVI.template$GROUP == "OutputOptions", c("PARAMETER", "DE
 ## Generate Soil Layer Alias' Table
 
 
-soil.alias.names <- soil.codes[complete.cases(soil.codes),]
-
-soil.alias <- soil.alias.names[ , grepl("ALIAS", names(soil.alias.names) ) ]
-
-soil.alias <- unique(unlist(soil.alias))
-
-soil.layers <- soil.alias.names[ , grepl("LAYER", names(soil.alias.names) ) ]
-
-soil.layers <- unique(unlist(soil.layers))
-
-# soil.classes <- matrix(nrow = length(soil.horizons), ncol = 1, data = soil.horizons)
-
-soil.alias.table <- matrix(nrow = length(soil.alias), ncol = 3, data = c(alias = rep(":Alias", length(soil.alias)),
-                                                                        alias.name = paste(soil.alias),
-                                                                        soil.layer = paste(soil.layers)))
+# soil.alias.names <- soil.codes[complete.cases(soil.codes),]
+# 
+# soil.alias <- soil.alias.names[ , grepl("ALIAS", names(soil.alias.names) ) ]
+# 
+# soil.alias <- unique(unlist(soil.alias))
+# 
+# soil.layers <- soil.alias.names[ , grepl("LAYER", names(soil.alias.names) ) ]
+# 
+# soil.layers <- unique(unlist(soil.layers))
+# 
+# # soil.classes <- matrix(nrow = length(soil.horizons), ncol = 1, data = soil.horizons)
+# 
+# soil.alias.table <- matrix(nrow = length(soil.alias), ncol = 3, data = c(alias = rep(":Alias", length(soil.alias)),
+#                                                                         alias.name = paste(soil.alias),
+#                                                                         soil.layer = paste(soil.layers)))
 
 ############################################################################################################################
 ##
@@ -147,10 +147,13 @@ cat(file = RVIoutFile, append = T, sep = "",
       "\n",
       "#---------------------------------------------------------", "\n",
       "# ---- Soil Layer Alias Definitions ----------------------", "\n",
-      "\n"
+      "\n",
+    ":Alias TOP_SOIL SOIL[0]", "\n",
+    ":Alias INT_SOIL SOIL[1]", "\n",
+    ":Alias DEEP_SOIL SOIL[2]", "\n"
 )
   
-  write.table(soil.alias.table, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  # write.table(soil.alias.table, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
 
 
 cat(file = RVIoutFile, append = T, sep = "",
