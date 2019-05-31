@@ -16,6 +16,7 @@ library(rgdal)
 library(proj4)
 library(cloudml)
 
+source("/var/obwb-hydro-modelling/src/functions.R")
 
 ###########################################################################################
 ##
@@ -46,11 +47,11 @@ landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/EOSD_alb_S
 
 # soils <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Soils_PM1.tif", crs = bc.albers)
 
-soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soils.tif", crs = bc.albers)
+soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/Soil_type.tif", crs = bc.albers)
 
 aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquifer.tif", crs = bc.albers)
 
-subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster3.tif", crs = bc.albers)
+subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster2.tif", crs = bc.albers)
 
 
 
@@ -77,7 +78,7 @@ slope <- subset(slope.aspect, subset = 'slope')
 
 aspect <- subset(slope.aspect, subset = 'aspect')
 
-print("cropping shit to the Okanagan...")
+print("cropping extents to the Okanagan...")
 
 ## Crop all components to match model watersheds
 slope.ok <- mask(crop(slope, model.watersheds.shape), model.watersheds.shape)
@@ -229,6 +230,9 @@ DT.revert <- DT
 
 ## Assign cells with no aquifer information (i.e., under lakes) with 0 so that they're not removed
 DT[is.na(DT$aquifer), "aquifer"] <- 0
+
+## Assign the most common soil type to all cells with missing soils information
+DT[is.na(DT$soils), "soils"] <- getmode(DT[!is.na(DT$soils), "soils"])
 
 DT <- DT[complete.cases(DT),]
 
