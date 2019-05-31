@@ -111,7 +111,7 @@ print("HRU table built")
 ###########################################################################
 
 # soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
-soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-attributes.csv",
+soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil_attributes.csv",
                        col.names = c("OID", "Value", "Count", "soil_type"))
 
 aquifer.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/aquifer_codes.csv")
@@ -174,7 +174,7 @@ Subbasin.output[, 1] <- subbasin.codes$Subbasin_ID
 
 Subbasin.output[, 2] <- as.character(subbasin.codes$SubBasin_name)
 
-Subbasin.output[, 3] <- subbasin.codes$Downstream_ID
+Subbasin.output[, 3] <- as.character(subbasin.codes$Downstream_ID)
 
 Subbasin.output[, 4] <- "DEFAULT_TRAP"
 
