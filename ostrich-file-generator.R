@@ -47,7 +47,7 @@ RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-cod
 
 parameters <- RVP.template[!is.na(RVP.template$CAL_MIN), c("PARAMETER", "DEFINITION", "CAL_MIN", "CAL_MAX")]
 
-initial <- "extract"
+initial <- "random"
 
 tx.in <- "none"
 
@@ -57,7 +57,8 @@ tx.out <- "none"
 
 parameter.table <- matrix(NA, ncol = 7, nrow = length(parameters$DEFINITION))
 
-parameter.table[,1] <- paste("par", parameters$PARAMETER, parameters$DEFINITION, sep = "_")
+# parameter.table[,1] <- paste("par", parameters$PARAMETER, parameters$DEFINITION, sep = "_")
+parameter.table[,1] <- paste(parameters$DEFINITION, parameters$PARAMETER, sep = "_")
 
 parameter.table[,2] <- initial
 
