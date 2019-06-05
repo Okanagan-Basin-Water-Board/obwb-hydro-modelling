@@ -616,8 +616,8 @@ cat(file = OstrichRVPTemplateFile, append = F, sep = "",
     "# ---- Soil Classes --------------------------------------", "\n",
     
     ":SoilClasses","\n",
-    "     :Attributes,", "\n",
-    "     :Units,", "\n"
+    "     :Attributes,", "%SAND, %CLAY, %SILT, %ORGANIC", "\n",
+    "     :Units,", "none, none, none, none", "\n"
 )
 
 write.table(soil.classes, OstrichRVPTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F)
@@ -645,7 +645,36 @@ cat(file = OstrichRVPTemplateFile, append = T, sep = "",
 write.table(vegetation.classes, OstrichRVPTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F)
 
 cat(file = OstrichRVPTemplateFile, append = T, sep = "",
-    ":EndVegetationClasses", "\n",
+    ":EndVegetationClasses", "\n")
+
+if(ncol(as.data.frame(seasonal.LAI)) > 1){
+  cat(file = OstrichRVPTemplateFile, append = T, sep = "",
+      "#------Seaonal Canopy LAI Changes-------------------", "\n",
+      ":SeasonalCanopyLAI","\n"
+  )
+  
+  write.table(seasonal.LAI, OstrichRVPTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+  
+  cat(file = OstrichRVPTemplateFile, append = T, sep = "",
+      ":EndSeasonalCanopyLAI", "\n",
+      "\n")
+}
+
+if(ncol(as.data.frame(seasonal.HT)) > 1){
+  cat(file = OstrichRVPTemplateFile, append = T, sep = "",
+      "#------Seaonal Canopy Height Changes-------------------", "\n",
+      ":SeasonalCanopyHeight","\n"
+  )
+  
+  write.table(seasonal.HT, OstrichRVPTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+  
+  cat(file = OstrichRVPTemplateFile, append = T, sep = "",
+      ":EndSeasonalCanopyHeight", "\n",
+      "\n")
+}
+
+
+cat(file = OstrichRVPTemplateFile, append = T, sep = "",
     "#---------------------------------------------------------", "\n",
     "# ---- Soil Profiles -------------------------------------", "\n",
     ":SoilProfiles", "\n",
