@@ -98,6 +98,42 @@ vegetation.classes <- vegetation.classes[,-(which(names(vegetation.classes) %in%
 }
 
 ##########################################################
+## Vegetation Parameters List
+
+vegetation.parameters <- RVP.template[RVP.template$GROUP == "VegetationParameter", ]
+
+## convert all columns to character
+vegetation.parameters[,] <- lapply(vegetation.parameters[, ], as.character)
+
+vegetation.parameter.names <- unique(vegetation.parameters$PARAMETER)
+
+layers <- unique(vegetation.parameters$DEFINITION)
+
+vegetation.units <- rep(NA, length(vegetation.parameter.names))
+
+vegetation.parameter.table <- matrix(nrow = length(layers), ncol = length(vegetation.parameter.names) + 1, NA)
+
+
+
+for(i in 1:length(vegetation.parameter.names)){
+  
+  para <- vegetation.parameters[vegetation.parameters$PARAMETER == vegetation.parameter.names[i],]
+  
+  extract <- para[, c("DEFINITION", "VALUE")]
+  
+  if(i == 1){
+    
+    vegetation.parameter.table[,1:2] <- as.matrix(extract)
+    
+  } else { 
+    vegetation.parameter.table[,i+1] <- as.matrix(extract[,"VALUE"])
+  }
+  
+  vegetation.units[i] <- unique(para[,"UNITS"])
+  
+}
+
+##########################################################
 ## Land Use Classes Table:
 # - identify unique landuse types (i.e., unique rows) and exclude columns 1, 2, and 4 (i.e., value, Cover_type, and Bin_Value)
 
@@ -310,9 +346,20 @@ cat(file = RVPoutFile, append = T, sep = "",
 )
 
   write.table(landuse.parameter.table, RVPoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+  
+cat(file = RVPoutFile, append = T, sep = "",
+      ":EndLandUseParameterList", "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Vegetation Parameters -----------------------------------", "\n",
+      ":VegetationParameterList", "\n",
+      ":Parameters, ", paste(vegetation.parameter.names, collapse = ", "), "\n",
+      ":Units, ", paste(vegetation.units, collapse = ", "), "\n"
+)
+
+  write.table(vegetation.parameter.table, RVPoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
 
 cat(file = RVPoutFile, append = T, sep = "",
-    ":EndLandUseParameterList", "\n",
+    ":EndVegetationParameterList", "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Soil Parameters -----------------------------------", "\n",
     ":SoilParameterList", "\n",
@@ -369,7 +416,8 @@ if(!all(is.na(soil.parameters$CAL_MAX))){
     ## convert all columns to character
     soil.parameters.calibrate[,] <- lapply(soil.parameters.calibrate[, ], as.character)
     
-    soil.parameters.calibrate$CAL_VAR[which(!is.na(soil.parameters.calibrate$CAL_MAX))] <- paste("par", soil.parameters.calibrate$PARAMETER[which(!is.na(soil.parameters.calibrate$CAL_MAX))], soil.parameters.calibrate$DEFINITION[which(!is.na(soil.parameters.calibrate$CAL_MAX))], sep = "_")
+    # soil.parameters.calibrate$CAL_VAR[which(!is.na(soil.parameters.calibrate$CAL_MAX))] <- paste("par", soil.parameters.calibrate$PARAMETER[which(!is.na(soil.parameters.calibrate$CAL_MAX))], soil.parameters.calibrate$DEFINITION[which(!is.na(soil.parameters.calibrate$CAL_MAX))], sep = "_")
+    soil.parameters.calibrate$CAL_VAR[which(!is.na(soil.parameters.calibrate$CAL_MAX))] <- paste(soil.parameters.calibrate$DEFINITION[which(!is.na(soil.parameters.calibrate$CAL_MAX))], soil.parameters.calibrate$PARAMETER[which(!is.na(soil.parameters.calibrate$CAL_MAX))], sep = "_")
     
     soil.parameters.calibrate$CAL_VAR[which(is.na(soil.parameters.calibrate$CAL_MAX))] <- as.character(soil.parameters.calibrate$VALUE[which(is.na(soil.parameters.calibrate$CAL_MAX))])
     
@@ -420,7 +468,8 @@ if(!all(is.na(landuse.parameters$CAL_MAX))){
     ## convert all columns to character
     landuse.parameters.calibrate[,] <- lapply(landuse.parameters.calibrate[, ], as.character)
     
-    landuse.parameters.calibrate$CAL_VAR[which(!is.na(landuse.parameters.calibrate$CAL_MAX))] <- paste("par", landuse.parameters.calibrate$PARAMETER[which(!is.na(landuse.parameters.calibrate$CAL_MAX))], landuse.parameters.calibrate$DEFINITION[which(!is.na(landuse.parameters.calibrate$CAL_MAX))], sep = "_")
+    # landuse.parameters.calibrate$CAL_VAR[which(!is.na(landuse.parameters.calibrate$CAL_MAX))] <- paste("par", landuse.parameters.calibrate$PARAMETER[which(!is.na(landuse.parameters.calibrate$CAL_MAX))], landuse.parameters.calibrate$DEFINITION[which(!is.na(landuse.parameters.calibrate$CAL_MAX))], sep = "_")
+    landuse.parameters.calibrate$CAL_VAR[which(!is.na(landuse.parameters.calibrate$CAL_MAX))] <- paste(landuse.parameters.calibrate$DEFINITION[which(!is.na(landuse.parameters.calibrate$CAL_MAX))], landuse.parameters.calibrate$PARAMETER[which(!is.na(landuse.parameters.calibrate$CAL_MAX))], sep = "_")
     
     landuse.parameters.calibrate$CAL_VAR[which(is.na(landuse.parameters.calibrate$CAL_MAX))] <- as.character(landuse.parameters.calibrate$VALUE[which(is.na(landuse.parameters.calibrate$CAL_MAX))])
     
@@ -458,6 +507,58 @@ if(!all(is.na(landuse.parameters$CAL_MAX))){
   
   }
 
+  
+  ##########################################################
+  ## Vegetation Parameters List
+  
+  if(!all(is.na(vegetation.parameters$CAL_MAX))){
+    
+    vegetation.calibrate <- TRUE
+    
+    
+    vegetation.parameters.calibrate <- RVP.template[RVP.template$GROUP == "VegetationParameter", ]
+    
+    ## convert all columns to character
+    vegetation.parameters.calibrate[,] <- lapply(vegetation.parameters.calibrate[, ], as.character)
+    
+    # vegetation.parameters.calibrate$CAL_VAR[which(!is.na(vegetation.parameters.calibrate$CAL_MAX))] <- paste("par", vegetation.parameters.calibrate$PARAMETER[which(!is.na(vegetation.parameters.calibrate$CAL_MAX))], vegetation.parameters.calibrate$DEFINITION[which(!is.na(vegetation.parameters.calibrate$CAL_MAX))], sep = "_")
+    vegetation.parameters.calibrate$CAL_VAR[which(!is.na(vegetation.parameters.calibrate$CAL_MAX))] <- paste(vegetation.parameters.calibrate$DEFINITION[which(!is.na(vegetation.parameters.calibrate$CAL_MAX))], vegetation.parameters.calibrate$PARAMETER[which(!is.na(vegetation.parameters.calibrate$CAL_MAX))], sep = "_")
+    
+    vegetation.parameters.calibrate$CAL_VAR[which(is.na(vegetation.parameters.calibrate$CAL_MAX))] <- as.character(vegetation.parameters.calibrate$VALUE[which(is.na(vegetation.parameters.calibrate$CAL_MAX))])
+    
+    layers <- unique(vegetation.parameters.calibrate$DEFINITION)
+    
+    vegetation.parameter.table.calibrate <- matrix(nrow = length(layers), ncol = length(vegetation.parameter.names) + 1, NA)
+    
+    
+    
+    for(i in 1:length(vegetation.parameter.names)){
+      
+      para <- vegetation.parameters.calibrate[vegetation.parameters.calibrate$PARAMETER == vegetation.parameter.names[i],]
+      
+      extract <- para[, c("DEFINITION", "CAL_VAR")]
+      
+      if(i == 1){
+        
+        vegetation.parameter.table.calibrate[,1:2] <- as.matrix(extract)
+        
+      } else { 
+        vegetation.parameter.table.calibrate[,i+1] <- as.matrix(extract[,"CAL_VAR"])
+      }
+      
+      vegetation.units[i] <- unique(para[,"UNITS"])
+      
+    }
+    
+    print("One or more vegetation parameters will be included in the calibration...")
+    
+  } else {
+    
+    vegetation.calibrate <- FALSE
+    
+    print("No vegetation parameters will be included in the calibration...")
+    
+  }
 
 ##########################################################
 ## Global Parameters
@@ -470,7 +571,8 @@ if(!all(is.na(global.parameters$CAL_MAX))){
 
   global.parameters.calibrate <- global.parameters
   
-  global.parameters.calibrate$CAL_VAR[which(!is.na(global.parameters.calibrate$CAL_MAX))] <- paste("par", global.parameters.calibrate$PARAMETER[which(!is.na(global.parameters.calibrate$CAL_MAX))], global.parameters.calibrate$DEFINITION[which(!is.na(global.parameters.calibrate$CAL_MAX))], sep = "_")
+  # global.parameters.calibrate$CAL_VAR[which(!is.na(global.parameters.calibrate$CAL_MAX))] <- paste("par", global.parameters.calibrate$PARAMETER[which(!is.na(global.parameters.calibrate$CAL_MAX))], global.parameters.calibrate$DEFINITION[which(!is.na(global.parameters.calibrate$CAL_MAX))], sep = "_")
+  global.parameters.calibrate$CAL_VAR[which(!is.na(global.parameters.calibrate$CAL_MAX))] <- paste(global.parameters.calibrate$DEFINITION[which(!is.na(global.parameters.calibrate$CAL_MAX))], global.parameters.calibrate$PARAMETER[which(!is.na(global.parameters.calibrate$CAL_MAX))], sep = "_")
   
   global.parameters.calibrate$CAL_VAR[which(is.na(global.parameters.calibrate$CAL_MAX))] <- as.character(global.parameters.calibrate$VALUE[which(is.na(global.parameters.calibrate$CAL_MAX))])
 
@@ -583,9 +685,29 @@ if(landuse.calibrate == TRUE){
   
     write.table(landuse.parameter.table, OstrichRVPTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
   }
-  
+
 cat(file = OstrichRVPTemplateFile, append = T, sep = "",
     ":EndLandUseParameterList", "\n",
+    "#---------------------------------------------------------", "\n",
+    "# ---- Vegetation Parameters -----------------------------------", "\n",
+    ":VegetationParameterList", "\n",
+    ":Parameters, ", paste(vegetation.parameter.names, collapse = ", "), "\n",
+    ":Units, ", paste(vegetation.units, collapse = ", "), "\n"
+)
+
+if(vegetation.calibrate == TRUE){
+  
+  write.table(vegetation.parameter.table.calibrate, OstrichRVPTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+  
+} else {
+  
+  write.table(vegetation.parameter.table, OstrichRVPTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+}
+
+
+  
+cat(file = OstrichRVPTemplateFile, append = T, sep = "",
+    ":EndVegetationParameterList", "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Soil Parameters -----------------------------------", "\n",
     ":SoilParameterList", "\n",
