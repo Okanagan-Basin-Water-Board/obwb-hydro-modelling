@@ -416,6 +416,9 @@ if(!all(is.na(soil.parameters$CAL_MAX))){
     ## convert all columns to character
     soil.parameters.calibrate[,] <- lapply(soil.parameters.calibrate[, ], as.character)
     
+    ## Create an empty column called CAL_VAR
+    soil.parameters.calibrate$CAL_VAR <- NA
+    
     # soil.parameters.calibrate$CAL_VAR[which(!is.na(soil.parameters.calibrate$CAL_MAX))] <- paste("par", soil.parameters.calibrate$PARAMETER[which(!is.na(soil.parameters.calibrate$CAL_MAX))], soil.parameters.calibrate$DEFINITION[which(!is.na(soil.parameters.calibrate$CAL_MAX))], sep = "_")
     soil.parameters.calibrate$CAL_VAR[which(!is.na(soil.parameters.calibrate$CAL_MAX))] <- paste(soil.parameters.calibrate$DEFINITION[which(!is.na(soil.parameters.calibrate$CAL_MAX))], soil.parameters.calibrate$PARAMETER[which(!is.na(soil.parameters.calibrate$CAL_MAX))], sep = "_")
     
