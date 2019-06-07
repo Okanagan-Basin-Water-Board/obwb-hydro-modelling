@@ -213,8 +213,9 @@ for(i in 1:length(soil_type)){
   
   
   
-  ## Average out thickness of each model horizon, and sand, silt, clay percentages
-  thickness <- ddply(tmp2, .(model.horizon), summarize, mean_thickness = mean(HZN_THICK))
+  ## Average out thickness of each model horizon, and sand, silt, clay percentages.
+  ## Convert thickness from cm to m
+  thickness <- ddply(tmp2, .(model.horizon), summarize, mean_thickness = mean(HZN_THICK) / 100)
   
   sand <- ddply(tmp2, .(model.horizon), summarize, mean_sand = mean(TSAND))
   
