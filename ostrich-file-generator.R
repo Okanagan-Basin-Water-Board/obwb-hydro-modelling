@@ -75,7 +75,8 @@ parameter.table[,7] <- tx.out
 
 ### Create response variables table
 
-response.var.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
+# response.var.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
+response.var.file <- file.path("./model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 
 row <- 2
 
@@ -255,8 +256,10 @@ cat(file = SaveBestFile, append = F, sep = "",
     "mkdir best", "\n",
     "fi", "\n",
     "cp ", paste(ws.interest, "-", run.number, ".rvp  ", sep = ""), paste("best/", ws.interest, "-", run.number, ".rvp", sep = ""), "\n",
-    "cp ", paste(ws.interest, "-", run.number, "_Diagnostics.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""), "\n",
-    "cp ", paste(ws.interest, "-", run.number, "_Hydrographs.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Hydrographs.csv", sep = ""), "\n",
+    # "cp ", paste(ws.interest, "-", run.number, "_Diagnostics.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""), "\n",
+    # "cp ", paste(ws.interest, "-", run.number, "_Hydrographs.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Hydrographs.csv", sep = ""), "\n",
+    "cp ", paste("./model/", ws.interest, "-", run.number, "_Diagnostics.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""), "\n",
+    "cp ", paste("./model/", ws.interest, "-", run.number, "_Hydrographs.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Hydrographs.csv", sep = ""), "\n",
     
     "exit 0", "\n"
 )
