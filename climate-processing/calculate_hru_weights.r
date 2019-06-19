@@ -17,7 +17,7 @@ suppressMessages(library(R.utils))
 suppressMessages(library(utils))
 suppressMessages(library(raster))
 
-Remake.Data <- FALSE
+Remake.Data <- TRUE
 
 output.dir <- "/var/obwb-hydro-modelling/input-data/processed/climate"
 
