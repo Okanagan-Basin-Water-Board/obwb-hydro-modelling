@@ -53,6 +53,8 @@ aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquife
 
 subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster2.tif", crs = bc.albers)
 
+subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+
 
 
 okanagan.basin <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/FW_Atlas_OK_Basin.shp", crs = bc.albers)
@@ -148,7 +150,6 @@ DT <- data.table(
 ## Reassign aspect.values based on this new subset
 # aspect.values <- DT$aspect
 
-
 ###########################################################################################
 ##
 ## Generate bins to be used to determine HRUS
@@ -242,6 +243,22 @@ DT <- DT[complete.cases(DT),]
 # NOTE: Remove all cells with empty elevation data
 # DT <- DT[!is.na(DT$slope)]
 
+########################################
+##
+## Replace binned values for all locations which are lakes / reservoirs
+##
+########################################
+
+## Identify which subbasins are reservoirs
+reservoirs <- subbasin.codes[subbasin.codes$Res_Lake != "<Null>", "Subbasin_ID.."]
+
+## Assign ID of 999 to all rows which are within the reservoir / lake subbasins
+DT[DT$subbasin %in% reservoirs, ]$elevation.bin <- 999
+
+DT[DT$subbasin %in% reservoirs, ]$landcover.bin <- 999
+
+DT[DT$subbasin %in% reservoirs, ]$aspect.bin <- 999
+
 
 
 ########################################
@@ -256,6 +273,10 @@ DT$ID <- paste(DT$landcover.bin,
                DT$aspect.bin,
                DT$subbasin,
                sep = '')
+
+   
+    
+
 
 print(paste("There are", length(unique(DT$ID)), "unique HRUs within the model domain"))
 ########################################
@@ -366,7 +387,7 @@ print("Saving all spatial plots to file...")
 # ## Plot tidy ID
 pdf("/var/obwb-hydro-modelling/input-data/processed/spatial/HRU-output.pdf", height = 17, width = 11)
 
-ncolors=length(raw.ID)
+ncolors=length(unique.ID)
 colpalette<-rgb(runif(ncolors),runif(ncolors ),runif(ncolors ))
 
 plot(raw.r.ID, col = colpalette, main = "Raw HRUs")
@@ -413,6 +434,6 @@ rm(list = ls()[! ls() %in% c("DT", "DT.revert")])
 
 save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.RData")
 
-write.csv(DT, "/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.csv")
+# write.csv(DT, "/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.csv")
 
 print("Done!")
