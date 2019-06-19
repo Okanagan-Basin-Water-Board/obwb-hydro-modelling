@@ -120,6 +120,8 @@ landcover.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-
 
 vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
 
+subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+
 for(i in 1:nrow(HRU.output)){
 
   # HRU.output[i, "SOIL_PROFILE"] <- ifelse(is.na(HRU.output[i, "SOIL_PROFILE"]), "[NONE]", as.character(soil.codes$PM1_1)[HRU.output[i,"SOIL_PROFILE"] == soil.codes$Value])
@@ -144,6 +146,18 @@ HRU.output.clean <- HRU.output[!as.numeric(HRU.output[,"AREA"]) <= 0,]
 # 
 # ## re-assign IDs to HRUs to that all sub-basin HRUs are contiguous
 # HRU.output[,"ID"] <- 1:nrow(HRU.output)
+
+##################################################################################################
+##
+## Replace SOIL_PROFILE and VEG_CLASS with LAKE for HRUs which are Lakes / Reservoirs
+##
+##################################################################################################
+reservoirs <- as.character(subbasin.codes[subbasin.codes$Res_Lake != "<Null>", "Subbasin_ID.."])
+
+## Assign ID of 999 to all rows which are within the reservoir / lake subbasins
+HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "VEG_CLASS"] <- "LAKE"
+
+HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "SOIL_PROFILE"] <- "LAKE"
 
 ##################################################################################################
 ##
