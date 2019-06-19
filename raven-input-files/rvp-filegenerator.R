@@ -89,6 +89,9 @@ vegetation.classes <- unique(vegetation.codes[,-which(names(vegetation.codes) %i
 ## Replace MAX_LAI with values from max.LAI dataframe
 vegetation.classes$MAX_LAI <- max.LAI[match(vegetation.classes$Bin_type, max.LAI$Bin_type), "MAX_LAI"]
 
+## Replace missing MAX_LAI values with 0
+vegetation.classes[is.na(vegetation.classes$MAX_LAI), "MAX_LAI"] <- 0
+
 # seasonal.LAI <- vegetation.classes[,which(names(vegetation.classes) %in% c("Bin_type", paste("LAI", month.abb, sep = "_")))]
 
 seasonal.HT <- vegetation.classes[,which(names(vegetation.classes) %in% c("Bin_type", paste("HT", month.abb, sep = "_")))]
