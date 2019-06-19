@@ -23,10 +23,10 @@ ws.interest <- "Whiteman"
 include.watersheds <- ws.interest
 
 ## Specify a run number to associated with outputs
-run.number <- "June-18-Calibration"
+run.number <- "Reservoir-inclusion"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
@@ -114,6 +114,8 @@ if(recreate.rvh == TRUE){
         file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
         file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
         }
+
+source("/var/obwb-hydro-modelling/src/raven-input-files/reservoir-rvh-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvi-filegenerator.R")
 
