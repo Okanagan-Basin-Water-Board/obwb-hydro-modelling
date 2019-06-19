@@ -231,7 +231,8 @@ cat(file = OSTRAVENFile, append = F, sep = "",
     "\n",
     paste("cp ", paste(ws.interest, "-",  run.number, ".rvp   ", sep = ""), paste("model/", paste(ws.interest, "-",  run.number, ".rvp", sep = ""), sep = ""), sep = ""), "\n",
     paste("cd model"), "\n",
-    paste("./raven_rev.exe", paste(ws.interest, run.number, sep = "-"), sep = " "), "\n",
+    # paste("./raven_rev.exe", paste(ws.interest, run.number, sep = "-"), sep = " "), "\n",
+    paste("./Raven.exe", paste(ws.interest, run.number, sep = "-"), sep = " "), "\n",
     "\n",
     "exit 0"
 )
