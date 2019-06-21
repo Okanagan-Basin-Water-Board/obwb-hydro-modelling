@@ -20,7 +20,7 @@ algorithm.defs <- OST.template[OST.template$VARIABLE == "Algorithm", c("TYPE", "
 seed.var <- OST.template[OST.template$VARIABLE == "Seed", c("TYPE", "DEFINITION")]
 
 ### Determine File Pairs
-OST.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = ".tpl")
+OST.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = ".tpl", recursive = TRUE)
 
 if(length(OST.template.files >= 1)){
 
@@ -41,7 +41,17 @@ file.pairs[,1] <- OST.template.files
 
 file.pairs[,2] <- raven.files
 
-### Create Parameter Table
+###############################################################
+##
+## Generate Parameter Table
+##
+###############################################################
+
+##------------------------------------------------------------
+##
+## Generate parameters from RVP file
+##
+##------------------------------------------------------------
 
 RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv")
 
@@ -71,6 +81,45 @@ parameter.table[,5] <- tx.in
 parameter.table[,6] <- tx.ost
 
 parameter.table[,7] <- tx.out
+
+
+##------------------------------------------------------------
+##
+## Generate parameters from reservoir files (if applicable)
+##
+##------------------------------------------------------------
+
+if(length(reservoirs) >0){
+  
+  for(i in 1:length(reservoirs)){
+    
+    tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = reservoirs[i])
+    
+    calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", 'CAL_MIN', "CAL_MAX")])
+    
+    reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
+      
+    reservoir.parameter.table[,1] <- paste(reservoirs[i], calibration.parameter.table$PARAMETER, sep = "_")
+    
+    reservoir.parameter.table[,2] <- initial
+    
+    reservoir.parameter.table[,3] <- calibration.parameter.table$CAL_MIN
+    
+    reservoir.parameter.table[,4] <- calibration.parameter.table$CAL_MAX
+    
+    reservoir.parameter.table[,5] <- tx.in
+    
+    reservoir.parameter.table[,6] <- tx.ost
+    
+    reservoir.parameter.table[,7] <- tx.out
+    
+    
+    ## Append reservoir parameters to main parameter table
+    parameter.table <- rbind(parameter.table, reservoir.parameter.table)
+    
+  }
+  
+}
 
 
 ### Create response variables table
