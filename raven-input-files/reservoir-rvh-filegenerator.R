@@ -137,11 +137,10 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
           "#-------------------------------------------------------", "\n",
           "# Redirect to Reservoir Files", "\n",
           "\n",
-          ":RedirectToFile ", ReservoirRVHoutFile
+          ":RedirectToFile ", ReservoirRVHoutFile, "\n"
       )} else {
         cat(file = main.HRU.file, append = T, sep = "",
-            "\n",
-            ":RedirectToFile ", ReservoirRVHoutFile
+            ":RedirectToFile ", ReservoirRVHoutFile, "\n"
         ) 
       }
     
