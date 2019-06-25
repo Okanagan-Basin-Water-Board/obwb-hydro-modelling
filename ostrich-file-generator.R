@@ -19,27 +19,50 @@ algorithm.defs <- OST.template[OST.template$VARIABLE == "Algorithm", c("TYPE", "
 
 seed.var <- OST.template[OST.template$VARIABLE == "Seed", c("TYPE", "DEFINITION")]
 
-### Determine File Pairs
+
+##########################################################
+##
+## Determine File Pairs
+##
+##########################################################
+
+
+### Identify all *.tpl files
 OST.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = ".tpl", recursive = TRUE)
 
-if(length(OST.template.files >= 1)){
+## Create an empty matrix to house all file pairs
+file.pairs <- matrix(NA, nrow = length(OST.template.files), ncol = 2)
 
-raven.files <- gsub('.{4}$', '', OST.template.files)
-
-print(paste(length(OST.template.files), "Ostrich template file(s) found in specified directory..."))
-
-  } else {
+## Loop over *.tpl files and find the location of the partner
+for(i in 1:length(OST.template.files)){
   
-    print("No Ostrich template files found in specified directory ...")
+  Raven.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = gsub('.{4}$', '', strsplit(OST.template.files[i], "/")[[1]][2]), recursive = TRUE)
   
-  }
+  raven.files <- setdiff(Raven.template.files, OST.template.files)
+  
+  file.pairs[i,1] <- OST.template.files[i]
+  
+  file.pairs[i,2] <- raven.files
+
+}
+# if(length(OST.template.files >= 1)){
+# 
+# raven.files <- gsub('.{4}$', '', OST.template.files)
+# 
+# print(paste(length(OST.template.files), "Ostrich template file(s) found in specified directory..."))
+# 
+#   } else {
+#   
+#     print("No Ostrich template files found in specified directory ...")
+#   
+#   }
 
 
-file.pairs <- matrix(NA, nrow = length(raven.files), ncol = 2)
-
-file.pairs[,1] <- OST.template.files
-
-file.pairs[,2] <- raven.files
+# file.pairs <- matrix(NA, nrow = length(raven.files), ncol = 2)
+# 
+# file.pairs[,1] <- OST.template.files
+# 
+# file.pairs[,2] <- raven.files
 
 ###############################################################
 ##
