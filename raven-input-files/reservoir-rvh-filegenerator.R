@@ -22,7 +22,7 @@ subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-c
 subbasin.subset <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) == include.watersheds,]
 
 ## Identify all reservoirs/lakes within the watershed(s) of interest
-reservoirs <- unique(subbasin.subset$Res_Lake)
+reservoirs <- unique(subbasin.subset$Reservoir_name)
 
 ## Remove "<Null>"
 reservoirs <- as.character(reservoirs[!reservoirs %in% "<Null>"])
@@ -81,7 +81,7 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
     ##
     ##-----------------------------------------------------------------------------
     
-    SubBasinID <- subbasin.subset[subbasin.subset$Res_Lake == reservoirs[i], "Subbasin_ID.."]
+    SubBasinID <- subbasin.subset[subbasin.subset$Reservoir_name == reservoirs[i], "Subbasin_ID"]
     
     HRUID <- HRUs[HRUs$SBID == SubBasinID, "ID"]
     
@@ -115,7 +115,7 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
         ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
         "\n",
         ":VolumeStageRelation LOOKUP_TABLE", "\n",
-        npoints, "# number of points in curve", "\n"
+        npoints, " # number of points in curve", "\n"
     )
     
     write.table(StageStorage, ReservoirRVHoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
@@ -173,7 +173,7 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
       ##-----------------------------------------------------------------------------
       
       
-      OstrichReservoirRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh.tpl", sep = ""))
+      OstrichReservoirRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(reservoirs[i], ".rvh.tpl", sep = ""))
       
       cat(file=OstrichReservoirRVHTemplateFile, append=F, sep="",
           
