@@ -20,10 +20,10 @@ ptm <- proc.time()
 ws.interest <- "Testing"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
-include.watersheds <- "Whiteman"
+include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "Reservoir-inclusion"
+run.number <- "June-25-2019-Mission"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -39,10 +39,32 @@ calibration.start <- "2005-01-01"
 
 calibration.end <- "2010-12-31"
 
+
+#####################################################################
+##
+## Set-up directory (and sub-directories [if needed]) to store model input/output files
+##
+#####################################################################
+
 ## Create a directory within "Simulations" for the model input/output files to be stored
 dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), recursive = T)
 
+## If run.ostrich == TRUE, create required sub-directories to store templates and model files.
+if(run.ostrich == TRUE){
+  
+  ## create a "model" sub-directory
+  dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
+  
+  dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates"))
+  
+}
+
+#####################################################################
+##
 ## Create a README file with a summary of the run
+##
+#####################################################################
+
 file.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"))
 
 cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"), append = FALSE, sep = "",
@@ -73,7 +95,7 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
 ##
 ##  - Raven Executable
 ##
-##  - Ostrich executable and save_best.sh script
+##  - Ostrich executable (if required)
 #####################################################################
 
 file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.DRAFT.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
@@ -83,15 +105,12 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/cl
 # file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src.175/src/raven_rev.exe"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/Raven.exe"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 
-if("Ostrich" %in% list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))){print("Ostrich files already exist in this directory...")
-} else { 
+## If run.ostrich == TRUE, create Ostrich softlink in the model directory
+if(run.ostrich == TRUE){
   file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/OstrichMPI"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   # file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   # file.copy(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-  print(paste("Ostrich required softlinks created in ", ws.interest, "-", run.number, " directory...", sep = ''))
 }
-
-
 
 #####################################################################
 ##
@@ -146,23 +165,23 @@ if(run.ostrich == TRUE){
   ## Generate a list of all files in the current model directory
   files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), full.names = TRUE)
   
-  ## Remove rvp and tpl files from the list
-  move.files <- files[file_ext(files) != "rvp" & file_ext(files) != "tpl" & file_ext(files) != "sh" & file_ext(files) != "txt" & file_ext(files) != ""] 
+  ## Remove rvp file from the list
+  move.files <- files[file_ext(files) != "rvp" & file_ext(files) != "sh" & file_ext(files) != "txt" & file_ext(files) != ""] 
   # &
                         # files != file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))]
   
-  ## create a "model" sub-directory
-  dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
-  
-  ## move all files except rvp and tpl files to "model" sub-directory
+    ## move all files except rvp and tpl files to "model" sub-directory
   file.move(move.files, file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
+  
+  ## If reservoirs are included in the model, move the reservoirs folder into the model folder
+  if(dir.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))){
+    system2("mv", paste(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"), file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"), sep =" "))
+  }
   
   print("Beginning Ostrich Calibration...")
   
   system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ostrich"))
-  
-  
   
   
   #####################################################################
