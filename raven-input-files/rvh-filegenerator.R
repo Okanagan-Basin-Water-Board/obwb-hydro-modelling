@@ -140,6 +140,10 @@ for(i in 1:nrow(HRU.output)){
 
 # ## Remove HRUs with zero area.
 HRU.output.clean <- HRU.output[!as.numeric(HRU.output[,"AREA"]) <= 0,]
+
+## Replace "NA" soil profiles with most common soil profile
+HRU.output.clean[which(is.na(HRU.output.clean[,"SOIL_PROFILE"])), "SOIL_PROFILE"] <- as.character(soil.codes$soil_type[soil.codes$Value == getmode(HRU.table$soils)])
+
 # 
 # ## re-order the table so that all HRUs for each subbasin are next to each other
 # HRU.output <- HRU.output[order(HRU.output[,"BASIN_ID"]),]
@@ -152,7 +156,7 @@ HRU.output.clean <- HRU.output[!as.numeric(HRU.output[,"AREA"]) <= 0,]
 ## Replace SOIL_PROFILE and VEG_CLASS with LAKE for HRUs which are Lakes / Reservoirs
 ##
 ##################################################################################################
-reservoirs <- as.character(subbasin.codes[subbasin.codes$Res_Lake != "<Null>", "Subbasin_ID.."])
+reservoirs <- as.character(subbasin.codes[subbasin.codes$Reservoir_name != "<Null>", "Subbasin_ID"])
 
 ## Assign ID of 999 to all rows which are within the reservoir / lake subbasins
 HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "VEG_CLASS"] <- "LAKE"
