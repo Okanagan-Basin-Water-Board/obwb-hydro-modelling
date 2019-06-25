@@ -606,7 +606,7 @@ if(!all(is.na(global.parameters$CAL_MAX))){
 ##
 #############################################################################################
 
-OstrichRVPTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvp.tpl", sep = ""))
+OstrichRVPTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvp.tpl", sep = ""))
 
 
 cat(file = OstrichRVPTemplateFile, append = F, sep = "",
