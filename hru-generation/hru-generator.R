@@ -51,7 +51,7 @@ soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/So
 
 aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquifer.tif", crs = bc.albers)
 
-subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster2.tif", crs = bc.albers)
+subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster3.tif", crs = bc.albers)
 
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
@@ -250,7 +250,7 @@ DT <- DT[complete.cases(DT),]
 ########################################
 
 ## Identify which subbasins are reservoirs
-reservoirs <- subbasin.codes[subbasin.codes$Res_Lake != "<Null>", "Subbasin_ID.."]
+reservoirs <- subbasin.codes[subbasin.codes$Reservoir_name != "<Null>", "Subbasin_ID"]
 
 ## Assign ID of 999 to all rows which are within the reservoir / lake subbasins
 DT[DT$subbasin %in% reservoirs, ]$elevation.bin <- 999
