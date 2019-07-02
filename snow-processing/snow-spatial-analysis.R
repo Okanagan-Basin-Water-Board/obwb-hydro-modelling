@@ -47,6 +47,7 @@ snow.pillow.locations <- snow.pillow.locations[!is.na(snow.pillow.locations$HRU)
 snow.pillow.locations <- merge(subbasin.codes, snow.pillow.locations, by = "Subbasin_ID")
 
 
+## Write out condensed csv file which include the HRU and Subbasin_ID for relevant snow locations
 write.csv(snow.course.locations, "/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-course-locations-model-domain.csv")
 
 write.csv(snow.pillow.locations, "/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-pillow-locations-model-domain.csv")
