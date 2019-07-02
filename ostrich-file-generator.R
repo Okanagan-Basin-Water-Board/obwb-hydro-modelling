@@ -42,8 +42,9 @@ for(i in 1:length(OST.template.files)){
   
   file.pairs[i,1] <- OST.template.files[i]
   
-  file.pairs[i,2] <- raven.files
-
+  ## Because reservoirs subfolder is moved into model folder in parallel processing, add model/ path to file pairs, where appropriate
+  file.pairs[i,2] <- ifelse(sub("\\/.*", "", raven.files) == "reservoirs", paste("model/", raven.files, sep = ""), raven.files)
+    
 }
 # if(length(OST.template.files >= 1)){
 # 
@@ -122,7 +123,7 @@ if(length(reservoirs) >0){
     
     reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
       
-    reservoir.parameter.table[,1] <- paste(reservoirs[i], calibration.parameter.table$PARAMETER, sep = "_")
+    reservoir.parameter.table[,1] <- paste(gsub('([[:punct:]])|\\s+','_',reservoirs[i]), calibration.parameter.table$PARAMETER, sep = "_")
     
     reservoir.parameter.table[,2] <- initial
     
@@ -150,7 +151,7 @@ if(length(reservoirs) >0){
 # response.var.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 response.var.file <- file.path("./model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 
-row <- 2
+row <- 1
 
 col <- 3
 
