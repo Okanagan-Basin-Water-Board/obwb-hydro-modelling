@@ -198,7 +198,13 @@ Subbasin.output[, 4] <- "DEFAULT_TRAP"
 
 Subbasin.output[, 5] <- "_AUTO"
 
-Subbasin.output[, 6] <- 1
+## Assign zero reach length to those subbasins which are reservoirs
+Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Reservoir_name != "<Null>"], 5] <- 0
+
+Subbasin.output[, 6] <- 0
+
+## Flag all subbasins which have a WSC station associated with them to be gauged (1). All other subbasins are ungauged (0)
+Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Hydrometric_stn != "<Null>"], 6] <- 1
 
 
 ###########################################################################
