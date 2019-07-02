@@ -26,20 +26,36 @@ run.number <- run.number
 hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
 
 ## Read in the list of WSC stations required to be downloaded. This table must also include associated subbasins and watersheds
-download.list <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/WSC_download_list.csv")
+# download.list <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/WSC_download_list.csv")
+
+## Read in the RVI template and identify the start and end dates. WSC data is then only imported for this period. Start.date and end.date
+## are formatted as required by hy_daily_flows.
+RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
+
+start.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.template$PARAMETER == "StartDate", "DEFINITION"], format = "%m/%d/%Y")
+
+end.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.template$PARAMETER == "EndDate", "DEFINITION"], format = "%m/%d/%Y")
+
+
+
+## Extract corresponding WSC gauges from subbasin_codes.csv
+subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
 ## Specify the location RAVEN *.rvt files should be saved
 output.location <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"))
 
 ## Extract all WSC station numbers for use in hy_daily_flows to retrieve datasets for all
-station.no <- download.list[download.list$Watershed %in% paste(include.watersheds, "_Creek", sep = ''), "Station_No"]
+station.no <- subbasin.codes[subbasin.codes$GNIS_NAME %in% paste(include.watersheds, " Creek", sep = ''), "Hydrometric_stn"]
+
+## Remove "<NULL">
+station.no <- as.character(station.no[!station.no %in% "<Null>"])
 
 
 ## If there are no WSC stations within the ws.interest (i.e., station.no is zero), no redirects are written and the model will not be calibrated to WSC data
 if(length(station.no) > 0) {
 
 ## Retrieve all available data for all required stations and save in one large tibble.
-tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here)
+tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here, start_date = start.date, end_date = end.date)
 
 ## Execute my custom function which does the follows:
 # - A bunch of QA/QC tests written by Rob Chlumsky
@@ -51,7 +67,7 @@ tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here)
 
 
   ECflow.rvt.tidy.single.obs(ff = tmp,
-                         master = download.list,
+                         master = subbasin.codes,
                          dir = output.location,
                          include.watersheds = include.watersheds,
                          run.number = run.number,
