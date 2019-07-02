@@ -137,10 +137,10 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
           "#-------------------------------------------------------", "\n",
           "# Redirect to Reservoir Files", "\n",
           "\n",
-          ":RedirectToFile ", ReservoirRVHoutFile, "\n"
+          ":RedirectToFile ", paste("reservoirs/", reservoirs[i], ".rvh", sep = ""), "\n"
       )} else {
         cat(file = main.HRU.file, append = T, sep = "",
-            ":RedirectToFile ", ReservoirRVHoutFile, "\n"
+            ":RedirectToFile ", paste("reservoirs/", reservoirs[i], ".rvh", sep = ""), "\n"
         ) 
       }
     
@@ -164,7 +164,12 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
       
       calibration.parameter.table$CAL_VAR[which(!is.na(calibration.parameter.table$CAL_MAX))] <- paste(reservoirs[i], calibration.parameter.table$PARAMETER[which(!is.na(calibration.parameter.table$CAL_MAX))],sep = "_")
       
+      ## Replace any spaces with underscores - this is needed for lakes with names longer than one word
+      calibration.parameter.table$CAL_VAR[which(!is.na(calibration.parameter.table$CAL_MAX))] <- gsub('([[:punct:]])|\\s+','_',calibration.parameter.table$CAL_VAR[which(!is.na(calibration.parameter.table$CAL_MAX))])
+      
       calibration.parameter.table$CAL_VAR[which(is.na(calibration.parameter.table$CAL_MAX))] <- as.character(calibration.parameter.table$VALUE[which(is.na(calibration.parameter.table$CAL_MAX))])  
+      
+      
       
       ##-----------------------------------------------------------------------------
       ##
