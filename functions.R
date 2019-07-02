@@ -288,7 +288,7 @@ ECflow.rvt.tidy.single <- function(ff,master,dir,include.watersheds,run.number,p
 ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.number,calibration.start,calibration.end,prd=NULL,stnNames=NULL,write.redirect=F,flip.number=F) {
   
   # data checks
-  if (!(is.null(stnNames)) & (length(unique(master$SubID)) != length(stnNames))) {
+  if (!(is.null(stnNames)) & (length(unique(master$Subbasin_ID)) != length(stnNames))) {
     stop("Length of subIDs must be the same as stnNames.")
   }
   
@@ -339,7 +339,7 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
     
     dd.sub <- dd[which(dd$STATION_NUMBER %in% stations[j]),]
     
-    subID <- master$SubID[which(master$Station_No == stations[j])]
+    subID <- master$Subbasin_ID[which(master$Hydrometric_stn == stations[j])]
     
     # fix to handle multi-byte marker/byte order marker,
     #   appears if there is more than one station per file
