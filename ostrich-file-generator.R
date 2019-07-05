@@ -79,9 +79,10 @@ for(i in 1:length(OST.template.files)){
 
 RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv")
 
-parameters <- RVP.template[!is.na(RVP.template$CAL_MIN), c("PARAMETER", "DEFINITION", "CAL_MIN", "CAL_MAX")]
+parameters <- RVP.template[!is.na(RVP.template$CAL_MIN), c("PARAMETER", "DEFINITION", "VALUE", "CAL_MIN", "CAL_MAX")]
 
-initial <- "random"
+## Extract "Value" as the initial starting value for Ostrich. This matches the initial values in the *.rvp file and prevents having to use the "extract" function in Ostrich
+initial <- as.numeric(as.character(parameters$VALUE))
 
 tx.in <- "none"
 
@@ -119,9 +120,11 @@ if(length(reservoirs) >0){
     
     tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = reservoirs[i])
     
-    calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", 'CAL_MIN', "CAL_MAX")])
+    calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
     
     reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
+    
+    initial <- as.numeric(as.character(calibration.parameter.table$VALUE))
       
     reservoir.parameter.table[,1] <- paste(gsub('([[:punct:]])|\\s+','_',reservoirs[i]), calibration.parameter.table$PARAMETER, sep = "_")
     
