@@ -10,6 +10,7 @@
 require(doParallel)
 require(tools)
 require(filesstrings)
+require(mailR)
 
 cores <- detectCores() - 1
 
@@ -20,10 +21,10 @@ ptm <- proc.time()
 ws.interest <- "Testing"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
-include.watersheds <- "Mission"
+include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "June-25-2019-Mission"
+run.number <- "Aug-13-Whiteman"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -35,7 +36,7 @@ recreate.rvh <- FALSE
 include.water.demand <- FALSE
 
 ## Define the period of calibration
-calibration.start <- "2005-01-01"
+calibration.start <- "2000-01-01"
 
 calibration.end <- "2010-12-31"
 
@@ -142,7 +143,12 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvp-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
+source("/var/obwb-hydro-modelling/src/raven-input-files/snow-rvt-filegenerator.R")
+
 if(run.ostrich == TRUE){
+  
+  ## Add calibration-select here. It will then setup the response variables for things to be minimized.
+  
   source("/var/obwb-hydro-modelling/src/ostrich-file-generator.R")
 }
 
@@ -228,6 +234,23 @@ if(run.ostrich == TRUE){
   
   dev.off()
   
+  ## Send email to notify of completion
+  
+  send.mail(from = "birdl@ae.ca",
+            to =  "birdl@ae.ca",
+            subject = "Calibration Complete",
+            body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed."),
+            authenticate = TRUE,
+            smtp = list(host.name = "smtp.office365.com",
+                        port = 587,
+                        user.name = "birdl@ae.ca",
+                        passwd = "Summer2019",
+                        tls = TRUE),
+            attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model/", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")))
+  
+  ## Shutdown the VM.
+  system2("sudo", args = "shutdown -h now")
+  
 #####################################################################
 ##
 ## Run Raven executable with improved parameter values, or with base value is run.ostrich == FALSE
@@ -289,7 +312,14 @@ if(run.ostrich == TRUE){
   
   }
 
-## end timer
+  # HRU.file <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+  # 
+  # subbasinNetwork.plot(HRU.file$SBtable[sub("\\_.*", "", HRU.file$SBtable$Name) == include.watersheds, ], labeled = T)
+  # 
+  # plot(HRU.file$SBnetwork)
+
+  
+  ## end timer
 proc.time() - ptm
 
 
@@ -344,3 +374,7 @@ proc.time() - ptm
 # hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("processor_2/model/Whiteman-Apr-24-19_Hydrographs.csv", sep = "")))
 
 # ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("processor_2/model/Whiteman-Apr-24-19_WatershedStorage.csv", sep = "")))
+
+
+# reservoirs <- res.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+# res.plot(reservoirs$res$Mission_Creek219, zero.axis = F)
