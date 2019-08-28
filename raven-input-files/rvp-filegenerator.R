@@ -231,7 +231,7 @@ global[,] <- lapply(global[, ], as.character)
 
 ## add annual runoff value to global table from annual.runoff master list
 ## If multiple watersheds included, the mean annual runoff from all is included
-avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == include.watersheds, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
+avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED %in% include.watersheds, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
 
 global[global$DEFINITION == "AVG_ANNUAL_RUNOFF", "VALUE"] <- as.character(mean(avg.annual.runoff))
 
