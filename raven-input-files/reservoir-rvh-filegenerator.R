@@ -19,7 +19,7 @@ require(RavenR)
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
 ## Subset to isolate only the rows relevant to the watershed(s) of interest. gsub command removes the " Creek" from GNIS_NAME
-subbasin.subset <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) == include.watersheds,]
+subbasin.subset <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
 
 ## Identify all reservoirs/lakes within the watershed(s) of interest
 reservoirs <- unique(subbasin.subset$Reservoir_name)
