@@ -193,3 +193,259 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
   
   return(TRUE)
 }
+
+# function to plot model run results
+plot.results <- function(ws.interest, run.number, subbasin.subset) {
+  
+  ###############################
+  ##
+  ## Plot Modelled Streamflows
+  ##
+  ###############################
+  
+  ## Read-in modelled hydrographs
+  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  
+  ## Identify which columns have obsrved data available
+  subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
+  
+  if(length(subs.obs) >0){
+    
+    ## Remove NA
+    subs.obs <- subs.obs[!is.na(subs.obs)]
+    
+    ## remove the "_obs" characters to allow successful extraction
+    my.subs <- gsub("_obs", "", subs.obs)
+    
+    par(mfrow = c(1,1))
+    
+    ## Generate a plot for all subbasins which have observed data available
+    for(i in 1:length(my.subs)){
+      x <- hyd.extract(subs = my.subs[i], hydrographs)
+      hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
+      title(my.subs[i])
+    }
+    
+    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    
+    for(i in 1:length(apex.ID)){
+      
+      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      
+      x <- hyd.extract(subs = apex.sub, hydrographs)
+      
+      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+      title(paste("Mouth of Creek:", apex.sub))
+    }
+    
+  } else {
+    
+    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    
+    for(i in 1:length(apex.ID)){
+    
+      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      
+      x <- hyd.extract(subs = apex.sub, hydrographs)
+      
+      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+      title(paste("Mouth of Creek:", apex.sub))
+    }
+    
+  }
+  
+  ###############################
+  ##
+  ## Plot watershed storage components
+  ##
+  ###############################
+  
+  ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+  
+  par(mfrow = c(4, 1), mar= c(2,4,2,2))
+  
+  for(i in 6:ncol(ws.storage)){
+    
+    plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
+    
+  }
+  
+  ###############################
+  ##
+  ## Plot Model Forcings
+  ##
+  ###############################
+  
+  forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+  
+  forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
+  
+  par(mfrow = c(2, 1))
+  
+  par(mar = c(0,5,2.5,1))
+  plot(forcing$tiso, forcing$temp_daily_min..C., type = "l",
+       col = 'blue',
+       xlab = "",
+       xaxt = "n",
+       ylab = expression(paste("Daily Air Temperature (", ~degree~C, ")")),
+       ylim = c(-30, 50),
+       panel.first = abline(h = 0, lty = 3, col = 'grey'))
+  
+  lines(forcing$tiso, forcing$temp_daily_max..C., type = 'l', col = 'red')
+  
+  legend("topleft", legend = c("Minimum Daily Air Temperatue", "Maximum Daily Air Temperature"), lty = 1, col = c("blue", "red"), bty = 'n')
+  
+  
+  par(mar = c(2,5,0.5,1))
+  plot(forcing$tiso, forcing$rain..mm.d., type = 'h',
+       xlab = '',
+       ylab = "Daily Total Precipitation (mm)",
+       panel.first = abline(h = 0, lty = 3, col = 'grey'),
+       ylim = c(0, 65)
+  )
+  lines(forcing$tiso, forcing$snow..mm.d., col = 'lightblue', type = 'h')
+  
+  legend("topright", legend = c("Daily Total Rain", "Daily Total Snow"), col = c("black", "lightblue"), bty = 'n', lty = 1)
+  
+  ###############################
+  ##
+  ## Plot Subbasin Network
+  ##
+  ###############################
+  
+  # HRU.file <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+  # 
+  # subbasinNetwork.plot(HRU.file$SBtable[sub("\\_.*", "", HRU.file$SBtable$Name) == include.watersheds, ], labeled = T)
+  
+  
+}
+
+
+plot.calibration.results <- function(ws.interest, run.number, subbasin.sibset) {
+
+  ###############################
+  ##
+  ## Plot Modelled Streamflows
+  ##
+  ###############################
+
+  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  
+  ## Identify which columns have obsrved data available
+  subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
+  
+  if(length(subs.obs) >0){
+    
+    ## Remove NA
+    subs.obs <- subs.obs[!is.na(subs.obs)]
+    
+    ## remove the "_obs" characters to allow successful extraction
+    my.subs <- gsub("_obs", "", subs.obs)
+    
+    par(mfrow = c(1,1))
+    
+    ## Generate a plot for all subbasins which have observed data available
+    for(i in 1:length(my.subs)){
+      x <- hyd.extract(subs = my.subs[i], hydrographs)
+      hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
+      title(my.subs[i])
+    }
+    
+    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    
+    for(i in 1:length(apex.ID)){
+      
+      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      
+      x <- hyd.extract(subs = apex.sub, hydrographs)
+      
+      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+      title(paste("Mouth of Creek:", apex.sub))
+    }
+    
+  } else {
+    
+    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    
+    for(i in 1:length(apex.ID)){
+      
+      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      
+      x <- hyd.extract(subs = apex.sub, hydrographs)
+      
+      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+      title(paste("Mouth of Creek:", apex.sub))
+    }
+    
+    
+  }
+  
+  ###############################
+  ##
+  ## Plot watershed storage components
+  ##
+  ###############################
+  
+  ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+  
+  par(mfrow = c(4, 1), mar= c(2,4,2,2))
+  
+  for(i in 6:ncol(ws.storage)){
+    
+    plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
+    
+  }
+  
+  ###############################
+  ##
+  ## Plot Model Forcings
+  ##
+  ###############################
+  
+  forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+  
+  forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
+  
+  par(mfrow = c(2, 1))
+  
+  par(mar = c(0,5,2.5,1))
+  plot(forcing$tiso, forcing$temp_daily_min..C., type = "l",
+       col = 'blue',
+       xlab = "",
+       xaxt = "n",
+       ylab = expression(paste("Daily Air Temperature (", ~degree~C, ")")),
+       ylim = c(-30, 50),
+       panel.first = abline(h = 0, lty = 3, col = 'grey'))
+  
+  lines(forcing$tiso, forcing$temp_daily_max..C., type = 'l', col = 'red')
+  
+  legend("topleft", legend = c("Minimum Daily Air Temperatue", "Maximum Daily Air Temperature"), lty = 1, col = c("blue", "red"), bty = 'n')
+  
+  
+  par(mar = c(2,5,0.5,1))
+  plot(forcing$tiso, forcing$rain..mm.d., type = 'h',
+       xlab = '',
+       ylab = "Daily Total Precipitation (mm)",
+       panel.first = abline(h = 0, lty = 3, col = 'grey'),
+       ylim = c(0, 65)
+  )
+  lines(forcing$tiso, forcing$snow..mm.d., col = 'lightblue', type = 'h')
+  
+  legend("topright", legend = c("Daily Total Rain", "Daily Total Snow"), col = c("black", "lightblue"), bty = 'n', lty = 1)
+
+  ##############################
+  ##
+  ## Plot Subbasin Network
+  ##
+  ###############################
+  
+  # HRU.file <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+  # 
+  # subbasinNetwork.plot(HRU.file$SBtable[sub("\\_.*", "", HRU.file$SBtable$Name) == include.watersheds, ], labeled = T)
+  
+  
+}
