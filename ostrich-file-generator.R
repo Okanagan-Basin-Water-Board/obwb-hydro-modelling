@@ -148,13 +148,32 @@ if(length(reservoirs) >0){
   
 }
 
+#####################################
+## Create response variables table
+####################################
 
-### Create response variables table
+## Initiate user-input to select the station to calibrate to
+
+# 
+diag <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
+# 
+# 
+# available.stations <- unlist(lapply(strsplit(as.character(diag$filename), "_"), `[[`, 2))
+# available.stations <- unlist(lapply(strsplit(available.stations, ".rvt"), `[[`, 1))
+# 
+# question <- c("Which station with available observation records would you like to calibrate to?:", available.stations)
+# cat(question)
+# calibrate.to <- readLines(file("stdin"), n=1)
+
+# row <- which(diag$filename %like% calibration.stations)
+
+
 
 # response.var.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 response.var.file <- file.path("./model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 
-row <- 1
+# row <- 1
+row <- which(diag$filename %like% calibration.stations)
 
 col <- 3
 
