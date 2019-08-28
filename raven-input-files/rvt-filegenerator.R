@@ -36,13 +36,12 @@ start.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.templat
 
 end.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.template$PARAMETER == "EndDate", "DEFINITION"], format = "%m/%d/%Y")
 
+## Specify the location RAVEN *.rvt files should be saved
+output.location <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"))
 
 
 ## Extract corresponding WSC gauges from subbasin_codes.csv
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
-## Specify the location RAVEN *.rvt files should be saved
-output.location <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"))
 
 ## Extract all WSC station numbers for use in hy_daily_flows to retrieve datasets for all
 station.no <- subbasin.codes[subbasin.codes$GNIS_NAME %in% paste(include.watersheds, " Creek", sep = ''), "Hydrometric_stn"]
@@ -55,28 +54,45 @@ station.no <- as.character(station.no[!station.no %in% "<Null>"])
 if(length(station.no) > 0) {
 
 ## Retrieve all available data for all required stations and save in one large tibble.
-tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here, start_date = start.date, end_date = end.date)
+  # tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here, start_date = start.date, end_date = end.date)
 
-## Execute my custom function which does the follows:
-# - A bunch of QA/QC tests written by Rob Chlumsky
-# - Isolates all stations for each Watershed
-# - Creates ONE "WatershednName-RunNumber.rvt" file for the select watershed. This file contains the file names for individual 
-#   *.rvt files for each WSC gauge within the select watershed
-# - Creates INDIVIDUAL "subid_wscname.rvt" file for each WSC station and the associated subbasin.
-
-
-
-  ECflow.rvt.tidy.single.obs(ff = tmp,
-                         master = subbasin.codes,
-                         dir = output.location,
-                         include.watersheds = include.watersheds,
-                         run.number = run.number,
-                         calibration.start = calibration.start,
-                         calibration.end = calibration.end,
-                         write.redirect = T,
-                         flip.number = T)
   
-} else {print("No WSC stations are included for calibration...")
+  ## Add error handling for those stations which are not contained in the HYDAT database
+  tryCatch(
+    
+    ## Retrieve all available data for all required stations and save in one large tibble
+    {tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here, start_date = start.date, end_date = end.date)
+    
+    
+    # Identify the stations that are actually included - these allow calibration station to be specified.
+    stations.included <- unique(tmp$STATION_NUMBER)
+    
+    ## Execute my custom function which does the follows:
+    # - A bunch of QA/QC tests written by Rob Chlumsky
+    # - Isolates all stations for each Watershed
+    # - Creates ONE "WatershednName-RunNumber.rvt" file for the select watershed. This file contains the file names for individual 
+    #   *.rvt files for each WSC gauge within the select watershed
+    # - Creates INDIVIDUAL "subid_wscname.rvt" file for each WSC station and the associated subbasin.
+    ECflow.rvt.tidy.single.obs(ff = tmp,
+                               master = subbasin.codes,
+                               dir = output.location,
+                               include.watersheds = include.watersheds,
+                               run.number = run.number,
+                               calibration.start = calibration.start,
+                               calibration.end = calibration.end,
+                               write.redirect = T,
+                               flip.number = T)
+    },
+    
+    ## If this returns an error (most likely because the station(s) don't exist in the HYDAT database), return an error, but keep executing
+    error = function(e) {print(paste("WSC station:", station.no, "does not exist in the HYDAT database. No observed flows will be included in the model run."))
+    ## Create empty file so remaining commands can be appended.
+    RVToutFile <- file(file.path(output.location, paste(ws.interest, "-", run.number, ".rvt", sep = '')), open = "a+")
+    close(RVToutFile)}
+  
+    ) ## End of error handling
+
+} else {print(paste("No WSC stations exist within the", include.watersheds, "Creek watershed(s)..."))
   ## Create empty file so remaining commands can be appended.
   RVToutFile <- file(file.path(output.location, paste(ws.interest, "-", run.number, ".rvt", sep = '')), open = "a+")
   close(RVToutFile)
