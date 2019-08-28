@@ -206,6 +206,11 @@ Subbasin.output[, 6] <- 0
 ## Flag all subbasins which have a WSC station associated with them to be gauged (1). All other subbasins are ungauged (0)
 Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Hydrometric_stn != "<Null>"], 6] <- 1
 
+## Flag all subbasin are either: The Apex of the Fan (Reports_to_Fan == "A") OR are the mouth of the creek (Downstream_ID == -1)
+Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Reports_to_Fan == "A"], 6] <- 1
+
+Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Downstream_ID == -1], 6] <- 1
+
 
 ###########################################################################
 ##
