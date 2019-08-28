@@ -11,6 +11,7 @@ require(doParallel)
 require(tools)
 require(filesstrings)
 require(mailR)
+require(data.table)
 
 cores <- detectCores() - 1
 
@@ -24,7 +25,7 @@ ws.interest <- "Testing"
 include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Aug-13-Whiteman"
+run.number <- "Aug-28-Whiteman-WD"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -33,10 +34,10 @@ run.ostrich <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- FALSE
+include.water.demand <- TRUE
 
 ## Define the period of calibration
-calibration.start <- "2000-01-01"
+calibration.start <- "2005-01-01"
 
 calibration.end <- "2010-12-31"
 
@@ -52,12 +53,12 @@ dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
 
 ## If run.ostrich == TRUE, create required sub-directories to store templates and model files.
 if(run.ostrich == TRUE){
-  
+
   ## create a "model" sub-directory
   dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
-  
+
   dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates"))
-  
+
 }
 
 #####################################################################
@@ -68,8 +69,8 @@ if(run.ostrich == TRUE){
 
 file.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"))
 
-cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"), append = FALSE, sep = "",
-    
+cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"), append = F, sep = "",
+
       paste("- Run completed on ", Sys.time()), "\n",
       paste("- Run completed by ", Sys.getenv("LOGNAME")), "\n",
       if(recreate.rvh == FALSE){paste("- *.rvh file generated on ", file.info("/var/obwb-hydro-modelling/simulations/Master.rvh")$mtime, " was used for this model run")}
@@ -78,14 +79,23 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
     else {"- Ostrich was used for model calibration"}, "\n",
       if(include.water.demand == FALSE){"- Water demand data were not included in this model run"}
     else {"- Water demand data were included in this model run"}, "\n",
-      
+
       "- Run completed using climate data last modified as follows:", "\n",
       paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
       paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.DRAFT.nc")$mtime), "\n",
       paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
-      
-      paste("- Calibration was completed for the period", calibration.start, "to", calibration.end), "\n"
+
+      paste("- Calibration was completed for the period", calibration.start, "to", calibration.end), "\n",
+    "\n",
+    "-------------------- R OUTPUT --------------------",
+    "\n"
     )
+
+
+## Dump all R output to the same Read me file
+sink(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "README.txt"), append = T,
+     type = c("output", "message"),
+     split = T)
 
 #####################################################################
 ##
@@ -124,12 +134,12 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvc-filegenerator.R")
 ## Only recreate the rvh file if necessary. Otherwise "Master.rvh" is copied from parent /simulations directory
 if(recreate.rvh == TRUE){
   print("Regenerating master *.rvh file...")
-  
+
   source("/var/obwb-hydro-modelling/src/raven-input-files/rvh-filegenerator.R")
-  
+
   file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
-  
+
 } else {print("Existing rvh file is being used for this model run...")
         file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
         file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
@@ -145,19 +155,22 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/snow-rvt-filegenerator.R")
 
-if(run.ostrich == TRUE){
-  
-  ## Add calibration-select here. It will then setup the response variables for things to be minimized.
-  
-  source("/var/obwb-hydro-modelling/src/ostrich-file-generator.R")
-}
+# if(run.ostrich == TRUE){
+# 
+#   ## Add calibration-select here. It will then setup the response variables for things to be minimized.
+# 
+#   source("/var/obwb-hydro-modelling/src/ostrich-file-generator.R")
+# }
 
 #####################################################################
 ##
 ## Run Ostrich and/or Raven
 ##
 #####################################################################
-if(run.ostrich == TRUE){
+if(run.ostrich == TRUE & exists("stations.included") == TRUE){
+
+  ## Request user input on which WSC station the model should be calibrated to.
+  source("/var/obwb-hydro-modelling/src/calibration-select.R")
   
   ## set working directory to current model run directory
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
@@ -165,6 +178,9 @@ if(run.ostrich == TRUE){
   ## execute RAVEN
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
   system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'))
+  
+  ## Generate the Ostrich Input file
+  source("/var/obwb-hydro-modelling/src/ostrich-file-generator.R")
   
   print("Moving model files to model sub-directory to begin Ostrich calibration...")
   
@@ -192,45 +208,15 @@ if(run.ostrich == TRUE){
   
   #####################################################################
   ##
-  ## Plot simulated vs. Observed flows where observed flows exist
+  ## Plot a series of model results
   ##
   #####################################################################
   require(RavenR)
   
-  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model/", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  ## Generate a pdf of results
+  pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
   
-  ## Identify which columns have obsrved data available
-  subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
-  
-  ## Remove NA
-  subs.obs <- subs.obs[!is.na(subs.obs)]
-  
-  ## remove the "_obs" characters to allow successful extraction
-  my.subs <- gsub("_obs", "", subs.obs)
-  
-  
-  pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model/", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
-  
-  par(mfrow = c(1,1))
-  
-  ## Generate a plot for all subbasins which have observed data available
-  for(i in 1:length(my.subs)){
-    x <- hyd.extract(subs = my.subs[i], hydrographs)
-    hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
-    title(my.subs[i])
-  }
-  
-  
-  
-  ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model/", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
-  
-  par(mfrow = c(4, 1), mar= c(2,4,2,2))
-  
-  for(i in 4:ncol(ws.storage)){
-    
-    plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
-    
-  }
+  plot.calibration.results(ws.interest, run.number, subbasin.sibset)
   
   dev.off()
   
@@ -246,7 +232,7 @@ if(run.ostrich == TRUE){
                         user.name = "birdl@ae.ca",
                         passwd = "Summer2019",
                         tls = TRUE),
-            attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model/", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")))
+            attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")))
   
   ## Shutdown the VM.
   system2("sudo", args = "shutdown -h now")
@@ -259,6 +245,12 @@ if(run.ostrich == TRUE){
 
 } else {
   
+  if(run.ostrich == TRUE){
+    
+    print(paste("There are no WSC stations within the ", include.watersheds, " Creek watershed(s). No calibration is possible. One execution of Raven will be completed.", sep = ""))
+  
+  }
+  
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
@@ -268,108 +260,29 @@ if(run.ostrich == TRUE){
   
   #####################################################################
   ##
-  ## Plot simulated vs. Observed flows where observed flows exist
+  ## Plot a series of model results
   ##
   #####################################################################
   require(RavenR)
   
-  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
-  
-  ## Identify which columns have obsrved data available
-  subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
-  
-  ## Remove NA
-  subs.obs <- subs.obs[!is.na(subs.obs)]
-  
-  ## remove the "_obs" characters to allow successful extraction
-  my.subs <- gsub("_obs", "", subs.obs)
-  
-  
+  ## Generate a pdf of results
   pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
-  
-  par(mfrow = c(1,1))
-  
-  ## Generate a plot for all subbasins which have observed data available
-  for(i in 1:length(my.subs)){
-    x <- hyd.extract(subs = my.subs[i], hydrographs)
-    hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
-    title(my.subs[i])
-  }
-  
-  
-  
-  ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
-  
-  par(mfrow = c(4, 1), mar= c(2,4,2,2))
-  
-  for(i in 4:ncol(ws.storage)){
-    
-    plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
-    
-  }
+
+  plot.results(ws.interest, run.number, subbasin.subset)
   
   dev.off()
   
   }
 
-  # HRU.file <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
-  # 
-  # subbasinNetwork.plot(HRU.file$SBtable[sub("\\_.*", "", HRU.file$SBtable$Name) == include.watersheds, ], labeled = T)
-  # 
-  # plot(HRU.file$SBnetwork)
+  
 
   
   ## end timer
 proc.time() - ptm
 
+## Close sink() connection so no more output is written to file.
+sink()
 
-# #####################################################################
-# ##
-# ## Plot simulated vs. Observed flows where observed flows exist
-# ##
-# #####################################################################
-# require(RavenR)
-# 
-# hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
-# 
-# ## Identify which columns have obsrved data available
-# subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
-# 
-# ## Remove NA
-# subs.obs <- subs.obs[!is.na(subs.obs)]
-# 
-# ## remove the "_obs" characters to allow successful extraction
-# my.subs <- gsub("_obs", "", subs.obs)
-# 
-# 
-# pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
-# 
-# par(mfrow = c(1,1))
-# 
-# ## Generate a plot for all subbasins which have observed data available
-# for(i in 1:length(my.subs)){
-#   x <- hyd.extract(subs = my.subs[i], hydrographs)
-#   hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
-#   title(my.subs[i])
-# }
-# 
-# 
-# 
-# ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
-# 
-# par(mfrow = c(4, 1), mar= c(2,4,2,2))
-# 
-# for(i in 4:ncol(ws.storage)){
-#   
-#    plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
-#   
-# }
-# 
-# dev.off()
-
-###########################################
-##
-## 
 
 # hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("processor_2/model/Whiteman-Apr-24-19_Hydrographs.csv", sep = "")))
 
