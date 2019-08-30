@@ -59,71 +59,124 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
     
     parameters <- na.omit(tmp[ ,c("PARAMETER", "VALUE")])
     
-    ##-----------------------------------------------------------------------------
-    ##
-    ## Isolate the stage-storage curve for the given reservoir and identify the number of points
-    ##
-    ##-----------------------------------------------------------------------------
-    
-    ## Remove "Dead" Storage from the curve, but include zero storage
-    tmp2 <- tmp[tmp$Storage_Type == "Zero" | tmp$Storage_Type == "Live" | tmp$Storage_Type == "Potential", ]
-    
-    ## Convert volume to m3 as required by Raven
-    tmp2$Current_Storage_m3 <- tmp2$Current_Storage_dam3 * 1000
-    
-    StageStorage <- tmp2[ ,c("Stage_m_GSC", "Current_Storage_m3")]
-    
-    npoints <- nrow(StageStorage)
     
     ##-----------------------------------------------------------------------------
     ##
-    ## Extract the correspinding subbasin ID and HRU ID for the given reservoirs, as well as the lake area
+    ## Check if there is a stage-storage curve for the specified reservoir. If so, incude it, if not, add simple lake-like reservoir.
     ##
     ##-----------------------------------------------------------------------------
     
-    SubBasinID <- subbasin.subset[subbasin.subset$Reservoir_name == reservoirs[i], "Subbasin_ID"]
+    if("Current_Storage_dam3" %in% names(tmp)){
     
-    HRUID <- HRUs[HRUs$SBID == SubBasinID, "ID"]
+      ##-----------------------------------------------------------------------------
+      ##
+      ## Isolate the stage-storage curve for the given reservoir and identify the number of points
+      ##
+      ##-----------------------------------------------------------------------------
+      
+      ## Remove "Dead" Storage from the curve, but include zero storage
+      tmp2 <- tmp[tmp$Storage_Type == "Zero" | tmp$Storage_Type == "Live" | tmp$Storage_Type == "Potential", ]
+      
+      ## Convert volume to m3 as required by Raven
+      tmp2$Current_Storage_m3 <- tmp2$Current_Storage_dam3 * 1000
+      
+      StageStorage <- tmp2[ ,c("Stage_m_GSC", "Current_Storage_m3")]
+      
+      npoints <- nrow(StageStorage)
+      
+      ##-----------------------------------------------------------------------------
+      ##
+      ## Extract the correspinding subbasin ID and HRU ID for the given reservoirs, as well as the lake area
+      ##
+      ##-----------------------------------------------------------------------------
+      
+      SubBasinID <- subbasin.subset[subbasin.subset$Reservoir_name == reservoirs[i], "Subbasin_ID"]
+      
+      HRUID <- HRUs[HRUs$SBID == SubBasinID, "ID"]
+      
+      LakeArea <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000)
+      
+      ##-----------------------------------------------------------------------------
+      ##
+      ## Generate individual *.rvh files for all reservoirs within the model watershed
+      ##
+      ##-----------------------------------------------------------------------------
+      
+      ReservoirRVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
+      
+      cat(file=ReservoirRVHoutFile, append=F, sep="",
+          
+          "#########################################################################","\n",
+          "##", "\n",
+          "## Individual Reservoir RVH file. Redirected from Master.rvh file","\n",
+          ":Application       R","\n",
+          ":WrittenBy         Lawrence Bird","\n",
+          ":CreationDate  ",    paste(Sys.time()),"\n",
+          "#---------------------------------------------------------", "\n",
+          "\n",
+          ":Reservoir ", as.character(reservoirs[i]), "\n",
+          ":SubBasinID ", SubBasinID, "\n",
+          ":HRUID ", HRUID, "\n",
+          ":WeirCoefficient ", parameters$VALUE[parameters$PARAMETER == "WeirCoefficient"], "\n",
+          ":CrestWidth ", parameters$VALUE[parameters$PARAMETER == "CrestWidth"], "\n",
+          ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
+          ":LakeArea ", LakeArea, "\n",
+          ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
+          "\n",
+          ":VolumeStageRelation LOOKUP_TABLE", "\n",
+          npoints, " # number of points in curve", "\n"
+      )
+      
+      write.table(StageStorage, ReservoirRVHoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
+      
+      cat(file=ReservoirRVHoutFile, append=T, sep="",
+          ":EndVolumeStageRelation", "\n",
+          ":EndReservoir", "\n"
+      )
     
-    LakeArea <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000)
-    
-    ##-----------------------------------------------------------------------------
-    ##
-    ## Generate individual *.rvh files for all reservoirs within the model watershed
-    ##
-    ##-----------------------------------------------------------------------------
-    
-    ReservoirRVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
-    
-    cat(file=ReservoirRVHoutFile, append=F, sep="",
-        
-        "#########################################################################","\n",
-        "##", "\n",
-        "## Individual Reservoir RVH file. Redirected from Master.rvh file","\n",
-        ":Application       R","\n",
-        ":WrittenBy         Lawrence Bird","\n",
-        ":CreationDate  ",    paste(Sys.time()),"\n",
-        "#---------------------------------------------------------", "\n",
-        "\n",
-        ":Reservoir ", as.character(reservoirs[i]), "\n",
-        ":SubBasinID ", SubBasinID, "\n",
-        ":HRUID ", HRUID, "\n",
-        ":WeirCoefficient ", parameters$VALUE[parameters$PARAMETER == "WeirCoefficient"], "\n",
-        ":CrestWidth ", parameters$VALUE[parameters$PARAMETER == "CrestWidth"], "\n",
-        ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
-        ":LakeArea ", LakeArea, "\n",
-        ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
-        "\n",
-        ":VolumeStageRelation LOOKUP_TABLE", "\n",
-        npoints, " # number of points in curve", "\n"
-    )
-    
-    write.table(StageStorage, ReservoirRVHoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
-    
-    cat(file=ReservoirRVHoutFile, append=T, sep="",
-        ":EndVolumeStageRelation", "\n",
-        ":EndReservoir", "\n"
-    )
+    } else {
+      
+      ##-----------------------------------------------------------------------------
+      ##
+      ## Extract the correspinding subbasin ID and HRU ID for the given reservoirs, as well as the lake area
+      ##
+      ##-----------------------------------------------------------------------------
+      
+      SubBasinID <- subbasin.subset[subbasin.subset$Reservoir_name == reservoirs[i], "Subbasin_ID"]
+      
+      HRUID <- HRUs[HRUs$SBID == SubBasinID, "ID"]
+      
+      LakeArea <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000)
+
+      ##-----------------------------------------------------------------------------
+      ##
+      ## Generate individual *.rvh files for all reservoirs within the model watershed
+      ##
+      ##-----------------------------------------------------------------------------
+      
+      ReservoirRVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
+      
+      cat(file=ReservoirRVHoutFile, append=F, sep="",
+          
+          "#########################################################################","\n",
+          "##", "\n",
+          "## Individual Reservoir RVH file. Redirected from Master.rvh file","\n",
+          ":Application       R","\n",
+          ":WrittenBy         Lawrence Bird","\n",
+          ":CreationDate  ",    paste(Sys.time()),"\n",
+          "#---------------------------------------------------------", "\n",
+          "\n",
+          ":Reservoir ", as.character(reservoirs[i]), "\n",
+          ":SubBasinID ", SubBasinID, "\n",
+          ":HRUID ", HRUID, "\n",
+          ":WeirCoefficient ", parameters$VALUE[parameters$PARAMETER == "WeirCoefficient"], "\n",
+          ":CrestWidth ", parameters$VALUE[parameters$PARAMETER == "CrestWidth"], "\n",
+          ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
+          ":LakeArea ", LakeArea, "\n",
+          ":EndReservoir", "\n"
+          )
+      
+    }
     
     ##-----------------------------------------------------------------------------
     ##
@@ -177,38 +230,69 @@ if(length(reservoirs) <1){print(paste("No reservoirs included within the", inclu
       ##
       ##-----------------------------------------------------------------------------
       
-      
       OstrichReservoirRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(reservoirs[i], ".rvh.tpl", sep = ""))
       
-      cat(file=OstrichReservoirRVHTemplateFile, append=F, sep="",
+        ##-----------------------------------------------------------------------------
+        ##
+        ## Check if there is a stage-storage curve for the specified reservoir. If so, incude it, if not, add simple lake-like reservoir.
+        ##
+        ##-----------------------------------------------------------------------------
+      
+        if("Current_Storage_dam3" %in% names(tmp)){
+        
+          cat(file=OstrichReservoirRVHTemplateFile, append=F, sep="",
+              
+              "#########################################################################","\n",
+              "##", "\n",
+              "## Individual Ostrich Template Reservoir RVH file.","\n",
+              ":Application       R","\n",
+              ":WrittenBy         Lawrence Bird","\n",
+              ":CreationDate  ",    paste(Sys.time()),"\n",
+              "#---------------------------------------------------------", "\n",
+              "\n",
+              ":Reservoir ", as.character(reservoirs[i]), "\n",
+              ":SubBasinID ", SubBasinID, "\n",
+              ":HRUID ", HRUID, "\n",
+              ":WeirCoefficient ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "WeirCoefficient"], "\n",
+              ":CrestWidth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "CrestWidth"], "\n",
+              ":MaxDepth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "MaxDepth"], "\n",
+              ":LakeArea ", LakeArea, "\n",
+              ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
+              "\n",
+              ":VolumeStageRelation LOOKUP_TABLE", "\n",
+              npoints, " # number of points in curve", "\n"
+          )
           
-          "#########################################################################","\n",
-          "##", "\n",
-          "## Individual Reservoir RVH file. Redirected from Master.rvh file","\n",
-          ":Application       R","\n",
-          ":WrittenBy         Lawrence Bird","\n",
-          ":CreationDate  ",    paste(Sys.time()),"\n",
-          "#---------------------------------------------------------", "\n",
-          "\n",
-          ":Reservoir ", as.character(reservoirs[i]), "\n",
-          ":SubBasinID ", SubBasinID, "\n",
-          ":HRUID ", HRUID, "\n",
-          ":WeirCoefficient ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "WeirCoefficient"], "\n",
-          ":CrestWidth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "CrestWidth"], "\n",
-          ":MaxDepth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "MaxDepth"], "\n",
-          ":LakeArea ", LakeArea, "\n",
-          ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
-          "\n",
-          ":VolumeStageRelation LOOKUP_TABLE", "\n",
-          npoints, " # number of points in curve", "\n"
-      )
-      
-      write.table(StageStorage, OstrichReservoirRVHTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
-      
-      cat(file=OstrichReservoirRVHTemplateFile, append=T, sep="",
-          ":EndVolumeStageRelation", "\n",
-          ":EndReservoir", "\n"
-      )
+          write.table(StageStorage, OstrichReservoirRVHTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
+          
+          cat(file=OstrichReservoirRVHTemplateFile, append=T, sep="",
+              ":EndVolumeStageRelation", "\n",
+              ":EndReservoir", "\n"
+          )
+        
+        } else {
+          
+          cat(file=OstrichReservoirRVHTemplateFile, append=F, sep="",
+              
+              "#########################################################################","\n",
+              "##", "\n",
+              "## Individual Ostrich Template Reservoir RVH file.","\n",
+              ":Application       R","\n",
+              ":WrittenBy         Lawrence Bird","\n",
+              ":CreationDate  ",    paste(Sys.time()),"\n",
+              "#---------------------------------------------------------", "\n",
+              "\n",
+              ":Reservoir ", as.character(reservoirs[i]), "\n",
+              ":SubBasinID ", SubBasinID, "\n",
+              ":HRUID ", HRUID, "\n",
+              ":WeirCoefficient ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "WeirCoefficient"], "\n",
+              ":CrestWidth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "CrestWidth"], "\n",
+              ":MaxDepth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "MaxDepth"], "\n",
+              ":LakeArea ", LakeArea, "\n",
+              ":EndReservoir", "\n"
+          )
+          
+        }
       
       if(i == length(reservoirs)){print(paste(length(reservoirs), "required Ostrich template(s) generated..."))}
     } # End if statement for running Ostrich
