@@ -6,7 +6,7 @@
 ##
 ## Mar-18-2019 LAB
 #################################################################################################################
-
+#CHANGE
 require(doParallel)
 require(tools)
 require(filesstrings)
@@ -22,10 +22,11 @@ ptm <- proc.time()
 ws.interest <- "Testing"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
-include.watersheds <- "Whiteman"
+# include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
+include.watersheds <- c("Vernon", "Coldstream")
 
 ## Specify a run number to associated with outputs
-run.number <- "Aug-28-Whiteman-WD"
+run.number <- "Aug-30-Ver-Col"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -34,7 +35,7 @@ run.ostrich <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- TRUE
+include.water.demand <- FALSE
 
 ## Define the period of calibration
 calibration.start <- "2005-01-01"
@@ -216,7 +217,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## Generate a pdf of results
   pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
   
-  plot.calibration.results(ws.interest, run.number, subbasin.sibset)
+  plot.calibration.results(ws.interest, run.number, subbasins.present)
   
   dev.off()
   
@@ -268,7 +269,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## Generate a pdf of results
   pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
 
-  plot.results(ws.interest, run.number, subbasin.subset)
+  plot.results(ws.interest, run.number, subbasins.present)
   
   dev.off()
   
@@ -282,7 +283,6 @@ proc.time() - ptm
 
 ## Close sink() connection so no more output is written to file.
 sink()
-
 
 # hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("processor_2/model/Whiteman-Apr-24-19_Hydrographs.csv", sep = "")))
 
