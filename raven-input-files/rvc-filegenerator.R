@@ -38,10 +38,10 @@ cat(file = RVCoutFile, append = F, sep = "",
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
 ## Subset to isolate only the rows relevant to the watershed(s) of interest. gsub command removes the " Creek" from GNIS_NAME
-subbasin.subset <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
+subbasins.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
 
 ## Identify all reservoirs/lakes within the watershed(s) of interest
-reservoirs <- unique(subbasin.subset$Reservoir_name)
+reservoirs <- unique(subbasins.present$Reservoir_name)
 
 ## Remove "<Null>"
 reservoirs <- as.character(reservoirs[!reservoirs %in% "<Null>"])
@@ -64,7 +64,7 @@ if(length(reservoirs) <1){print("No initial conditions specified...")
     
     AbsoluteCrestHeight <- as.numeric(parameters[parameters$PARAMETER == "AbsoluteCrestHeight", "VALUE"])
   
-    SubBasinID <- subbasin.subset[subbasin.subset$Reservoir_name == reservoirs[i], "Subbasin_ID"]
+    SubBasinID <- subbasins.present[subbasins.present$Reservoir_name == reservoirs[i], "Subbasin_ID"]
     
    if(i == 1){
     cat(file = RVCoutFile, append = T, sep = "",
