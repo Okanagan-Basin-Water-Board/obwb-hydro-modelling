@@ -19,9 +19,9 @@ require(RavenR)
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
 ## Check if there are reservoirs present in any of the include.watersheds. If so, create a "reservoirs" directory.
-reservoirs.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
+subbasins.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
 
-if(length(unique(reservoirs.present$Reservoir_name)) > 1){dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))}
+if(length(unique(subbasins.present$Reservoir_name)) > 1){dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))}
 
 
 for(j in 1:length(include.watersheds)){
@@ -35,7 +35,7 @@ for(j in 1:length(include.watersheds)){
   ## Remove "<Null>"
   reservoirs <- as.character(reservoirs[!reservoirs %in% "<Null>"])
   
-  if(length(reservoirs) <1){print(paste("No reservoirs included within the", include.watersheds, "watershed(s)"))
+  if(length(reservoirs) <1){print(paste("No reservoirs included within the", include.watersheds[j], "watershed"))
     } else {
   
     ## Read in the rvh file to identify HRU number associated with each reservoir
