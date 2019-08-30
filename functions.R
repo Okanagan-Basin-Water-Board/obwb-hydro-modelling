@@ -195,7 +195,7 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
 }
 
 # function to plot model run results
-plot.results <- function(ws.interest, run.number, subbasin.subset) {
+plot.results <- function(ws.interest, run.number, subbasins.present) {
   
   ###############################
   ##
@@ -227,31 +227,31 @@ plot.results <- function(ws.interest, run.number, subbasin.subset) {
     }
     
     ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
     
-    for(i in 1:length(apex.ID)){
+    for(i in 1:length(mouth.ID)){
       
-      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
       
-      x <- hyd.extract(subs = apex.sub, hydrographs)
+      x <- hyd.extract(subs = mouth.sub, hydrographs)
       
       hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", apex.sub))
+      title(paste("Mouth of Creek:", mouth.sub))
     }
     
   } else {
     
     ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
     
-    for(i in 1:length(apex.ID)){
+    for(i in 1:length(mouth.ID)){
     
-      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
       
-      x <- hyd.extract(subs = apex.sub, hydrographs)
+      x <- hyd.extract(subs = mouth.sub, hydrographs)
       
       hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", apex.sub))
+      title(paste("Mouth of Creek:", mouth.sub))
     }
     
   }
@@ -354,31 +354,31 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.sibset) {
     }
     
     ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
     
-    for(i in 1:length(apex.ID)){
+    for(i in 1:length(mouth.ID)){
       
-      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
       
-      x <- hyd.extract(subs = apex.sub, hydrographs)
+      x <- hyd.extract(subs = mouth.sub, hydrographs)
       
       hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", apex.sub))
+      title(paste("Mouth of Creek:", mouth.sub))
     }
     
   } else {
     
     ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    apex.ID <- subbasin.subset$Subbasin_ID[subbasin.subset$Downstream_ID == "-1"] 
+    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
     
-    for(i in 1:length(apex.ID)){
+    for(i in 1:length(mouth.ID)){
       
-      apex.sub <- names(hydrographs$hyd)[which(grepl(apex.ID[i], names(hydrographs$hyd)))]
+      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
       
-      x <- hyd.extract(subs = apex.sub, hydrographs)
+      x <- hyd.extract(subs = mouth.sub, hydrographs)
       
       hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", apex.sub))
+      title(paste("Mouth of Creek:", mouth.sub))
     }
     
     
