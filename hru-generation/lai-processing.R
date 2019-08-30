@@ -12,7 +12,7 @@ library(dplyr)
 ## Read in GIS data except for the LAI *.tif files
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
-landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Patched_EOSD.tif", crs = bc.albers)
+landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Patched_EOSD2.tif", crs = bc.albers)
 
 vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
 
