@@ -24,10 +24,10 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 ##
 ## Read-in required sptial datasets:
 ##  - Okanagan-overlapping DEM (20 m Resolution): DEM_alb.tif (Overlapping Okanagan required to allow correct calculation of slope/aspect before clipping)
-##  - Okanagan Landcover Raster (30 m Resolution - Resampled to 20 m Resolution to match DEM): Patched_EOSD.tif
+##  - Okanagan Landcover Raster (30 m Resolution - Resampled to 20 m Resolution to match DEM): Patched_EOSD2.tif
 ##  - Okanagan Parent Soils Raster (resampled to 20m resolution): Soils_PM1.tif
 ##  - Okanagan Aquifers Shapefile (OBWB Aquifers): OBWB_Aquifer.tif
-##  - Model domain subbasins (as delineated by Associated): WS_Raster4.tif
+##  - Model domain subbasins (as delineated by Associated): WS_Raster5.tif
 ##
 ##  - Okanagan Basin Shapefile: FW_Atlas_OK_Basin.shp
 ##  - Named/mapped watersheds included in model domain: EFN_WS.shp
@@ -43,7 +43,7 @@ dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/DEM_Fix2.tif", c
 
 # dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/archive/DEM_alb.tif", crs = bc.albers)
 
-landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Patched_EOSD.tif", crs = bc.albers)
+landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Patched_EOSD2.tif", crs = bc.albers)
 
 # soils <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Soils_PM1.tif", crs = bc.albers)
 
@@ -51,7 +51,7 @@ soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/So
 
 aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquifer.tif", crs = bc.albers)
 
-subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster4.tif", crs = bc.albers)
+subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster5.tif", crs = bc.albers)
 
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
