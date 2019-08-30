@@ -54,30 +54,33 @@ if(length(reservoirs) <1){print("No initial conditions specified...")
     
     tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = reservoirs[i])
     
-    ##-----------------------------------------------------------------------------
-    ##
-    ## Extract required weir information and lake depth from tmp
-    ##
-    ##-----------------------------------------------------------------------------
+    ## Check if there is a stage-storage curve
+    if("Current_Storage_dam3" %in% names(tmp)){
+      
+       ##-----------------------------------------------------------------------------
+      ##
+      ## Extract required weir information and lake depth from tmp
+      ##
+      ##-----------------------------------------------------------------------------
+      
+      parameters <- na.omit(tmp[ ,c("PARAMETER", "VALUE")])
+      
+      AbsoluteCrestHeight <- as.numeric(parameters[parameters$PARAMETER == "AbsoluteCrestHeight", "VALUE"])
     
-    parameters <- na.omit(tmp[ ,c("PARAMETER", "VALUE")])
-    
-    AbsoluteCrestHeight <- as.numeric(parameters[parameters$PARAMETER == "AbsoluteCrestHeight", "VALUE"])
-  
-    SubBasinID <- subbasins.present[subbasins.present$Reservoir_name == reservoirs[i], "Subbasin_ID"]
-    
-   if(i == 1){
-    cat(file = RVCoutFile, append = T, sep = "",
-        "\n",
-        "# ----- Specify Initial Conditions for Reservoir Stage ----", "\n",
-        "\n",
+      SubBasinID <- subbasins.present[subbasins.present$Reservoir_name == reservoirs[i], "Subbasin_ID"]
+      
+     if(i == 1){
+      cat(file = RVCoutFile, append = T, sep = "",
+          "\n",
+          "# ----- Specify Initial Conditions for Reservoir Stage ----", "\n",
+          "\n",
+          ":InitialReservoirStage ", SubBasinID, " ", AbsoluteCrestHeight, "\n"
+          )
+      } else {
+        cat(file = RVCoutFile, append = T, sep = "",
         ":InitialReservoirStage ", SubBasinID, " ", AbsoluteCrestHeight, "\n"
         )
-    } else {
-      cat(file = RVCoutFile, append = T, sep = "",
-      ":InitialReservoirStage ", SubBasinID, " ", AbsoluteCrestHeight, "\n"
-      )
-    }
-    
+      }
+    }# Enf if (check if there is a stage-storage curve)
   } # End For Loop
 }# End Else
