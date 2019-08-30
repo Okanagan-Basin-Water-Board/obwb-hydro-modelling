@@ -3,6 +3,9 @@ echo ------------ Generating HRUs --------------------------------
 Rscript hru-generation/hru-generator.R
 echo ------------ Done generating HRUs ---------------------------
 
+echo ----------- Reprocessing LAI information -------------------
+Rscript hru-generation/lai-processing.R
+echo ----------- Done processing LAI information ---------------
 
 echo ------------- Writing new Master.rvh file ------------------
 Rscript raven-input-files/rvh-filegenerator.R
