@@ -119,11 +119,15 @@ tasmin.forcing.filename <- "tasmin.HRU.timeseries.DRAFT.nc"
 ## Get dimensions of netcdf file - only uses tasmin since all are the same dimensions
 tasmin.nc.file <- nc_open(file.path("/var/obwb-hydro-modelling/input-data/processed/climate", tasmin.forcing.filename))
 
-tasmin <- ncvar_get(tasmin.nc.file, "tasmin")
+# tasmin <- ncvar_get(tasmin.nc.file, "tasmin")
 
-nGridCell <- dim(tasmin)[1]
+# nGridCell <- dim(tasmin)[1]
 
-ntime <- dim(tasmin)[2]
+nGridCell <- tasmin.nc.file$dim$HRU$len
+
+# ntime <- dim(tasmin)[2]
+
+ntime <- tasmin.nc.file$dim$time$len
 
 nHRU <- nrow(HRUs$HRUtable)
 
