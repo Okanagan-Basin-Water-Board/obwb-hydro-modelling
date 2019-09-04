@@ -311,6 +311,31 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   
   ###############################
   ##
+  ## Plot Reservoir Stage (if reservoirs present)
+  ##
+  ###############################
+  
+  par(mfrow = c(1,1), mar = c(5, 4, 4, 2))
+  
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
+    
+    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
+    
+    reservoir.stage <- res.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    
+    for(i in 1:length(reservoir.subbasins)){
+      
+      col.name <- gsub(' ','_',reservoir.subbasins[i])
+      
+      res.plot(reservoir.stage$res[,col.name], zero.axis = F)
+      
+      title(col.name)
+    }  
+  }
+  
+  
+  ###############################
+  ##
   ## Plot Subbasin Network
   ##
   ###############################
@@ -437,6 +462,31 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.sibset) {
   
   legend("topright", legend = c("Daily Total Rain", "Daily Total Snow"), col = c("black", "lightblue"), bty = 'n', lty = 1)
 
+  
+  ###############################
+  ##
+  ## Plot Reservoir Stage (if reservoirs present)
+  ##
+  ###############################
+  
+  par(mfrow = c(1,1), mar = c(5, 4, 4, 2))
+  
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
+    
+    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
+    
+    reservoir.stage <- res.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    
+    for(i in 1:length(reservoir.subbasins)){
+      
+      col.name <- gsub(' ','_',reservoir.subbasins[i])
+      
+      res.plot(reservoir.stage$res[,col.name], zero.axis = F)
+      
+      title(col.name)
+    }  
+    
+  }
   ##############################
   ##
   ## Plot Subbasin Network
