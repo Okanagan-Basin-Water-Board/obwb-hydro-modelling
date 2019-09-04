@@ -6,7 +6,7 @@
 ##
 ## Mar-18-2019 LAB
 #################################################################################################################
-#CHANGE
+
 require(doParallel)
 require(tools)
 require(filesstrings)
@@ -23,10 +23,10 @@ ws.interest <- "Testing"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
-include.watersheds <- c("Vernon", "Coldstream")
+include.watersheds <- c("Whiteman", "Mission")
 
 ## Specify a run number to associated with outputs
-run.number <- "Aug-30-Ver-Col"
+run.number <- "Sep-04-res-plot-test"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -282,7 +282,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
 proc.time() - ptm
 
 ## Close sink() connection so no more output is written to file.
-sink()
+sink(NULL)
 
 # hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("processor_2/model/Whiteman-Apr-24-19_Hydrographs.csv", sep = "")))
 
