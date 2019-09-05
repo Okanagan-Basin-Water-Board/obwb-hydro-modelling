@@ -30,7 +30,6 @@ filenames <- list.files("/var/obwb-hydro-modelling/input-data/raw/naturalized-fl
 ## Identify which file is required to be read in based on the "include.watersheds" variable
 required.files <- filenames[gsub( " .*$", "", filenames) %in% include.watersheds]
 
-
 ###################################################################################################################################################
 ##
 ## Generate Year/Week timeseries which is consistent with the OWDM approach (i.e., 8 day last week of year, and 8 day Feb 29. week in leap years)
@@ -128,8 +127,16 @@ for(i in 1:length(required.files)){
   ## Isolate the subbasin ID which corresponds with the Apex of the Alluvial Fan
   stream.poi.subbasin.ID <- subbasins[subbasins$GNIS_NAME %in% paste(current.watershed, "Creek") & subbasins$Reports_to_Fan == "A", "Subbasin_ID"]
   
-  stream.poi.subbasin.ID.col.name <- colnames(raven.output)[grepl(stream.poi.subbasin.ID, colnames(raven.output)) & !grepl("observed", colnames(raven.output))]
   
+  ## If there are more than one subbasins which report to the Apex of the fan (i.e., on Trepanier Creek), add and "or" (i.e., |) which resuts in multiple column names being identified
+  if(length(stream.poi.subbasin.ID) > 1){
+    
+    stream.poi.subbasin.ID <- paste(stream.poi.subbasin.ID, collapse = "|")
+
+  }
+  
+  stream.poi.subbasin.ID.col.name <- colnames(raven.output)[grepl(stream.poi.subbasin.ID, colnames(raven.output)) & !grepl("observed", colnames(raven.output))]
+
   # stream.poi.subbasin.ID.col <- which(colnames(raven.output) %like% stream.poi.subbasin.ID)
   
   ##---------------------------------------------------------------------------------------------------------------
@@ -168,7 +175,17 @@ for(i in 1:length(required.files)){
   ##
   ##---------------------------------------------------------------------------------------------------------------
   
-  Times$Raven.apex <- raven.output[,stream.poi.subbasin.ID.col.name]
+  ## If multiple columns were identified (i.e, more than one subbasin reports to the apex), calculate row sums (i.e., cumulative sum of all subbasins which report to the apex.)
+  if(length(stream.poi.subbasin.ID.col.name) > 1){
+    
+    ## Use rowSums so that wherever more than one subbasin reports to the apex of the fan (i.e., Trepanier Creek), the sum of the relevant subbasins is returned.
+    Times$Raven.apex <- rowSums(raven.output[,stream.poi.subbasin.ID.col.name])
+  } else {
+    
+    ## If only one column present, rowSums is not needed
+    Times$Raven.apex <- raven.output[,stream.poi.subbasin.ID.col.name]
+    
+  }
   
   # Times$Raven.mouth <- raven.output[,mouth.subbasin.ID.col.name]
   
@@ -272,7 +289,8 @@ for(i in 1:length(required.files)){
                               sheet = "OWDM Model Summary")
     
     ## Identify the column which contains "Abv Fan" - this is within the "Abv Fan - OWDM Water Use" statement. This flag is used to identify the correct dataset to use for comparison to 1996-2010 dataset
-    owdm.col.start <- which(apply(owdm.summary, 2, function(x) any(grepl("Abv Fan - OWDM Water Use", x))))
+    ## tail() is required to select the last returned colum - sometimes "Abv Fan" exists elsewhere, but I only want the last occurence (i.e., the summary table)
+    owdm.col.start <- tail(which(apply(owdm.summary, 2, function(x) any(grepl("Abv Fan", x)))),1)
     
     ## Select only the rows that contain data for Week 1 - Week 52
     owdm.summary <- owdm.summary[owdm.summary[,owdm.col.start] %in% Weeks,]
