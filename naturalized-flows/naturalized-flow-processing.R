@@ -114,8 +114,17 @@ for(i in 1:length(required.files)){
   ##
   ##################################################################################################################
   
-  ## Read-in the model results (hydrographs)
-  raven.output <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  if(run.ostrich == TRUE){
+    
+    ## Read-in the model results (hydrographs)
+    raven.output <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+                             
+    } else {
+  
+    ## Read-in the model results (hydrographs)
+    raven.output <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  
+  }
   
   ## Convert the dates to Date characters
   raven.output$date <- as.Date(raven.output$date)
