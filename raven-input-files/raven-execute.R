@@ -23,13 +23,13 @@ ws.interest <- "Testing"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
-include.watersheds <- c("Whiteman", "Mission")
+include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Sep-04-res-plot-test"
+run.number <- "Sep-06-Whiteman-Testing"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
@@ -86,7 +86,7 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
       paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.DRAFT.nc")$mtime), "\n",
       paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
 
-      paste("- Calibration was completed for the period", calibration.start, "to", calibration.end), "\n",
+      paste("- Model Diagnostics were calculated for the period", calibration.start, "to", calibration.end), "\n",
     "\n",
     "-------------------- R OUTPUT --------------------",
     "\n"
@@ -219,6 +219,8 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   
   plot.calibration.results(ws.interest, run.number, subbasins.present)
   
+  source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
+  
   dev.off()
   
   ## Send email to notify of completion
@@ -270,6 +272,8 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
 
   plot.results(ws.interest, run.number, subbasins.present)
+  
+  source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
   
   dev.off()
   
