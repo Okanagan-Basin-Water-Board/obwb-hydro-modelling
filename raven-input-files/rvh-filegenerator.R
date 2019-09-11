@@ -66,6 +66,7 @@ print("generating HRU-table...")
 
 ptm <- proc.time()
 
+## NOTE: Should the rounding within this table be removed to correct the "total modelled area"?
 for(i in 1:length(unique.HRU)){
   
   index <- which(HRU.table$Tidy.ID == unique.HRU[i])
