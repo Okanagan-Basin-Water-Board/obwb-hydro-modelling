@@ -105,9 +105,25 @@ subbasin.ok <- mask(crop(subbasin, model.watersheds.shape), model.watersheds.sha
 
 coords <- coordinates(dem.ok)
 
-# coords.subbasin <- coordinates(subbasin.ok)
+## ----------------------------------------
+##
+## Checl to ensure all coordinates match (i.e., reprojection and snapping is correct)
+##
+## ----------------------------------------
 
-# coords.landcover <- coordinates(landcover.ok)
+coords.subbasin <- coordinates(subbasin.ok)
+
+coords.landcover <- coordinates(landcover.ok)
+
+if(coords != coords.subbasin | coords != coords.landcover | coords.subbasin != coords.landcover){
+  stop("Coordinates do not match. Ensure all input datasets are reprojected and snapped to the same grid. Use DEM_fix2.tif as the base grid.")
+}
+
+## ----------------------------------------
+##
+## Extract values for all required components
+##
+## ----------------------------------------
 
 slope.values <- values(slope.ok)
 
@@ -235,6 +251,7 @@ DT[is.na(DT$aquifer), "aquifer"] <- 0
 ## Assign the most common soil type to all cells with missing soils information
 DT[is.na(DT$soils), "soils"] <- getmode(DT[!is.na(DT$soils), "soils"])
 
+## Remove incomplete cases (i.e., dead area outside of the model watersheds)
 DT <- DT[complete.cases(DT),]
 
 # 
