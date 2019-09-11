@@ -19,14 +19,14 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Testing"
+ws.interest <- "Preliminary-Natural-Calibration"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Sep-06-Whiteman-Testing"
+run.number <- "Whiteman-Sep-11"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- TRUE
@@ -38,9 +38,9 @@ recreate.rvh <- FALSE
 include.water.demand <- FALSE
 
 ## Define the period of calibration
-calibration.start <- "2005-01-01"
+calibration.start <- "1996-01-01"
 
-calibration.end <- "2010-12-31"
+calibration.end <- "2003-12-31"
 
 
 #####################################################################
@@ -119,8 +119,8 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/Raven
 
 ## If run.ostrich == TRUE, create Ostrich softlink in the model directory
 if(run.ostrich == TRUE){
-  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/OstrichMPI"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-  # file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  # file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/OstrichMPI"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   # file.copy(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 }
 
@@ -203,8 +203,8 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   
   print("Beginning Ostrich Calibration...")
   
-  system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
-  # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ostrich"))
+  # system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
+  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ostrich"))
   
   
   #####################################################################
@@ -212,33 +212,33 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## Plot a series of model results
   ##
   #####################################################################
-  require(RavenR)
-  
-  ## Generate a pdf of results
-  pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
-  
-  plot.calibration.results(ws.interest, run.number, subbasins.present)
-  
-  source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
-  
-  dev.off()
-  
-  ## Send email to notify of completion
-  
-  send.mail(from = "birdl@ae.ca",
-            to =  "birdl@ae.ca",
-            subject = "Calibration Complete",
-            body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed."),
-            authenticate = TRUE,
-            smtp = list(host.name = "smtp.office365.com",
-                        port = 587,
-                        user.name = "birdl@ae.ca",
-                        passwd = "Summer2019",
-                        tls = TRUE),
-            attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")))
-  
-  ## Shutdown the VM.
-  system2("sudo", args = "shutdown -h now")
+  # require(RavenR)
+  # 
+  # ## Generate a pdf of results
+  # pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
+  # 
+  # plot.calibration.results(ws.interest, run.number, subbasins.present)
+  # 
+  # source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
+  # 
+  # dev.off()
+  # 
+  # ## Send email to notify of completion
+  # 
+  # send.mail(from = "birdl@ae.ca",
+  #           to =  "birdl@ae.ca",
+  #           subject = "Calibration Complete",
+  #           body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed."),
+  #           authenticate = TRUE,
+  #           smtp = list(host.name = "smtp.office365.com",
+  #                       port = 587,
+  #                       user.name = "birdl@ae.ca",
+  #                       passwd = "Summer2019",
+  #                       tls = TRUE),
+  #           attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")))
+  # 
+  # ## Shutdown the VM.
+  # system2("sudo", args = "shutdown -h now")
   
 #####################################################################
 ##
