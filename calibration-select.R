@@ -28,3 +28,41 @@ if(!is.na(Sys.getenv("SHELL", unset = NA))){
   } 
 }
 
+
+# ## Check to see if there are snow pillows and/snow courses included in the current model run.
+# 
+# if(exists("snow.courses.included")){
+# 
+#     snow.courses.included <- snow.courses.included
+# 
+# } else{
+#   
+#   snow.courses.included <- "None"
+#   
+# }
+# 
+# if(exists("snow.pillows.included")){
+#   
+#   snow.pillows.included <- snow.pillows.included
+#   
+# } else {
+#   
+#   
+#   snow.pillows.included <- "None"
+# }
+# 
+# 
+# max.len <- max(length(stations.included), length(snow.courses.included), length(snow.pillows.included))
+# 
+# 
+# stations.included <- c(stations.included, rep(NA, max.len - length(stations.included)))
+# snow.courses.included <- c(snow.courses.included, rep(NA, max.len - length(snow.courses.included)))
+# snow.pillows.included<- c(snow.pillows.included, rep(NA, max.len - length(snow.pillows.included)))
+# 
+# 
+# data.frame(WSC_Stations = stations.included,
+#            Snow_Courses = snow.courses.included,
+#            Snow_Pillows = snow.pillows.included
+#            )
+
+
