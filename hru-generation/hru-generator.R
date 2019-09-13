@@ -16,6 +16,16 @@ library(rgdal)
 library(proj4)
 library(cloudml)
 
+# Load base packages for error-free execution using Rscript from the command line
+# require(stats)
+# require(graphics)
+# require(grDevices)
+# require(utils)
+# require(datasets)
+library(methods)
+# require(base)
+# require(tfruns)
+
 source("/var/obwb-hydro-modelling/src/functions.R")
 
 ###########################################################################################
@@ -32,6 +42,7 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 ##  - Okanagan Basin Shapefile: FW_Atlas_OK_Basin.shp
 ##  - Named/mapped watersheds included in model domain: EFN_WS.shp
 ###########################################################################################
+## QAQC: Could list input files in one text file, rather than hardcoding.
 
 print("reading in spatial data...")
 
@@ -107,7 +118,7 @@ coords <- coordinates(dem.ok)
 
 ## ----------------------------------------
 ##
-## Checl to ensure all coordinates match (i.e., reprojection and snapping is correct)
+## Check to ensure all coordinates match (i.e., reprojection and snapping is correct)
 ##
 ## ----------------------------------------
 
@@ -115,9 +126,11 @@ coords.subbasin <- coordinates(subbasin.ok)
 
 coords.landcover <- coordinates(landcover.ok)
 
-if(coords != coords.subbasin | coords != coords.landcover | coords.subbasin != coords.landcover){
+if(all.equal(coords, coords.subbasin) != TRUE | all.equal(coords, coords.landcover) != TRUE){
   stop("Coordinates do not match. Ensure all input datasets are reprojected and snapped to the same grid. Use DEM_fix2.tif as the base grid.")
 }
+
+rm(coords.subbasin, coords.landcover)
 
 ## ----------------------------------------
 ##
@@ -217,10 +230,10 @@ DT$landcover.bin <- ifelse(landcover.values <= 11, 300, # No data / Unclassified
 ## Determine aspect bins
 
 DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
-                       ifelse(aspect.values >= 0 & aspect.values < 135, 401, # North
-                       ifelse(aspect.values >= 45 & aspect.values < 135, 402, # East
-                       ifelse(aspect.values >= 135 & aspect.values < 225, 403, # West
-                       ifelse(aspect.values >= 225 & aspect.values < 315, 404, 999))))) #South (999 = something went wrong)
+                       ifelse(aspect.values >= 0 & aspect.values < 45, 400, # North
+                       ifelse(aspect.values >= 45 & aspect.values < 135, 401, # East
+                       ifelse(aspect.values >= 135 & aspect.values < 225, 402, # South
+                       ifelse(aspect.values >= 225 & aspect.values < 315, 403, 999))))) #West (999 = something went wrong)
 
 # DT$aspect.bin <- ifelse(aspect.values >= 270, 400, # north
 #                  ifelse(aspect.values >= 0 & aspect.values < 90, 400, # north
@@ -251,11 +264,9 @@ DT[is.na(DT$aquifer), "aquifer"] <- 0
 ## Assign the most common soil type to all cells with missing soils information
 DT[is.na(DT$soils), "soils"] <- getmode(DT[!is.na(DT$soils), "soils"])
 
+
 ## Remove incomplete cases (i.e., dead area outside of the model watersheds)
 DT <- DT[complete.cases(DT),]
-
-# 
-# DT <- DT[complete.cases(DT), ]
 
 # NOTE: Remove all cells with empty elevation data
 # DT <- DT[!is.na(DT$slope)]
@@ -430,6 +441,7 @@ dev.off()
 print("reprojecting coordinates to lat/lon...")
 
 ## create new coords object drom the reduced DT (i.e., excluding NAs)
+## QAQC: Replace this with cbind(x, y) since they were extracted from DT above to create the series of raster
 coords.reduced <- matrix(nrow = nrow(DT), ncol = 2, data = c(x = DT$coords.x,
                                                      y = DT$coords.y))
 
