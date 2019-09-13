@@ -138,43 +138,107 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
     ###################################################################################################
     ##
     ## Calculate Observation Weights
+    ###################################################################################################
     
-    spinup.start <- as.character(lubridate::date(ts.temp[1]))
+    ## ---------------------------------------------------------
+    ##
+    ## If model validation is not being completed, generate observation weights based on calibration dates, and pad remaining days with 0 (i.e., simply observations)
+    ##
+    ## ---------------------------------------------------------
     
-    spinup.end <- as.character(lubridate::date(calibration.start)-1)
+    if(validate.model == FALSE){
     
-    spinup.weights <- ts.temp[paste(spinup.start, spinup.end, sep = "/")]
+      spinup.start <- as.character(lubridate::date(ts.temp[1]))
+      
+      spinup.end <- as.character(lubridate::date(calibration.start)-1)
+      
+      spinup.weights <- ts.temp[paste(spinup.start, spinup.end, sep = "/")]
+      
+      coredata(spinup.weights) <- rep(0, length(spinup.weights))
+      
+      calibration.weights <- ts.temp[paste(calibration.start, calibration.end, sep = "/")]
+      
+      coredata(calibration.weights) <- rep(1, length(calibration.weights))
+      
+      obs.start <- as.character(lubridate::date(calibration.end)+1)
+      
+      obs.end <- as.character(lubridate::date(ts.temp[length(ts.temp)]))
+      
+      obs.weights <- ts.temp[paste(obs.start, obs.end, sep = "/")]
+      
+      coredata(obs.weights) <- rep(0, length(obs.weights))
+      
+      
+      observation.weights.table <- rbind(spinup.weights, calibration.weights, obs.weights)
+      
+      ## Write Observation Weights to File
+      writeLines(sprintf(':ObservationWeights HYDROGRAPH %i m3/s # %s',subID,rvt.name),fc)
+      writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(observation.weights.table[1])),nrow(observation.weights.table)),fc)
+      
+      for (k in 1:nrow(observation.weights.table)) {
+        writeLines(sprintf('%g',observation.weights.table[k]),fc)
+      }
+      
+      writeLines(':EndObservationWeights',fc)
+      
+  
+      ## Close file connection    
+      close(fc)
     
-    coredata(spinup.weights) <- rep(0, length(spinup.weights))
-    
-    calibration.weights <- ts.temp[paste(calibration.start, calibration.end, sep = "/")]
-    
-    coredata(calibration.weights) <- rep(1, length(calibration.weights))
-    
-    obs.start <- as.character(lubridate::date(calibration.end)+1)
-    
-    obs.end <- as.character(lubridate::date(ts.temp[length(ts.temp)]))
-    
-    obs.weights <- ts.temp[paste(obs.start, obs.end, sep = "/")]
-    
-    coredata(obs.weights) <- rep(0, length(obs.weights))
-    
-    
-    observation.weights.table <- rbind(spinup.weights, calibration.weights, obs.weights)
-    
-    ## Write Observation Weights to File
-    writeLines(sprintf(':ObservationWeights HYDROGRAPH %i m3/s # %s',subID,rvt.name),fc)
-    writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(observation.weights.table[1])),nrow(observation.weights.table)),fc)
-    
-    for (k in 1:nrow(observation.weights.table)) {
-      writeLines(sprintf('%g',observation.weights.table[k]),fc)
     }
     
-    writeLines(':EndObservationWeights',fc)
+    ## ---------------------------------------------------------
+    ##
+    ## If model validation is being completed, generate observation weights based on validation dates, and pad remaining days with 0 (i.e., simply observations)
+    ##
+    ## ---------------------------------------------------------
     
-
-    ## Close file connection    
-    close(fc)
+    if(validate.model == TRUE){
+      
+      spinup.start <- as.character(lubridate::date(ts.temp[1]))
+      
+      spinup.end <- as.character(lubridate::date(calibration.start)-1)
+      
+      spinup.weights <- ts.temp[paste(spinup.start, spinup.end, sep = "/")]
+      
+      coredata(spinup.weights) <- rep(0, length(spinup.weights))
+      
+      calibration.weights <- ts.temp[paste(calibration.start, calibration.end, sep = "/")]
+      
+      coredata(calibration.weights) <- rep(0, length(calibration.weights))
+      
+      validation.weights <- ts.temp[paste(validation.start, validation.end, sep = "/")]
+      
+      coredata(validation.weights) <- rep(1, length(validation.weights))
+      
+      
+      obs.start <- as.character(lubridate::date(validation.end)+1)
+      
+      obs.end <- as.character(lubridate::date(ts.temp[length(ts.temp)]))
+      
+      obs.weights <- ts.temp[paste(obs.start, obs.end, sep = "/")]
+      
+      coredata(obs.weights) <- rep(0, length(obs.weights))
+      
+      
+      observation.weights.table <- rbind(spinup.weights, calibration.weights, validation.weights, obs.weights)
+      
+      ## Write Observation Weights to File
+      writeLines(sprintf(':ObservationWeights HYDROGRAPH %i m3/s # %s',subID,rvt.name),fc)
+      writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(observation.weights.table[1])),nrow(observation.weights.table)),fc)
+      
+      for (k in 1:nrow(observation.weights.table)) {
+        writeLines(sprintf('%g',observation.weights.table[k]),fc)
+      }
+      
+      writeLines(':EndObservationWeights',fc)
+      
+      
+      ## Close file connection    
+      close(fc)
+      
+    }
+    
     
     # write to support file
     if (write.redirect) {
@@ -475,7 +539,7 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.sibset) {
     
     reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
     
-    reservoir.stage <- res.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    reservoir.stage <- res.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
     for(i in 1:length(reservoir.subbasins)){
       
