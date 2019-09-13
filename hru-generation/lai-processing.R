@@ -9,6 +9,16 @@ library(sf)
 library(plyr)
 library(dplyr)
 
+# Load base packages for error-free execution using Rscript from the command line
+# require(stats)
+# require(graphics)
+# require(grDevices)
+# require(utils)
+# require(datasets)
+library(methods)
+# require(base)
+# require(tfruns)
+
 ## Read in GIS data except for the LAI *.tif files
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
@@ -60,12 +70,16 @@ data.all <- inner_join(data, vegetation.codes, by = c("landcover" = "Value"))
 results.mean <- data.all %>% group_by(Bin_type) %>% summarise_at(.vars = c(lai.var.names),
                                                             .funs = c(mean="mean"), na.rm = T)
 
-## Calculate maximum LAI for all
-results.max <- data.all %>% group_by(Bin_type) %>% summarise_at(.vars = c(lai.var.names),
-                                                                  .funs = c(max="max"), na.rm = T)
+# ## Calculate maximum LAI for all
+# results.max <- data.all %>% group_by(Bin_type) %>% summarise_at(.vars = c(lai.var.names),
+#                                                                   .funs = c(max="max"), na.rm = T)
 
 ## Identify the maximum annual value for each vegetation type
-max <- data.frame("Bin_type" = results.max$Bin_type, "MAX_LAI" = apply(results.max[,grepl("lai", names(results.max))], 1, max))
+# max <- data.frame("Bin_type" = results.max$Bin_type, "MAX_LAI" = apply(results.max[,grepl("lai", names(results.max))], 1, max))
+
+## Identify the maximum monthly mean LAI value - use this as the "MAX_LAI value within raven (rather than the maximum value recorded for each month. I don't believe this actually affects the results, only the seasonal scaling factor to adjust max_lai to seaonal lai values. Max_lai does not appear to be used anywhere else in the model.
+max <- data.frame("Bin_type" = results.mean$Bin_type, "MAX_LAI" = apply(results.mean[,grepl("lai", names(results.mean))], 1, max))
+
 
 ## Identify vegetation bins which should not have variable LAI
 exclusions <- c("NO_DATA", "NON_VEGETATED", "SHADOW", "SNOW_ICE", "WATER")
