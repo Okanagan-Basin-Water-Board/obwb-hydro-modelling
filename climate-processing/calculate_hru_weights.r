@@ -17,6 +17,18 @@ suppressMessages(library(R.utils))
 suppressMessages(library(utils))
 suppressMessages(library(raster))
 
+# Load base packages for error-free execution using Rscript from the command line
+# require(stats)
+# require(graphics)
+# require(grDevices)
+# require(utils)
+# require(datasets)
+require(methods)
+# require(base)
+# require(tfruns)
+
+###########################################################
+
 Remake.Data <- TRUE
 
 output.dir <- "/var/obwb-hydro-modelling/input-data/processed/climate"
