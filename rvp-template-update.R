@@ -10,13 +10,13 @@
 require(RavenR)
 
 ## Enter the filepath to the calibration attempt that should be used to update the RVP-Template
-calibration.attempt <- "/var/obwb-hydro-modelling/simulations/Testing/Testing-Aug-19-Whiteman-2-Calibration"
+calibration.attempt <- "/var/obwb-hydro-modelling/simulations/Preliminary-Natural-Calibration/Preliminary-Natural-Calibration-Whiteman-Sep-12"
 
 ## Read in the optimum parameter values identified by Ostrich (i.e., these are automatically compiled into OstModel0.txt)
 data <- Ost.read(file.path(calibration.attempt, "OstModel0.txt"))
 
 ## Confirm that there is only one parameter set in the OstModel0 file. If not, this will identify the best set (based on the Objectve Function).
-optim0 <- Ost.bestparams(Ost.data = data, best.num = 0.1)
+optim0 <- Ost.bestparams(Ost.data = data, best.num = 0.0001)
 
 
 ## When Reservoirs are included in the calibration, need to identify columns which correspond to reservoirs and then remove them (otherwise the length of the replace elemtn will not match the number of parameters in the RVP Template)
