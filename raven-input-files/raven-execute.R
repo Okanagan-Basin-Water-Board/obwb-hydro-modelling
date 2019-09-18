@@ -22,14 +22,17 @@ ptm <- proc.time()
 ws.interest <- "Preliminary-Natural-Calibration"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
-# include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
-include.watersheds <- "Whiteman"
+include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
+# include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
 
 ## Specify a run number to associated with outputs
-run.number <- "Whiteman-Sep-11"
+run.number <- "Sep-17-Natual-Base-Calibration-Results"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
+
+## Specify whether the model is being run for validation purposes
+validate.model <- FALSE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
@@ -37,10 +40,18 @@ recreate.rvh <- FALSE
 ## Should water demand information be included in the model run?
 include.water.demand <- FALSE
 
-## Define the period of calibration
+# Should reservoir parameters be included in the calibration?
+calibrate.reservoirs <- FALSE
+
+## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
 
-calibration.end <- "2003-12-31"
+calibration.end <- "2010-12-31"
+
+## Define the period of validation / diagnostics
+validation.start <- "2011-01-01"
+
+validation.end <- "2017-12-31"
 
 
 #####################################################################
@@ -82,7 +93,7 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
     else {"- Water demand data were included in this model run"}, "\n",
 
       "- Run completed using climate data last modified as follows:", "\n",
-      paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
+      paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.DRAFT.nc")$mtime), "\n",
       paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.DRAFT.nc")$mtime), "\n",
       paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
 
@@ -175,38 +186,39 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   
   ## set working directory to current model run directory
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-  
+
   ## execute RAVEN
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
   system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'))
-  
+
+
   ## Generate the Ostrich Input file
   source("/var/obwb-hydro-modelling/src/ostrich-file-generator.R")
-  
+
   print("Moving model files to model sub-directory to begin Ostrich calibration...")
-  
+
   ## Generate a list of all files in the current model directory
   files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), full.names = TRUE)
-  
+
   ## Remove rvp file from the list
-  move.files <- files[file_ext(files) != "rvp" & file_ext(files) != "sh" & file_ext(files) != "txt" & file_ext(files) != ""] 
+  move.files <- files[file_ext(files) != "rvp" & file_ext(files) != "sh" & file_ext(files) != "txt" & file_ext(files) != ""]
   # &
                         # files != file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))]
-  
+
     ## move all files except rvp and tpl files to "model" sub-directory
   file.move(move.files, file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
-  
+
   ## If reservoirs are included in the model, move the reservoirs folder into the model folder
   if(dir.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))){
     system2("mv", paste(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"), file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"), sep =" "))
   }
-  
+
   print("Beginning Ostrich Calibration...")
-  
+
   # system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
   system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ostrich"))
-  
-  
+
+
   #####################################################################
   ##
   ## Plot a series of model results
@@ -222,22 +234,22 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   # source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
   # 
   # dev.off()
-  # 
-  # ## Send email to notify of completion
-  # 
-  # send.mail(from = "birdl@ae.ca",
-  #           to =  "birdl@ae.ca",
-  #           subject = "Calibration Complete",
-  #           body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed."),
-  #           authenticate = TRUE,
-  #           smtp = list(host.name = "smtp.office365.com",
-  #                       port = 587,
-  #                       user.name = "birdl@ae.ca",
-  #                       passwd = "Summer2019",
-  #                       tls = TRUE),
-  #           attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")))
-  # 
-  # ## Shutdown the VM.
+
+  ## Send email to notify of completion
+
+  send.mail(from = "birdl@ae.ca",
+            to =  "birdl@ae.ca",
+            subject = "Calibration Complete",
+            body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed(s)."),
+            authenticate = TRUE,
+            smtp = list(host.name = "smtp.office365.com",
+                        port = 587,
+                        user.name = "birdl@ae.ca",
+                        passwd = "Summer2019",
+                        tls = TRUE),
+            attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
+
+  ## Shutdown the VM.
   # system2("sudo", args = "shutdown -h now")
   
 #####################################################################
