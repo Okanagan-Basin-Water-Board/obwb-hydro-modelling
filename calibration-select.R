@@ -1,33 +1,95 @@
 require(stringr)
 
-if(!is.na(Sys.getenv("RSTUDIO", unset = NA))){
-  
-  user_receive <- readline(prompt = cat("The following WSC stations are available for calibration:", stations.included, "\n",
-                                      "Please enter station numbers to include in calibration (separated by commas)..."))
+if(length(stations.included) > 1){
 
-  ## Create a character vector of the stations to be included in calibration
-  calibration.stations <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
-  
-  print(paste(c("You entered...", calibration.stations)))
-  
+  if(!is.na(Sys.getenv("RSTUDIO", unset = NA))){
+    
+    ## Determine which WSC stations should be included in the calibration
+
+    user_receive <- readline(prompt = cat("The following WSC stations are available for calibration:", stations.included, "\n",
+                                        "Please enter station numbers to include in calibration (separated by commas)..."))
 
   
-} else { 
+    ## Create a character vector of the stations to be included in calibration
+    calibration.stations <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
 
-if(!is.na(Sys.getenv("SHELL", unset = NA))){
+    ## Print out your entry
+    # cat("You entered...", calibration.stations, "\n)
+
+    ## Determine the corresponding weighting for each station
+    user_receive <- readline(prompt = cat("The following stations will be included in the calibration:", calibration.stations, "\n",
+                                          "Please enter the corresponding weighting value for each station (separated by commas)..."))
+
+    calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
+
+
+
+    if(sum(as.numeric(calibration.station.weights)) == 1){
+      cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n")
+    } else {
+      user_receive <- readline(prompt = cat("Station weights must sum to 1. Please re-enter weight for the following WSC stations (separated by commas):", calibration.stations))
+
+
+      calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
+
+      if(sum(as.numeric(calibration.station.weights)) != 1){
+        cat("Station weights still do not sum to 1. Please re-start the execution process.")
+
+      }
+
+    }
+    
+    
+  } else { 
   
-  cat("The following WSC stations are available for calibration:", stations.included, "\n",
-      "Please enter station numbers to include in calibration (separated by commas)...")
-  user_receive <- readLines(con = "stdin", 1)
-  
-  ## Create a character vector of the stations to be included in calibration
-  calibration.stations <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
-  
-  cat("You entered...", calibration.stations, "\n")
-  
-  } 
+    if(!is.na(Sys.getenv("SHELL", unset = NA))){
+      
+      cat("The following WSC stations are available for calibration:", stations.included, "\n",
+          "Please enter station numbers to include in calibration (separated by commas)...")
+      user_receive <- readLines(con = "stdin", 1)
+      
+      ## Create a character vector of the stations to be included in calibration
+      calibration.stations <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
+      
+      # cat("You entered...", calibration.stations, "\n")
+      
+      ## Determine the corresponding weighting for each station
+      cat("The following stations will be included in the calibration:", calibration.stations, "\n",
+          "Please enter the corresponding weighting value for each station (separated by commas)...")
+      
+      user_receive <- readLines(con = "stdin", 1)
+      
+      calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
+      
+      if(sum(as.numeric(calibration.station.weights)) == 1){
+        cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n")
+      } else {
+        
+        cat("Station weights must sum to 1. Please re-enter weight for the following WSC stations (separated by commas):", calibration.stations)
+        
+        user_receive <- readLines(con = "stdin", 1)
+        
+        calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
+        
+        if(sum(as.numeric(calibration.station.weights)) != 1){
+          cat("Station weights still do not sum to 1. Please re-start the execution process.")
+          
+        }
+        
+      }
+    
+    } 
+  }
+
+} else {
+
+
+  calibration.stations <- stations.included
+
+  calibration.station.weights <- 1
+
+
 }
-
 
 # ## Check to see if there are snow pillows and/snow courses included in the current model run.
 # 
