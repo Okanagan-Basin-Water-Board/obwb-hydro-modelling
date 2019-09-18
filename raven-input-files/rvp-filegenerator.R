@@ -585,7 +585,7 @@ if(!all(is.na(global.parameters$CAL_MAX))){
   global.parameters.calibrate <- global.parameters.calibrate[, c("PARAMETER", "DEFINITION", "CAL_VAR")]  
   
   ## add annual runoff value to global table from annual.runoff master list
-  avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED == include.watersheds, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
+  avg.annual.runoff <- annual.runoff[annual.runoff$WATERSHED %in% include.watersheds, "AVG_ANNUAL_RUNOFF_APEX_FAN"]
   
   global.parameters.calibrate[global.parameters.calibrate$DEFINITION == "AVG_ANNUAL_RUNOFF", "CAL_VAR"] <- as.character(mean(avg.annual.runoff))
 
@@ -600,6 +600,7 @@ if(!all(is.na(global.parameters$CAL_MAX))){
   print("No global parameters will be included in the calibration...")
   
 }
+
 
 #############################################################################################
 ## Generate *.rvp.tpl file
