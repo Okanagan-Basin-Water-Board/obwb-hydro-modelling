@@ -10,7 +10,7 @@
 require(RavenR)
 
 ## Enter the filepath to the calibration attempt that should be used to update the RVP-Template
-calibration.attempt <- "/var/obwb-hydro-modelling/simulations/Preliminary-Natural-Calibration/Preliminary-Natural-Calibration-Whiteman-Sep-12"
+calibration.attempt <- "/var/obwb-hydro-modelling/simulations/Preliminary-Natural-Calibration/Preliminary-Natural-Calibration-Sep-16-Natural-Base-Calibration"
 
 ## Read in the optimum parameter values identified by Ostrich (i.e., these are automatically compiled into OstModel0.txt)
 data <- Ost.read(file.path(calibration.attempt, "OstModel0.txt"))
