@@ -19,20 +19,22 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Preliminary-Natural-Calibration"
+# ws.interest <- "Preliminary-Natural-Calibration"
+ws.interest <- "Recent-period"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
-include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
+# include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
+include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Sep-17-Natual-Base-Calibration-Results"
+run.number <- "Sep-24-test"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
-validate.model <- FALSE
+validate.model <- TRUE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
@@ -130,7 +132,7 @@ file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/Raven
 
 ## If run.ostrich == TRUE, create Ostrich softlink in the model directory
 if(run.ostrich == TRUE){
-  # file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/OstrichMPI"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/OstrichMPI"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   # file.copy(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 }
@@ -215,8 +217,8 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
 
   print("Beginning Ostrich Calibration...")
 
-  # system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
-  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ostrich"))
+  system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
+  # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ostrich"))
 
 
   #####################################################################
@@ -237,20 +239,33 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
 
   ## Send email to notify of completion
 
+  # send.mail(from = "birdl@ae.ca",
+  #           to =  "birdl@ae.ca",
+  #           subject = "Calibration Complete",
+  #           body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed(s)."),
+  #           authenticate = TRUE,
+  #           smtp = list(host.name = "smtp.office365.com",
+  #                       port = 587,
+  #                       user.name = "birdl@ae.ca",
+  #                       passwd = "Summer2019",
+  #                       tls = TRUE),
+  #           attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
+
+  
   send.mail(from = "birdl@ae.ca",
             to =  "birdl@ae.ca",
             subject = "Calibration Complete",
-            body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed(s)."),
+            body = paste("Model run", run.number, "has completed. The VM has been turned off."),
             authenticate = TRUE,
             smtp = list(host.name = "smtp.office365.com",
                         port = 587,
                         user.name = "birdl@ae.ca",
                         passwd = "Summer2019",
-                        tls = TRUE),
-            attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
-
+                        tls = TRUE))
+  
+  
   ## Shutdown the VM.
-  # system2("sudo", args = "shutdown -h now")
+  system2("sudo", args = "shutdown -h now")
   
 #####################################################################
 ##
