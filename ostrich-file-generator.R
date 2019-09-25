@@ -107,6 +107,7 @@ parameter.table[,6] <- tx.ost
 
 parameter.table[,7] <- tx.out
 
+initial.all <- initial
 
 ##------------------------------------------------------------
 ##
@@ -114,38 +115,49 @@ parameter.table[,7] <- tx.out
 ##
 ##------------------------------------------------------------
 
-if(length(reservoirs) >0){
+
+if(calibrate.reservoirs == TRUE){
+
+  all.reservoirs <- unique(subbasins.present$Reservoir_name)
   
-  for(i in 1:length(reservoirs)){
-    
-    tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = reservoirs[i])
-    
-    calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
-    
-    reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
-    
-    initial <- as.numeric(as.character(calibration.parameter.table$VALUE))
+  all.reservoirs <- as.character(all.reservoirs[!all.reservoirs %in% "<Null>"])
+  
+  if(length(all.reservoirs) >0){
+  
+    for(i in 1:length(all.reservoirs)){
+  
+      tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = all.reservoirs[i])
+  
+      calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
+  
+      reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
+  
+      initial.res <- as.numeric(as.character(calibration.parameter.table$VALUE))
+  
+      reservoir.parameter.table[,1] <- paste(gsub('([[:punct:]])|\\s+','_',all.reservoirs[i]), calibration.parameter.table$PARAMETER, sep = "_")
+  
+      reservoir.parameter.table[,2] <- initial.res
+  
+      reservoir.parameter.table[,3] <- calibration.parameter.table$CAL_MIN
+  
+      reservoir.parameter.table[,4] <- calibration.parameter.table$CAL_MAX
+  
+      reservoir.parameter.table[,5] <- tx.in
+  
+      reservoir.parameter.table[,6] <- tx.ost
+  
+      reservoir.parameter.table[,7] <- tx.out
+  
+  
+      ## Append reservoir parameters to main parameter table
+      parameter.table <- rbind(parameter.table, reservoir.parameter.table)
       
-    reservoir.parameter.table[,1] <- paste(gsub('([[:punct:]])|\\s+','_',reservoirs[i]), calibration.parameter.table$PARAMETER, sep = "_")
-    
-    reservoir.parameter.table[,2] <- initial
-    
-    reservoir.parameter.table[,3] <- calibration.parameter.table$CAL_MIN
-    
-    reservoir.parameter.table[,4] <- calibration.parameter.table$CAL_MAX
-    
-    reservoir.parameter.table[,5] <- tx.in
-    
-    reservoir.parameter.table[,6] <- tx.ost
-    
-    reservoir.parameter.table[,7] <- tx.out
-    
-    
-    ## Append reservoir parameters to main parameter table
-    parameter.table <- rbind(parameter.table, reservoir.parameter.table)
-    
-  }
+      initial.all <- c(initial.all, initial.res)
   
+    }
+  
+  }
+
 }
 
 #####################################
@@ -172,10 +184,22 @@ diag <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest,
 # response.var.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 response.var.file <- file.path("./model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 
-# row <- 1
-row <- which(diag$filename %like% calibration.stations)
+response.var.names <- paste(response.var$DEFINITION, calibration.stations, sep = "_")
 
-col <- 3
+# row <- 1
+
+row <- c()
+
+for(i in 1:length(calibration.stations)){
+  
+  current.row <- which(grepl(paste(calibration.stations[i], collapse = "|"), diag$filename))
+  
+  row <- c(row, current.row)
+  
+}
+
+# row <- which(grepl(paste(calibration.stations, collapse = "|"), diag$filename))
+col <- which(colnames(diag) == "DIAG_NASH_SUTCLIFFE")
 
 key <- "OST_NULL"
 
@@ -252,7 +276,7 @@ cat(file = OSTInFile, append = T, sep = "",
     "BeginResponseVars", "\n",
     "# Name, Filename, Keyword, Line, Col, Token", "\n",
     
-    paste(response.var$DEFINITION, response.var.file, ";", key, row, col, token, sep = " "), "\n"
+    paste(paste(response.var.names, response.var.file, ";", key, row, col, token, sep = " "), "\n")
 )
 
 cat(file = OSTInFile, append = T, sep = "",
@@ -264,7 +288,7 @@ cat(file = OSTInFile, append = T, sep = "",
     "BeginTiedRespVars", "\n",
     "# Name, Number of parameters, Parameter Names, Type, Type_Data", "\n",
     
-    paste("NegNS", 1, response.var$DEFINITION, "wsum", -1.00), "\n"
+    paste("NegNS", length(response.var.names), paste(response.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights) * -1, collapse = " ")), "\n"
 )
 
 cat(file = OSTInFile, append = T, sep = "",
@@ -301,15 +325,25 @@ write.table(seed.var, OSTInFile, append = T, col.names = F, row.names = F, sep =
 cat(file = OSTInFile, append = T, sep = "",
     "\n",
     "#---------------------------------------------------------", "\n",
+    "# ---- Begin InitParams ----------------------------------", "\n",
+    "\n",
+    "BeginInitParams","\n",
+    paste(initial.all, collapse=" "),"\n",
+    "EndInitParams"
+)
+
+cat(file = OSTInFile, append = T, sep = "",
+    "\n",
+    "#---------------------------------------------------------", "\n",
     "# ---- Begin Algorithm ----------------------------------", "\n",
     "\n",
-    "BeginDDSAlg", "\n"
+    paste("Begin", essential.var[essential.var$TYPE == "ProgramType","DEFINITION"], "Alg", sep=""), "\n"
 )
 
 write.table(algorithm.defs, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F )
 
 cat(file = OSTInFile, append = T, sep = "",
-    "EndDDSAlg", "\n"
+    paste("End", essential.var[essential.var$TYPE == "ProgramType", "DEFINITION"], "Alg", sep=""), "\n"
 )
 
 
