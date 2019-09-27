@@ -20,7 +20,7 @@ ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
 # ws.interest <- "Preliminary-Natural-Calibration"
-ws.interest <- "Recent-period"
+ws.interest <- "PDDS-test"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -28,13 +28,13 @@ ws.interest <- "Recent-period"
 include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Sep-24-test"
+run.number <- "Sep-27-Grouped-Test"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
-validate.model <- TRUE
+validate.model <- FALSE
 
 ## Should the global rvh file be regenerated?
 recreate.rvh <- FALSE
