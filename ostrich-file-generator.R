@@ -1,4 +1,3 @@
-
 ############################################################################################################################
 ##
 ## This script generates the required ostIn.txt file for input into Ostrich
@@ -44,7 +43,7 @@ for(i in 1:length(OST.template.files)){
   
   ## Because reservoirs subfolder is moved into model folder in parallel processing, add model/ path to file pairs, where appropriate
   file.pairs[i,2] <- ifelse(sub("\\/.*", "", raven.files) == "reservoirs", paste("model/", raven.files, sep = ""), raven.files)
-    
+  
 }
 # if(length(OST.template.files >= 1)){
 # 
@@ -77,9 +76,43 @@ for(i in 1:length(OST.template.files)){
 ##
 ##------------------------------------------------------------
 
-RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv")
+RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
 
-parameters <- RVP.template[!is.na(RVP.template$CAL_MIN), c("PARAMETER", "DEFINITION", "VALUE", "CAL_MIN", "CAL_MAX")]
+## Isolate only parameters that will be included in calibration (i.e., remove parameters that don't have a calibration range specified)
+parameters <- RVP.template[which(!is.na(RVP.template$CAL_MIN)), c("GROUP", "PARAMETER", "DEFINITION", "VALUE", "CAL_MIN", "CAL_MAX")]
+
+## Convert all values to characters
+parameters[,] <- lapply(parameters[, ], as.character)
+
+
+calibration.specials <- parameters[parameters$GROUP == "CalibrationGroups", ]
+
+# calibration.special.names <- paste(calibration.specials$DEFINITION, calibration.specials$PARAMETER, sep = "_")
+
+if(nrow(calibration.specials) > 0){
+  
+  for(i in 1:nrow(calibration.specials)){
+    
+    special_parameter <- calibration.specials[i,]
+    
+    parameters[parameters$PARAMETER == special_parameter$PARAMETER & parameters$VALUE == special_parameter$DEFINITION, "DEFINITION"] <- special_parameter$DEFINITION
+    
+    parameters[parameters$PARAMETER == special_parameter$PARAMETER & parameters$VALUE == special_parameter$DEFINITION, "CAL_MIN"] <- special_parameter$CAL_MIN
+    
+    parameters[parameters$PARAMETER == special_parameter$PARAMETER & parameters$VALUE == special_parameter$DEFINITION, "CAL_MAX"] <- special_parameter$CAL_MAX
+    
+    parameters[parameters$PARAMETER == special_parameter$PARAMETER & parameters$VALUE == special_parameter$DEFINITION, "VALUE"] <- special_parameter$VALUE
+    
+    ## Remove duplicated rows from paramaters table
+    parameters <- parameters[!duplicated(parameters), ]
+    
+  }
+  
+  ## Delete the rows that house the CalibrationGroup definitions
+  parameters <- parameters[!parameters$GROUP == "CalibrationGroups",]
+  
+}
+
 
 ## Extract "Value" as the initial starting value for Ostrich. This matches the initial values in the *.rvp file and prevents having to use the "extract" function in Ostrich
 initial <- as.numeric(as.character(parameters$VALUE))
@@ -117,47 +150,47 @@ initial.all <- initial
 
 
 if(calibrate.reservoirs == TRUE){
-
+  
   all.reservoirs <- unique(subbasins.present$Reservoir_name)
   
   all.reservoirs <- as.character(all.reservoirs[!all.reservoirs %in% "<Null>"])
   
   if(length(all.reservoirs) >0){
-  
+    
     for(i in 1:length(all.reservoirs)){
-  
+      
       tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = all.reservoirs[i])
-  
+      
       calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
-  
+      
       reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
-  
+      
       initial.res <- as.numeric(as.character(calibration.parameter.table$VALUE))
-  
+      
       reservoir.parameter.table[,1] <- paste(gsub('([[:punct:]])|\\s+','_',all.reservoirs[i]), calibration.parameter.table$PARAMETER, sep = "_")
-  
+      
       reservoir.parameter.table[,2] <- initial.res
-  
+      
       reservoir.parameter.table[,3] <- calibration.parameter.table$CAL_MIN
-  
+      
       reservoir.parameter.table[,4] <- calibration.parameter.table$CAL_MAX
-  
+      
       reservoir.parameter.table[,5] <- tx.in
-  
+      
       reservoir.parameter.table[,6] <- tx.ost
-  
+      
       reservoir.parameter.table[,7] <- tx.out
-  
-  
+      
+      
       ## Append reservoir parameters to main parameter table
       parameter.table <- rbind(parameter.table, reservoir.parameter.table)
       
       initial.all <- c(initial.all, initial.res)
-  
+      
     }
-  
+    
   }
-
+  
 }
 
 #####################################
