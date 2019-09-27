@@ -1,0 +1,14 @@
+VARIABLE,TYPE,DEFINITION
+Essential,ProgramType,ParallelDDS
+Essential,ObjectiveFunction,GCOP
+Essential,ModelExecutable,./Ost-RAVEN.sh
+Useful,ModelSubDir,processor_
+Useful,PreserveModelOutput,no
+Useful,PreserveBestModel,./save_best.sh
+Useful,OstrichWarmStart,no
+Useful,TelescopingStrategy,none
+Algorithm,PerturbationValue,0.2
+Algorithm,MaxIterations,150
+Algorithm,UseInitialParamValues,,
+Seed,RandomSeed,123456
+Response,ResponseVariable,NS
