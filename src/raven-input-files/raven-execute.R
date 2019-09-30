@@ -20,7 +20,7 @@ ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
 # ws.interest <- "Preliminary-Natural-Calibration"
-ws.interest <- "PDDS-test"
+ws.interest <- "Natural-Calibration"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -28,7 +28,10 @@ ws.interest <- "PDDS-test"
 include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Sep-27-Grouped-Test"
+run.number <- "Sep-27-Whiteman-Calibration-1"
+
+## Add comments to README file.
+run.comments <- "This run is an intial calibration attempt for Whiteman Creek using newly implemented _Grouped_ parameters and correction for precipitation data. In addition, vegetation parameters were removed from calibration. 900 iteartions were used for calibration."
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- TRUE
@@ -100,6 +103,8 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
       paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
 
       paste("- Model Diagnostics were calculated for the period", calibration.start, "to", calibration.end), "\n",
+    "\n", 
+      run.comments, "\n",
     "\n",
     "-------------------- R OUTPUT --------------------",
     "\n"
