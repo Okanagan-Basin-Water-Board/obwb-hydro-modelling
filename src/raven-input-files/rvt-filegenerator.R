@@ -250,6 +250,15 @@ if(run.ostrich == TRUE){
 
     pr.correction.calibrate <- climate.parameters.calibrate[climate.parameters.calibrate$PARAMETER == "LinearTransform" & climate.parameters.calibrate$DEFINITION == "pr", "CAL_VAR"]
     
+    
+    ## Identify all existing *.rvt files (i.e., observation hydrogaphs) which exist - these are created by way of a function originally, so need to add them manually in the template
+    all.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+    
+    add.redirect <- all.files[file_ext(all.files) == "rvt"]
+    
+    add.redirect <- add.redirect[add.redirect != paste(ws.interest, "-", run.number, ".rvt", sep = "")]
+    
+    
     #############################################################################################
     ## 
     ##  Write *.rvt.tpl file
@@ -258,6 +267,11 @@ if(run.ostrich == TRUE){
     
     OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
     
+    for(i in 1:length(add.redirect)){
+      cat(file = OstrichRVTTemplateFile, append = T, sep = "",
+          ":RedirectToFile ", add.redirect[i], "\n"
+      )
+    }
     
     cat(file = OstrichRVTTemplateFile, append = T, sep = "",
         "\n",
@@ -319,9 +333,8 @@ if(run.ostrich == TRUE){
         "\n"
     )
     
-    
     print("One or more climate parameters will be included in the calibration...")
-  
+    
   } else {
     
     print("No climate parameters will be included in the calibration...")
