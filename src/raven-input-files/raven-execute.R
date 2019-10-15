@@ -207,12 +207,13 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## Generate a list of all files in the current model directory
   files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), full.names = TRUE)
 
-  ## Remove rvp file from the list
-  move.files <- files[file_ext(files) != "rvp" & file_ext(files) != "sh" & file_ext(files) != "txt" & file_ext(files) != ""]
-  # &
-                        # files != file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))]
-
-    ## move all files except rvp and tpl files to "model" sub-directory
+  ## Remove bash fies, text files, and folders from the list
+  move.files <- files[file_ext(files) != "sh" & file_ext(files) != "txt" & file_ext(files) != ""]
+  
+  ## Remove "master" templates (i.e., any of the 5 required input files) from the list so they're not moved. These files are included in "do.not.move" which is defined in ostrich-file-generator.R
+  move.files <- move.files[!move.files %in% file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), do.not.move)]
+  
+  ## move all files except rvp and tpl files to "model" sub-directory
   file.move(move.files, file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"))
 
   ## If reservoirs are included in the model, move the reservoirs folder into the model folder
@@ -265,7 +266,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
             smtp = list(host.name = "smtp.office365.com",
                         port = 587,
                         user.name = "birdl@ae.ca",
-                        passwd = "Summer2019",
+                        passwd = "Fall2019",
                         tls = TRUE))
   
   
