@@ -25,13 +25,13 @@ ws.interest <- "Natural-Calibration"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Whiteman"
+include.watersheds <- c("Whiteman", "Mission")
 
 ## Specify a run number to associated with outputs
-run.number <- "Sep-27-Whiteman-Calibration-1"
+run.number <- "Oct-15-Reservoir-Calibration-Test"
 
 ## Add comments to README file.
-run.comments <- "This run is an intial calibration attempt for Whiteman Creek using newly implemented _Grouped_ parameters and correction for precipitation data. In addition, vegetation parameters were removed from calibration. 900 iteartions were used for calibration."
+run.comments <- "This run is intended to ensure that reservoirs included in calibration efforts are handled correctly."
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- TRUE
@@ -46,7 +46,7 @@ recreate.rvh <- FALSE
 include.water.demand <- FALSE
 
 # Should reservoir parameters be included in the calibration?
-calibrate.reservoirs <- FALSE
+calibrate.reservoirs <- TRUE
 
 ## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
