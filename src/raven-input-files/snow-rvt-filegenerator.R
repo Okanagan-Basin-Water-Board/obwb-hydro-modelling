@@ -89,6 +89,25 @@ for(j in 1:length(include.watersheds)){
           ) 
         }
       
+      
+      ##################################################################
+      ## If run.ostrich == TRUE, add redircts to the template file too
+      
+      OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+      
+      if(i == 1){
+        cat(file = OstrichRVTTemplateFile, append = T, sep = "",
+            "\n",
+            "#-------------------------------------------------------", "\n",
+            paste("# Redirect to", include.watersheds[j], "Creek Snow Course Files"), "\n",
+            "\n",
+            ":RedirectToFile ", paste("SC_", snow.courses.included[i], ".rvt", sep = ""), "\n"
+        )} else {
+          cat(file = OstrichRVTTemplateFile, append = T, sep = "",
+              ":RedirectToFile ", paste("SC_", snow.courses.included[i], ".rvt", sep = ""), "\n"
+          ) 
+        }
+      
     }
     
     print(paste(length(snow.courses.included), "snow course(s) included in the", include.watersheds[j], "Creek watershed..."))
@@ -184,6 +203,22 @@ for(j in 1:length(include.watersheds)){
             ) 
           }
         
+        ##################################################################
+        ## If run.ostrich == TRUE, add redircts to the template file too
+        
+        if(i == 1){
+          cat(file = OstrichRVTTemplateFile, append = T, sep = "",
+              "\n",
+              "#-------------------------------------------------------", "\n",
+              paste("# Redirect to", include.watersheds[j], "Creek Snow Pillow Files"), "\n",
+              "\n",
+              ":RedirectToFile ", paste("SP_", station.name, ".rvt", sep = ""), "\n"
+          )} else {
+            cat(file = OstrichRVTTemplateFile, append = T, sep = "",
+                ":RedirectToFile ", paste("SP_", station.name, ".rvt", sep = ""), "\n"
+            ) 
+          }
+        
       }
       
       print(paste(length(snow.pillows.included), "snow pillows included in the", include.watersheds[j], "Creek watershed..."))
@@ -202,5 +237,3 @@ for(j in 1:length(include.watersheds)){
   }
 
 }
-
-                                
