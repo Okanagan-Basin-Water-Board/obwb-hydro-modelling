@@ -32,6 +32,9 @@ OST.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulation
 ## Create an empty matrix to house all file pairs
 file.pairs <- matrix(NA, nrow = length(OST.template.files), ncol = 2)
 
+## Create an empty vector to house file names which should not be moved to the model subdirectory
+do.not.move <- c()
+
 ## Loop over *.tpl files and find the location of the partner
 for(i in 1:length(OST.template.files)){
   
@@ -44,7 +47,15 @@ for(i in 1:length(OST.template.files)){
   ## Because reservoirs subfolder is moved into model folder in parallel processing, add model/ path to file pairs, where appropriate
   file.pairs[i,2] <- ifelse(sub("\\/.*", "", raven.files) == "reservoirs", paste("model/", raven.files, sep = ""), raven.files)
   
+  ## Identify files that should not be moved to model subdirectory
+  if(sub("\\/.*", "", raven.files) != "reservoirs"){
+    
+    do.not.move <- c(do.not.move, raven.files)
+    
+  }
+  
 }
+
 # if(length(OST.template.files >= 1)){
 # 
 # raven.files <- gsub('.{4}$', '', OST.template.files)
@@ -390,14 +401,26 @@ OSTRAVENFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, 
 
 cat(file = OSTRAVENFile, append = F, sep = "",
     "set -e", "\n",
-    "\n",
-    paste("cp ", paste(ws.interest, "-",  run.number, ".rvp   ", sep = ""), paste("model/", paste(ws.interest, "-",  run.number, ".rvp", sep = ""), sep = ""), sep = ""), "\n",
+    "\n")
+# paste("cp ", paste(ws.interest, "-",  run.number, ".rvp   ", sep = ""), paste("model/", paste(ws.interest, "-",  run.number, ".rvp", sep = ""), sep = ""), sep = ""), "\n",
+# paste("cp ", paste(ws.interest, "-",  run.number, ".rvt   ", sep = ""), paste("model/", paste(ws.interest, "-",  run.number, ".rvt", sep = ""), sep = ""), sep = ""), "\n")
+# Copy all relevant files into model subdirectory to initiate Ostrich run.
+for(i in 1:length(do.not.move)){
+  
+  cat(file = OSTRAVENFile, append = T, sep = "",
+      paste("cp ", do.not.move[i], "   model/", do.not.move[i], sep = ""),
+      "\n"
+  )
+}
+
+cat(file = OSTRAVENFile, append = T, sep = "",
     paste("cd model"), "\n",
     # paste("./raven_rev.exe", paste(ws.interest, run.number, sep = "-"), sep = " "), "\n",
     paste("./Raven.exe", paste(ws.interest, run.number, sep = "-"), sep = " "), "\n",
     "\n",
     "exit 0"
 )
+
 
 ## Specify file permission for Ost-RAVEN.sh to allow it to be executable
 Sys.chmod(path = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ost-RAVEN.sh"),
@@ -418,15 +441,42 @@ cat(file = SaveBestFile, append = F, sep = "",
     "if [ ! -e best ] ; then", "\n",
     "mkdir best", "\n",
     "fi", "\n",
-    "cp ", paste(ws.interest, "-", run.number, ".rvp  ", sep = ""), paste("best/", ws.interest, "-", run.number, ".rvp", sep = ""), "\n",
+    "\n"
+)
+
+
+if(calibrate.reservoirs == TRUE){
+  
+  cat(file = SaveBestFile, append = T, sep = "",
+      "if [ ! -e best/reservoirs ] ; then", "\n",
+      "mkdir best/reservoirs", "\n",
+      "fi", "\n",
+      "\n",
+      "cp model/reservoirs/*.rvh best/reservoirs/.", "\n",
+      "\n",
+      "cp ", paste(ws.interest, "-", run.number, ".rvp  ", sep = ""), paste("best/", ws.interest, "-", run.number, ".rvp", sep = ""), "\n",
+      "cp ", paste(ws.interest, "-", run.number, ".rvt  ", sep = ""), paste("best/", ws.interest, "-", run.number, ".rvt", sep = ""), "\n"
+  )
+  
+}
+
+for(i in 1:length(do.not.move)){
+  
+  cat(file = SaveBestFile, append = T, sep = "",
+      paste("cp ", do.not.move[i], "   best/", do.not.move[i], sep = ""),
+      "\n"
+  )
+}
+
+cat(file = SaveBestFile, append = T, sep = "",
+    # "cp ", paste(ws.interest, "-", run.number, ".rvp  ", sep = ""), paste("best/", ws.interest, "-", run.number, ".rvp", sep = ""), "\n",
     # "cp ", paste(ws.interest, "-", run.number, "_Diagnostics.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""), "\n",
     # "cp ", paste(ws.interest, "-", run.number, "_Hydrographs.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Hydrographs.csv", sep = ""), "\n",
     "cp ", paste("./model/", ws.interest, "-", run.number, "_Diagnostics.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""), "\n",
-    "cp ", paste("./model/", ws.interest, "-", run.number, "_Hydrographs.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Hydrographs.csv", sep = ""), "\n",
+    # "cp ", paste("./model/", ws.interest, "-", run.number, "_Hydrographs.csv  ", sep = ""), paste("best/", ws.interest, "-", run.number, "_Hydrographs.csv", sep = ""), "\n",
     
     "exit 0", "\n"
 )
 
 Sys.chmod(path = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "save_best.sh"),
           mode = "777")
-
