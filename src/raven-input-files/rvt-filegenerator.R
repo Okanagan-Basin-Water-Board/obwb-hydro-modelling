@@ -251,11 +251,17 @@ if(run.ostrich == TRUE){
     pr.correction.calibrate <- climate.parameters.calibrate[climate.parameters.calibrate$PARAMETER == "LinearTransform" & climate.parameters.calibrate$DEFINITION == "pr", "CAL_VAR"]
     
     
+    ## ------------------------------------------------------------------------------------------
     ## Identify all existing *.rvt files (i.e., observation hydrogaphs) which exist - these are created by way of a function originally, so need to add them manually in the template
+    ## ------------------------------------------------------------------------------------------
+    
+    ## List all files in the current run directory
     all.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
     
+    ## Identify which files are rvt files
     add.redirect <- all.files[file_ext(all.files) == "rvt"]
     
+    ## remove the master *.rvt file from the list (this is the file that Redirect commands will be added within)
     add.redirect <- add.redirect[add.redirect != paste(ws.interest, "-", run.number, ".rvt", sep = "")]
     
     
@@ -267,6 +273,7 @@ if(run.ostrich == TRUE){
     
     OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
     
+    ## Add :RedirctToFile commands to beginning of master rvt.tpl file to match the structure of the original *.rvt file. NOTE: The order of the files will be different, but this shouldn't matter
     for(i in 1:length(add.redirect)){
       cat(file = OstrichRVTTemplateFile, append = T, sep = "",
           ":RedirectToFile ", add.redirect[i], "\n"

@@ -203,9 +203,12 @@ for(j in 1:length(include.watersheds)){
             ) 
           }
         
-        ##################################################################
+        ##----------------------------------------------------------------
         ## If run.ostrich == TRUE, add redircts to the template file too
+        ##----------------------------------------------------------------
         
+        
+        ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
         if(i == 1){
           cat(file = OstrichRVTTemplateFile, append = T, sep = "",
               "\n",
