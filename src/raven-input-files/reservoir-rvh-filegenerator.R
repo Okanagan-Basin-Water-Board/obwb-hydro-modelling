@@ -78,7 +78,7 @@ for(j in 1:length(include.watersheds)){
       
         ##-----------------------------------------------------------------------------
         ##
-        ## Isolate the stage-storage curve for the given reservoir and identify the number of points
+        ## Isolate the stage-storage curve for the given reservoir and identify the number of points.
         ##
         ##-----------------------------------------------------------------------------
         
@@ -94,7 +94,7 @@ for(j in 1:length(include.watersheds)){
         
         ##-----------------------------------------------------------------------------
         ##
-        ## Extract the correspinding subbasin ID and HRU ID for the given reservoirs, as well as the lake area
+        ## Extract the correspinding subbasin ID and HRU ID for the given reservoirs, as well as the lake area and Max Capacity (as maximum storage capacity from stage-storage curve)
         ##
         ##-----------------------------------------------------------------------------
         
@@ -103,6 +103,8 @@ for(j in 1:length(include.watersheds)){
         HRUID <- HRUs[HRUs$SBID == SubBasinID, "ID"]
         
         LakeArea <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000)
+        
+        MaxCapacity <- max(tmp2$Current_Storage_m3)
         
         ##-----------------------------------------------------------------------------
         ##
@@ -130,6 +132,7 @@ for(j in 1:length(include.watersheds)){
             ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
             ":LakeArea ", LakeArea, "\n",
             ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
+            ":MaxCapacity ", MaxCapacity, "\n",
             "\n",
             ":VolumeStageRelation LOOKUP_TABLE", "\n",
             npoints, " # number of points in curve", "\n"
@@ -146,7 +149,8 @@ for(j in 1:length(include.watersheds)){
         
         ##-----------------------------------------------------------------------------
         ##
-        ## Extract the correspinding subbasin ID and HRU ID for the given reservoirs, as well as the lake area
+        ## Extract the correspinding subbasin ID and HRU ID for the given reservoirs, as well as the lake area and Max Capacity:
+        ## - Max Capacity calculated as product of lake area * Max Depth
         ##
         ##-----------------------------------------------------------------------------
         
@@ -155,6 +159,9 @@ for(j in 1:length(include.watersheds)){
         HRUID <- HRUs[HRUs$SBID == SubBasinID, "ID"]
         
         LakeArea <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000)
+        
+        ## Estimate MaxCapacity from LakeArea and MaxDepth
+        MaxCapacity <- LakeArea * parameters$VALUE[parameters$PARAMETER == "MaxDepth"]
   
         ##-----------------------------------------------------------------------------
         ##
@@ -181,6 +188,7 @@ for(j in 1:length(include.watersheds)){
             ":CrestWidth ", parameters$VALUE[parameters$PARAMETER == "CrestWidth"], "\n",
             ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
             ":LakeArea ", LakeArea, "\n",
+            ":MaxCapacity ", MaxCapacity, "\n",
             ":EndReservoir", "\n"
             )
         
@@ -215,13 +223,19 @@ for(j in 1:length(include.watersheds)){
       
       if(run.ostrich == TRUE & calibrate.reservoirs == TRUE){
         
-        calibration.parameter.table <- na.omit(tmp[ ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
+        # calibration.parameter.table <- na.omit(tmp[ ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
         
-        ## convert all columns to character
+        calibration.parameter.table <- tmp[!is.na(tmp$PARAMETER) ,c("PARAMETER", "VALUE", "CAL_MIN", "CAL_MAX")]
+        
+    
+        
+        # convert all columns to character
         calibration.parameter.table[,] <- lapply(calibration.parameter.table[, ], as.character)
         
         ## Create an empty column called CAL_VAR
         calibration.parameter.table$CAL_VAR <- NA
+        
+        calibration.parameter.table[is.na(calibration.parameter.table$CAL_MIN), "CAL_VAR"] <- calibration.parameter.table$VALUE[is.na(calibration.parameter.table$CAL_MIN)]
         
         calibration.parameter.table$CAL_VAR[which(!is.na(calibration.parameter.table$CAL_MAX))] <- paste(reservoirs[i], calibration.parameter.table$PARAMETER[which(!is.na(calibration.parameter.table$CAL_MAX))],sep = "_")
         
@@ -265,7 +279,8 @@ for(j in 1:length(include.watersheds)){
                 ":CrestWidth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "CrestWidth"], "\n",
                 ":MaxDepth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "MaxDepth"], "\n",
                 ":LakeArea ", LakeArea, "\n",
-                ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
+                ":AbsoluteCrestHeight ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "AbsoluteCrestHeight"], "\n",
+                ":MaxCapacity ", MaxCapacity, "\n",
                 "\n",
                 ":VolumeStageRelation LOOKUP_TABLE", "\n",
                 npoints, " # number of points in curve", "\n"
@@ -297,6 +312,7 @@ for(j in 1:length(include.watersheds)){
                 ":CrestWidth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "CrestWidth"], "\n",
                 ":MaxDepth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "MaxDepth"], "\n",
                 ":LakeArea ", LakeArea, "\n",
+                ":MaxCapacity ", MaxCapacity, "\n",
                 ":EndReservoir", "\n"
             )
             
