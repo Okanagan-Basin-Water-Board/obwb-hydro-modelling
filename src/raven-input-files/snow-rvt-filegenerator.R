@@ -90,9 +90,13 @@ for(j in 1:length(include.watersheds)){
         }
       
       
-      ##################################################################
+      ##----------------------------------------------------------------
       ## If run.ostrich == TRUE, add redircts to the template file too
+      ##----------------------------------------------------------------
       
+      if(run.ostrich == TRUE){
+        
+      ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
       OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
       
       if(i == 1){
@@ -107,7 +111,7 @@ for(j in 1:length(include.watersheds)){
               ":RedirectToFile ", paste("SC_", snow.courses.included[i], ".rvt", sep = ""), "\n"
           ) 
         }
-      
+      }
     }
     
     print(paste(length(snow.courses.included), "snow course(s) included in the", include.watersheds[j], "Creek watershed..."))
@@ -207,7 +211,11 @@ for(j in 1:length(include.watersheds)){
         ## If run.ostrich == TRUE, add redircts to the template file too
         ##----------------------------------------------------------------
         
-        
+        if(run.ostrich == TRUE){
+          
+          
+        OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+          
         ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
         if(i == 1){
           cat(file = OstrichRVTTemplateFile, append = T, sep = "",
@@ -221,6 +229,7 @@ for(j in 1:length(include.watersheds)){
                 ":RedirectToFile ", paste("SP_", station.name, ".rvt", sep = ""), "\n"
             ) 
           }
+        }
         
       }
       
