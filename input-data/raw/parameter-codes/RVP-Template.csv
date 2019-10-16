@@ -3,6 +3,7 @@ GlobalParameter,GlobalParameter,AVG_ANNUAL_RUNOFF,,mm,,
 GlobalParameter,GlobalParameter,SNOW_SWI,0.9968563,,0,1
 GlobalParameter,GlobalParameter,RAINSNOW_TEMP,3.950777,,0,4
 GlobalParameter,GlobalParameter,RAINSNOW_DELTA,3.988903,,0,4
+GlobalParameter,GlobalParameter,RESERVOIR_DEMAND_MULT,1,,,
 ClimateParameter,LinearTransform,pr,1,,1,1.15
 ChannelParameter,ChannelProfile,,DEFAULT_TRAP,,,
 ChannelParameter,Bedslope,,0.001,,,
