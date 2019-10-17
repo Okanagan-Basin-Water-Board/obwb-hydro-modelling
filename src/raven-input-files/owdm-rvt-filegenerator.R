@@ -184,6 +184,24 @@ if(nrow(owdm.sub) > 0){
     }
     
     writeLines(':EndIrrigationDemand',fc)
+    
+    ##-------------------------------------------------------------------
+    ##
+    ## Add :ReservoirDownstreamDemand command to specify how water demand is supplied to the given subbasin
+    ##
+    ##-------------------------------------------------------------------
+    
+    if(manage.reservoirs == TRUE){
+     
+            cat(file = fc, append = T, sep = "",
+                "\n",
+                "#---------------------------------------------", "\n",
+                paste("# Specify water demand management for subbasin", subs[i]), "\n",
+                paste(":ReservoirDownstreamDemand ", subs[i], as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"]), as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"]), sep = " "), "\n"
+            )
+
+    }
+    
     close(fc)
     
     ##-------------------------------------------------------------------
@@ -194,6 +212,7 @@ if(nrow(owdm.sub) > 0){
     
     if(i == 1){
         cat(file = RVToutFile, append = T, sep = "",
+        "\n",
         "#-------------------------------------------------------", "\n",
          "# Redirect to Water Demand Data", "\n",
         "\n",
@@ -219,6 +238,7 @@ if(nrow(owdm.sub) > 0){
       ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
       if(i == 1){
         cat(file = OstrichRVTTemplateFile, append = T, sep = "",
+            "\n",
             "#-------------------------------------------------------", "\n",
             "# Redirect to Water Demand Data", "\n",
             "\n",
@@ -231,6 +251,16 @@ if(nrow(owdm.sub) > 0){
       }
       
     }
+    
+  }
+  
+  if(manage.reservoirs == TRUE){
+    
+    print("Reservoirs will be managed to satisfy downstream demand.")
+    
+  } else {
+    
+    print("Reservoirs are NOT managed to satisfy downstream demand.")
     
   }
   
