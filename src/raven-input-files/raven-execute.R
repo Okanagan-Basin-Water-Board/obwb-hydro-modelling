@@ -19,22 +19,21 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-# ws.interest <- "Preliminary-Natural-Calibration"
-ws.interest <- "Natural-Calibration"
+ws.interest <- "Reservoir-Demand-Build"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- c("Whiteman", "Mission")
+include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "Oct-15-Reservoir-Calibration-Test"
+run.number <- "Oct-16-10"
 
 ## Add comments to README file.
-run.comments <- "This run is intended to ensure that reservoirs included in calibration efforts are handled correctly."
+run.comments <- "Mission Creek with water demand, and managed reservoirs."
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -43,10 +42,13 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- FALSE
+include.water.demand <- TRUE
 
 # Should reservoir parameters be included in the calibration?
-calibrate.reservoirs <- TRUE
+calibrate.reservoirs <- FALSE
+
+## Should reservoirs be managed to satisfy downstream demand?
+manage.reservoirs <- TRUE
 
 ## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
@@ -58,6 +60,8 @@ validation.start <- "2011-01-01"
 
 validation.end <- "2017-12-31"
 
+
+if(manage.reservoirs == TRUE & include.water.demand == FALSE){stop("In order to manage reservoirs to satisfy downstream demand, water demand must be included in the model run. Set include.water.demand == TRUE")}
 
 #####################################################################
 ##
@@ -174,12 +178,12 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/snow-rvt-filegenerator.R")
 
-# if(run.ostrich == TRUE){
-# 
-#   ## Add calibration-select here. It will then setup the response variables for things to be minimized.
-# 
-#   source("/var/obwb-hydro-modelling/src/ostrich-file-generator.R")
-# }
+if(include.water.demand == TRUE){
+  
+  source("/var/obwb-hydro-modelling/src/raven-input-files/owdm-rvt-filegenerator.R")
+  
+}
+
 
 #####################################################################
 ##
