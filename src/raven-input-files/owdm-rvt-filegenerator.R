@@ -174,32 +174,58 @@ if(nrow(owdm.sub) > 0){
     ##
     #####################################################################
     
-    fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
-    
-    writeLines(sprintf(':IrrigationDemand %i # %s',subs[i], paste(subs[i], "owdm.rvt", sep = "_")), fc)
-    writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(tmp$tiso[1]),nrow(tmp)), fc)
-    
-    for (k in 1:nrow(tmp)) {
-      writeLines(sprintf('%g',tmp[k,"extraction.total"]), fc)
-    }
-    
-    writeLines(':EndIrrigationDemand',fc)
-    
     ##-------------------------------------------------------------------
     ##
-    ## Add :ReservoirDownstreamDemand command to specify how water demand is supplied to the given subbasin
+    ## Check to see if the demand is directly from a reservoir
     ##
     ##-------------------------------------------------------------------
     
-    if(manage.reservoirs == TRUE){
-     
-            cat(file = fc, append = T, sep = "",
-                "\n",
-                "#---------------------------------------------", "\n",
-                paste("# Specify water demand management for subbasin", subs[i]), "\n",
-                paste(":ReservoirDownstreamDemand ", subs[i], as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"]), as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"]), sep = " "), "\n"
-            )
-
+    ## If reservoir_name is NULL, then it is NOT a reservoir - add :IrrigationDemand tags
+    if(subbasins[subbasins$Subbasin_ID == subs[i], "Reservoir_name"] == "<Null>"){
+    
+      fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
+      
+      writeLines(sprintf(':IrrigationDemand %i # %s',subs[i], paste(subs[i], "owdm.rvt", sep = "_")), fc)
+      writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(tmp$tiso[1]),nrow(tmp)), fc)
+      
+      for (k in 1:nrow(tmp)) {
+        writeLines(sprintf('%g',tmp[k,"extraction.total"]), fc)
+      }
+      
+      writeLines(':EndIrrigationDemand',fc)
+      
+      ##-------------------------------------------------------------------
+      ##
+      ## Add :ReservoirDownstreamDemand command to specify how water demand is supplied to the given subbasin
+      ##
+      ##-------------------------------------------------------------------
+      
+      if(manage.reservoirs == TRUE){
+        
+        cat(file = fc, append = T, sep = "",
+            "\n",
+            "#---------------------------------------------", "\n",
+            paste("# Specify water demand management for subbasin", subs[i]), "\n",
+            paste(":ReservoirDownstreamDemand ", subs[i], as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"]), as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"]), sep = " "), "\n"
+        )
+        
+      }
+      
+      ## IF subs[i] IS a reservoir, then use :ReservoirExtraction command instead of :IrrigationDemand
+      
+    } else { 
+      
+      fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
+      
+      writeLines(sprintf(':ReservoirExtraction %i # %s',subs[i], paste(subs[i], "owdm.rvt", sep = "_")), fc)
+      writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(tmp$tiso[1]),nrow(tmp)), fc)
+      
+      for (k in 1:nrow(tmp)) {
+        writeLines(sprintf('%g',tmp[k,"extraction.total"]), fc)
+      }
+      
+      writeLines(':EndReservoirExtraction',fc)
+      
     }
     
     close(fc)
