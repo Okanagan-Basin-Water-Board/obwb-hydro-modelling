@@ -200,11 +200,11 @@ for(j in 1:length(include.watersheds)){
       ##
       ##-----------------------------------------------------------------------------
       
-      if(j == 1 & i == 1){
+      if(i == 1){
         cat(file = main.HRU.file, append = T, sep = "",
             "\n",
             "#-------------------------------------------------------", "\n",
-            "# Redirect to Reservoir Files", "\n",
+            paste("# Redirect to", include.watersheds[j], "Creek Reservoir Files"), "\n",
             "\n",
             ":RedirectToFile ", paste("reservoirs/", reservoirs[i], ".rvh", sep = ""), "\n"
         )} else {
