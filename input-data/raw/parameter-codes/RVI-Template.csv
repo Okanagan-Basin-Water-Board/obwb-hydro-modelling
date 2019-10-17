@@ -18,7 +18,7 @@ Options,CloudCoverMethod,CLOUDCOV_NONE,,
 Options,PrecipIceptFract,PRECIP_ICEPT_LAI,,
 Options,MonthlyInterpolationMethod,MONTHINT_LINEAR_21,,
 Options,SoilModel,SOIL_MULTILAYER 3,,
-Options,ReservoirDemandAllocation,DEMANDBY_CONTRIB_AREA,,
+Options,ReservoirDemandAllocation,DEMANDBY_MAX_CAPACITY,,
 HydrologicalProcesses,SnowRefreeze,FREEZE_DEGREE_DAY,SNOW_LIQ,SNOW
 HydrologicalProcesses,Precipitation,PRECIP_RAVEN,ATMOS_PRECIP,MULTIPLE
 HydrologicalProcesses,CanopyEvaporation,CANEVP_ALL,CANOPY,ATMOSPHERE
