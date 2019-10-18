@@ -27,13 +27,13 @@ ws.interest <- "Reservoir-Demand-Build"
 include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "Oct-16-16"
+run.number <- "Oct-17-1"
 
 ## Add comments to README file.
-run.comments <- "Testing influence/need of MaxDepth when stage-storage curve is included"
+run.comments <- "Updating owdm-rvt-file to include :ReservoirExtraction if demand is direct from a reservoir"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
