@@ -267,75 +267,81 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   ##
   ###############################
   
-  ## Read-in modelled hydrographs
-  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
   
-  ## Identify which columns have obsrved data available
-  subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
+    ## Read-in modelled hydrographs
+    hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    
+    ## Identify which columns have obsrved data available
+    subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
+    
+    if(length(subs.obs) >0){
+      
+      ## Remove NA
+      subs.obs <- subs.obs[!is.na(subs.obs)]
+      
+      ## remove the "_obs" characters to allow successful extraction
+      my.subs <- gsub("_obs", "", subs.obs)
+      
+      par(mfrow = c(1,1))
+      
+      ## Generate a plot for all subbasins which have observed data available
+      for(i in 1:length(my.subs)){
+        x <- hyd.extract(subs = my.subs[i], hydrographs)
+        hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
+        title(my.subs[i])
+      }
+      
+      ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+      mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
+      
+      for(i in 1:length(mouth.ID)){
+        
+        mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
+        
+        x <- hyd.extract(subs = mouth.sub, hydrographs)
+        
+        hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+        title(paste("Mouth of Creek:", mouth.sub))
+      }
+      
+    } else {
+      
+      ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+      mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
+      
+      for(i in 1:length(mouth.ID)){
+      
+        mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
+        
+        x <- hyd.extract(subs = mouth.sub, hydrographs)
+        
+        hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+        title(paste("Mouth of Creek:", mouth.sub))
+      }
+      
+    }
   
-  if(length(subs.obs) >0){
-    
-    ## Remove NA
-    subs.obs <- subs.obs[!is.na(subs.obs)]
-    
-    ## remove the "_obs" characters to allow successful extraction
-    my.subs <- gsub("_obs", "", subs.obs)
-    
-    par(mfrow = c(1,1))
-    
-    ## Generate a plot for all subbasins which have observed data available
-    for(i in 1:length(my.subs)){
-      x <- hyd.extract(subs = my.subs[i], hydrographs)
-      hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
-      title(my.subs[i])
-    }
-    
-    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
-    
-    for(i in 1:length(mouth.ID)){
-      
-      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
-      
-      x <- hyd.extract(subs = mouth.sub, hydrographs)
-      
-      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", mouth.sub))
-    }
-    
-  } else {
-    
-    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
-    
-    for(i in 1:length(mouth.ID)){
-    
-      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
-      
-      x <- hyd.extract(subs = mouth.sub, hydrographs)
-      
-      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", mouth.sub))
-    }
-    
   }
-  
   ###############################
   ##
   ## Plot watershed storage components
   ##
   ###############################
   
-  ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
   
-  par(mfrow = c(4, 1), mar= c(2,4,2,2))
+    ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+    
+    par(mfrow = c(4, 1), mar= c(2,4,2,2))
+    
+    for(i in 6:ncol(ws.storage)){
+      
+      plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
+      
+    }
   
-  for(i in 6:ncol(ws.storage)){
-    
-    plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
-    
   }
-  
   ###############################
   ##
   ## Plot Model Forcings
@@ -420,57 +426,61 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   ##
   ###############################
 
-  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
   
-  ## Identify which columns have obsrved data available
-  subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
+    hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    
+    ## Identify which columns have obsrved data available
+    subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
+    
+    if(length(subs.obs) >0){
+      
+      ## Remove NA
+      subs.obs <- subs.obs[!is.na(subs.obs)]
+      
+      ## remove the "_obs" characters to allow successful extraction
+      my.subs <- gsub("_obs", "", subs.obs)
+      
+      par(mfrow = c(1,1))
+      
+      ## Generate a plot for all subbasins which have observed data available
+      for(i in 1:length(my.subs)){
+        x <- hyd.extract(subs = my.subs[i], hydrographs)
+        hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
+        title(my.subs[i])
+      }
+      
+      ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+      mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
+      
+      for(i in 1:length(mouth.ID)){
+        
+        mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
+        
+        x <- hyd.extract(subs = mouth.sub, hydrographs)
+        
+        hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+        title(paste("Mouth of Creek:", mouth.sub))
+      }
+      
+    } else {
+      
+      ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
+      mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
+      
+      for(i in 1:length(mouth.ID)){
+        
+        mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
+        
+        x <- hyd.extract(subs = mouth.sub, hydrographs)
+        
+        hyd.plot(x$sim, precip = hydrographs$hyd$precip)
+        title(paste("Mouth of Creek:", mouth.sub))
+      }
+      
+      
+    }
   
-  if(length(subs.obs) >0){
-    
-    ## Remove NA
-    subs.obs <- subs.obs[!is.na(subs.obs)]
-    
-    ## remove the "_obs" characters to allow successful extraction
-    my.subs <- gsub("_obs", "", subs.obs)
-    
-    par(mfrow = c(1,1))
-    
-    ## Generate a plot for all subbasins which have observed data available
-    for(i in 1:length(my.subs)){
-      x <- hyd.extract(subs = my.subs[i], hydrographs)
-      hyd.plot(x$sim, x$obs, precip = hydrographs$hyd$precip)
-      title(my.subs[i])
-    }
-    
-    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
-    
-    for(i in 1:length(mouth.ID)){
-      
-      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
-      
-      x <- hyd.extract(subs = mouth.sub, hydrographs)
-      
-      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", mouth.sub))
-    }
-    
-  } else {
-    
-    ## identofy the subbasin that drains to the mouth of the creek (i.e., downstream id = -1)
-    mouth.ID <- subbasins.present$Subbasin_ID[subbasins.present$Downstream_ID == "-1"] 
-    
-    for(i in 1:length(mouth.ID)){
-      
-      mouth.sub <- names(hydrographs$hyd)[which(grepl(mouth.ID[i], names(hydrographs$hyd)))]
-      
-      x <- hyd.extract(subs = mouth.sub, hydrographs)
-      
-      hyd.plot(x$sim, precip = hydrographs$hyd$precip)
-      title(paste("Mouth of Creek:", mouth.sub))
-    }
-    
-    
   }
   
   ###############################
@@ -479,16 +489,19 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   ##
   ###############################
   
-  ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
   
-  par(mfrow = c(4, 1), mar= c(2,4,2,2))
+    ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+    
+    par(mfrow = c(4, 1), mar= c(2,4,2,2))
+    
+    for(i in 6:ncol(ws.storage)){
+      
+      plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
+      
+    }
   
-  for(i in 6:ncol(ws.storage)){
-    
-    plot(ws.storage[,i], type = 'l', main = colnames(ws.storage[i]))
-    
   }
-  
   ###############################
   ##
   ## Plot Model Forcings
