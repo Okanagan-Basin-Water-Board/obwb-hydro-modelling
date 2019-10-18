@@ -342,37 +342,40 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   ##
   ###############################
   
-  forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))){
   
-  forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
+    forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+    
+    forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
+    
+    par(mfrow = c(2, 1))
+    
+    par(mar = c(0,5,2.5,1))
+    plot(forcing$tiso, forcing$temp_daily_min..C., type = "l",
+         col = 'blue',
+         xlab = "",
+         xaxt = "n",
+         ylab = expression(paste("Daily Air Temperature (", ~degree~C, ")")),
+         ylim = c(-30, 50),
+         panel.first = abline(h = 0, lty = 3, col = 'grey'))
+    
+    lines(forcing$tiso, forcing$temp_daily_max..C., type = 'l', col = 'red')
+    
+    legend("topleft", legend = c("Minimum Daily Air Temperatue", "Maximum Daily Air Temperature"), lty = 1, col = c("blue", "red"), bty = 'n')
+    
+    
+    par(mar = c(2,5,0.5,1))
+    plot(forcing$tiso, forcing$rain..mm.d., type = 'h',
+         xlab = '',
+         ylab = "Daily Total Precipitation (mm)",
+         panel.first = abline(h = 0, lty = 3, col = 'grey'),
+         ylim = c(0, 65)
+    )
+    lines(forcing$tiso, forcing$snow..mm.d., col = 'lightblue', type = 'h')
+    
+    legend("topright", legend = c("Daily Total Rain", "Daily Total Snow"), col = c("black", "lightblue"), bty = 'n', lty = 1)
   
-  par(mfrow = c(2, 1))
-  
-  par(mar = c(0,5,2.5,1))
-  plot(forcing$tiso, forcing$temp_daily_min..C., type = "l",
-       col = 'blue',
-       xlab = "",
-       xaxt = "n",
-       ylab = expression(paste("Daily Air Temperature (", ~degree~C, ")")),
-       ylim = c(-30, 50),
-       panel.first = abline(h = 0, lty = 3, col = 'grey'))
-  
-  lines(forcing$tiso, forcing$temp_daily_max..C., type = 'l', col = 'red')
-  
-  legend("topleft", legend = c("Minimum Daily Air Temperatue", "Maximum Daily Air Temperature"), lty = 1, col = c("blue", "red"), bty = 'n')
-  
-  
-  par(mar = c(2,5,0.5,1))
-  plot(forcing$tiso, forcing$rain..mm.d., type = 'h',
-       xlab = '',
-       ylab = "Daily Total Precipitation (mm)",
-       panel.first = abline(h = 0, lty = 3, col = 'grey'),
-       ylim = c(0, 65)
-  )
-  lines(forcing$tiso, forcing$snow..mm.d., col = 'lightblue', type = 'h')
-  
-  legend("topright", legend = c("Daily Total Rain", "Daily Total Snow"), col = c("black", "lightblue"), bty = 'n', lty = 1)
-  
+  }
   ###############################
   ##
   ## Plot Reservoir Stage (if reservoirs present)
@@ -400,19 +403,16 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   
   ###############################
   ##
-  ## Plot Subbasin Network
+  ## Modelled snow against observed snow
   ##
   ###############################
   
-  # HRU.file <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
-  # 
-  # subbasinNetwork.plot(HRU.file$SBtable[sub("\\_.*", "", HRU.file$SBtable$Name) == include.watersheds, ], labeled = T)
-  
-  
+  # snow.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = "SC_*|SP_*")
+ 
 }
 
 
-plot.calibration.results <- function(ws.interest, run.number, subbasin.sibset) {
+plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
 
   ###############################
   ##
@@ -495,37 +495,40 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.sibset) {
   ##
   ###############################
   
-  forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))){
   
-  forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
-  
-  par(mfrow = c(2, 1))
-  
-  par(mar = c(0,5,2.5,1))
-  plot(forcing$tiso, forcing$temp_daily_min..C., type = "l",
-       col = 'blue',
-       xlab = "",
-       xaxt = "n",
-       ylab = expression(paste("Daily Air Temperature (", ~degree~C, ")")),
-       ylim = c(-30, 50),
-       panel.first = abline(h = 0, lty = 3, col = 'grey'))
-  
-  lines(forcing$tiso, forcing$temp_daily_max..C., type = 'l', col = 'red')
-  
-  legend("topleft", legend = c("Minimum Daily Air Temperatue", "Maximum Daily Air Temperature"), lty = 1, col = c("blue", "red"), bty = 'n')
-  
-  
-  par(mar = c(2,5,0.5,1))
-  plot(forcing$tiso, forcing$rain..mm.d., type = 'h',
-       xlab = '',
-       ylab = "Daily Total Precipitation (mm)",
-       panel.first = abline(h = 0, lty = 3, col = 'grey'),
-       ylim = c(0, 65)
-  )
-  lines(forcing$tiso, forcing$snow..mm.d., col = 'lightblue', type = 'h')
-  
-  legend("topright", legend = c("Daily Total Rain", "Daily Total Snow"), col = c("black", "lightblue"), bty = 'n', lty = 1)
+    forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+    
+    forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
+    
+    par(mfrow = c(2, 1))
+    
+    par(mar = c(0,5,2.5,1))
+    plot(forcing$tiso, forcing$temp_daily_min..C., type = "l",
+         col = 'blue',
+         xlab = "",
+         xaxt = "n",
+         ylab = expression(paste("Daily Air Temperature (", ~degree~C, ")")),
+         ylim = c(-30, 50),
+         panel.first = abline(h = 0, lty = 3, col = 'grey'))
+    
+    lines(forcing$tiso, forcing$temp_daily_max..C., type = 'l', col = 'red')
+    
+    legend("topleft", legend = c("Minimum Daily Air Temperatue", "Maximum Daily Air Temperature"), lty = 1, col = c("blue", "red"), bty = 'n')
+    
+    
+    par(mar = c(2,5,0.5,1))
+    plot(forcing$tiso, forcing$rain..mm.d., type = 'h',
+         xlab = '',
+         ylab = "Daily Total Precipitation (mm)",
+         panel.first = abline(h = 0, lty = 3, col = 'grey'),
+         ylim = c(0, 65)
+    )
+    lines(forcing$tiso, forcing$snow..mm.d., col = 'lightblue', type = 'h')
+    
+    legend("topright", legend = c("Daily Total Rain", "Daily Total Snow"), col = c("black", "lightblue"), bty = 'n', lty = 1)
 
+  }
   
   ###############################
   ##
@@ -556,10 +559,6 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.sibset) {
   ## Plot Subbasin Network
   ##
   ###############################
-  
-  # HRU.file <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, ".rvh", sep = "")))
-  # 
-  # subbasinNetwork.plot(HRU.file$SBtable[sub("\\_.*", "", HRU.file$SBtable$Name) == include.watersheds, ], labeled = T)
   
   
 }
