@@ -66,8 +66,43 @@ station.no <- as.character(station.no[!station.no %in% "<Null>"])
 ## If there are no WSC stations within the ws.interest (i.e., station.no is zero), no redirects are written and the model will not be calibrated to WSC data
 if(length(station.no) > 0) {
 
-## Retrieve all available data for all required stations and save in one large tibble.
-  # tmp <- hy_daily_flows(station_number = station.no, hydat_path = hydat_here, start_date = start.date, end_date = end.date)
+  # ## -----------------------------------------------------
+  # ##
+  # ## Identify which stations only monitor water levels - assume that these are in "reservoirs"
+  # ##
+  # ## -----------------------------------------------------
+  # 
+  # available.data <- hy_stn_data_coll(station_number = station.no, hydat_path = hydat_here)
+  # 
+  # reservoir.stations <- c()
+  # 
+  # for(i in 1:length(station.no)){
+  #   
+  #   tmp <- available.data[available.data$STATION_NUMBER == station.no[i], ]
+  #   
+  #   data.types <- unique(tmp$DATA_TYPE)
+  #   
+  #   if(length(data.types) == 1){
+  #      
+  #      if(data.types == "Water Level"){
+  #     
+  #     reservoir.stations <- c(reservoir.stations, station.no[i])
+  #     
+  #   }
+  #  }
+  # }
+  
+  
+  # tmp <- hy_daily_levels(station_number = reservoir.stations, hydat_path = hydat_here, start_date = start.date, end_date = end.date)
+  # 
+  # ## -----------------------------------------------------
+  # ##
+  # ## Identify remaining stations that have flow data and create *.rvt files for these.
+  # ##
+  # ## -----------------------------------------------------
+  # 
+  # ## Identify remaining stations as flow stations
+  # flow.stations <- station.no[!station.no %in% reservoir.stations]
 
   
   ## Add error handling for those stations which are not contained in the HYDAT database
