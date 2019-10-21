@@ -95,7 +95,6 @@ parameters <- RVP.template[which(!is.na(RVP.template$CAL_MIN)), c("GROUP", "PARA
 ## Convert all values to characters
 parameters[,] <- lapply(parameters[, ], as.character)
 
-
 calibration.specials <- parameters[parameters$GROUP == "CalibrationGroups", ]
 
 # calibration.special.names <- paste(calibration.specials$DEFINITION, calibration.specials$PARAMETER, sep = "_")
@@ -123,6 +122,16 @@ if(nrow(calibration.specials) > 0){
   parameters <- parameters[!parameters$GROUP == "CalibrationGroups",]
   
 }
+
+##------------------------------------------------------------
+##
+## Identify which SubbasinProperties should be excluded. This REQUIRES that the watershed name is used for the group name by default.
+##
+##------------------------------------------------------------
+
+remove.subbasin.properties <- gsub('(.*)_\\w+', '\\1', watersheds)[!gsub('(.*)_\\w+', '\\1', watersheds) %in% include.watersheds]
+
+parameters <- parameters[!c(parameters$GROUP == "SubbasinProperties" & parameters$DEFINITION %in% remove.subbasin.properties), ]
 
 
 ## Extract "Value" as the initial starting value for Ostrich. This matches the initial values in the *.rvp file and prevents having to use the "extract" function in Ostrich
