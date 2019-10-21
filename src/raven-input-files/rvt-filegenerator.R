@@ -187,7 +187,7 @@ weights <- matrix(nrow = nHRU, ncol = 3, data = c(HRU = HRUs$HRUtable$ID,
 RVToutFile <- file.path(output.location, paste(ws.interest, "-", run.number, ".rvt", sep = ""))
 
 ## If running an OSTRICH calibration, include the :LinearTransform function for precipitation. If not, exclude this command (Expected to slow down model initialization process)
-if(run.ostrich == TRUE & length(pr.correction) == 1){
+if(length(pr.correction) == 1){
   cat(file = RVToutFile, append = T, sep = "",
       "\n",
       ":StationForcing", "\n",
