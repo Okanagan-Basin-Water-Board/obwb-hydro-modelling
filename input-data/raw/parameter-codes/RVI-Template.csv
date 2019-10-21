@@ -37,6 +37,6 @@ OutputOptions,EvaluationMetrics,NASH_SUTCLIFFE,,
 OutputOptions,EvaluationMetrics,RMSE,,
 OutputOptions,EvaluationMetrics,PCT_BIAS,,
 OutputOptions,EvaluationMetrics,R2,,
-OutputOptions,WriteForcingFunctions
-OutputOptions,#SuppressOutput
-OutputOptions,#SilentMode
+OutputOptions,#WriteForcingFunctions
+OutputOptions,SuppressOutput
+OutputOptions,SilentMode
