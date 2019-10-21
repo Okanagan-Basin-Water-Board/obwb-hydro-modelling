@@ -216,6 +216,31 @@ for(j in 1:length(include.watersheds)){
       
       ############################################################################################################################
       ##
+      ## If *.rvh.tpl exists, write the redircet commands to that file too.
+      ##
+      ############################################################################################################################
+      
+      if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))){
+        
+        OstrichRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
+        
+        if(i == 1){
+          cat(file = OstrichRVHTemplateFile, append = T, sep = "",
+              "\n",
+              "#-------------------------------------------------------", "\n",
+              paste("# Redirect to", include.watersheds[j], "Creek Reservoir Files"), "\n",
+              "\n",
+              ":RedirectToFile ", paste("reservoirs/", reservoirs[i], ".rvh", sep = ""), "\n"
+          )} else {
+            cat(file = OstrichRVHTemplateFile, append = T, sep = "",
+                ":RedirectToFile ", paste("reservoirs/", reservoirs[i], ".rvh", sep = ""), "\n"
+            ) 
+          }
+      }
+      
+      
+      ############################################################################################################################
+      ##
       ## Generate Ostrich Template file for same conditions
       ##
       ############################################################################################################################
