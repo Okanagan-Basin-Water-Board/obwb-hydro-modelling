@@ -506,7 +506,7 @@ SubbasinProperties,TIME_CONC,105,Whiteman,d,Whiteman,Whiteman
 SubbasinProperties,TIME_CONC,104,Whiteman,d,Whiteman,Whiteman
 SubbasinProperties,TIME_CONC,103,Whiteman,d,Whiteman,Whiteman
 SubbasinProperties,TIME_CONC,102,Whiteman,d,Whiteman,Whiteman
-SubbasinProperties,TIME_CONC,101,450,d,400,500
+SubbasinProperties,TIME_CONC,101,Whiteman,d,Whiteman,Whiteman
 SubbasinProperties,TIME_TO_PEAK,3108,Shorts,d,Shorts,Shorts
 SubbasinProperties,TIME_TO_PEAK,3107,Shorts,d,Shorts,Shorts
 SubbasinProperties,TIME_TO_PEAK,3106,Shorts,d,Shorts,Shorts
