@@ -24,16 +24,16 @@ ws.interest <- "Reservoir-Demand-Build"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Mission"
+include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Oct-17-1"
+run.number <- "Oct-21-Whiteman-subProps-tests-1"
 
 ## Add comments to README file.
-run.comments <- "Updating owdm-rvt-file to include :ReservoirExtraction if demand is direct from a reservoir"
+run.comments <- "Confirming updated scripts for subbasin properties included."
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -42,13 +42,13 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- TRUE
+include.water.demand <- FALSE
 
 # Should reservoir parameters be included in the calibration?
 calibrate.reservoirs <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
-manage.reservoirs <- TRUE
+manage.reservoirs <- FALSE
 
 ## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
@@ -167,6 +167,8 @@ if(recreate.rvh == TRUE){
         file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
         file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
         }
+
+source("/var/obwb-hydro-modelling/src/raven-input-files/subbasin-properties-generator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/reservoir-rvh-filegenerator.R")
 
