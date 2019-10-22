@@ -25,6 +25,9 @@ model.period <- seq(start.date, end.date, by = "days")
 ## Read in all snow course and snow pillow locations within the model domain
 snow.course.locations <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-course-locations-model-domain.csv")
 
+## Add container for all snow courses included in all model watersheds. This is used in custom.appendages
+all.snow.courses.included <- c()
+
 for(j in 1:length(include.watersheds)){
 
   ## Identify which snow courses and snow pillows are located within the current watershed(s)
@@ -45,7 +48,8 @@ for(j in 1:length(include.watersheds)){
   ## Return which snow courses have data available for the period of interest. This may be different to 'watershed.snow.courses' if data falls outside the window of modelling
   snow.courses.included <- unique(snow.course.SWE.model$Number)
   
-  
+  ## Create a vector with all snow courses in the modelled watershed(s) - this is needed when there is more than one modelled watershed
+  all.snow.courses.included <- c(all.snow.courses.included, as.character(snow.courses.included))
   
   if(length(snow.courses.included) > 0){
   
@@ -131,6 +135,9 @@ for(j in 1:length(include.watersheds)){
 
 snow.pillow.locations <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-pillow-locations-model-domain.csv")
 
+## Add container for all snow pillows included in all model watersheds. This is used in custom.appendages
+all.snow.pillows.included <- c()
+
 for(j in 1:length(include.watersheds)){
 
   watershed.snow.pillows <- snow.pillow.locations$LCTN_ID[gsub( " .*$", "", snow.pillow.locations$GNIS_NAME) %in% include.watersheds[j]]
@@ -158,6 +165,9 @@ for(j in 1:length(include.watersheds)){
     
     ## Return a listing of all stations which exist (i.e., had data available for the model period)
     snow.pillows.included <- colnames(snow.pillow.SWE.model)[colnames(snow.pillow.SWE.model)!= "DATE" & colnames(snow.pillow.SWE.model)!= "tiso"]
+    
+    ## Create a vector with all snow pillows in the modelled watershed(s) - this is needed when there is more than one modelled watershed
+    all.snow.pillows.included <- c(all.snow.pillows.included, as.character(snow.pillows.included))
     
     if(length(snow.pillows.included) > 0){
       
