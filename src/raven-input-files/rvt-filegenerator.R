@@ -26,7 +26,7 @@ library(ncdf4)
 RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
 
 ## Make all columns characters
-RVP.template[,] <- lapply(RVP.template.base[, ], as.character)
+RVP.template[,] <- lapply(RVP.template[, ], as.character)
 
 ## Extract the correction factor for Precipitation
 pr.correction <- RVP.template[RVP.template$GROUP == "ClimateParameter" & RVP.template$PARAMETER == "LinearTransform" & RVP.template$DEFINITION == "pr", "VALUE"]
@@ -186,8 +186,8 @@ weights <- matrix(nrow = nHRU, ncol = 3, data = c(HRU = HRUs$HRUtable$ID,
 
 RVToutFile <- file.path(output.location, paste(ws.interest, "-", run.number, ".rvt", sep = ""))
 
-## If running an OSTRICH calibration, include the :LinearTransform function for precipitation. If not, exclude this command (Expected to slow down model initialization process)
-if(length(pr.correction) == 1){
+## If a LinearTransform value for precipitation is included in the RVP-Template, add the LinearTransform function to the rvt file.
+if(length(pr.correction[!is.na(pr.correction)]) == 1){
   cat(file = RVToutFile, append = T, sep = "",
       "\n",
       ":StationForcing", "\n",
