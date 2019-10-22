@@ -58,6 +58,12 @@ processes <- RVI.template[RVI.template$GROUP == "HydrologicalProcesses", c("PARA
 
 output <- RVI.template[RVI.template$GROUP == "OutputOptions", c("PARAMETER", "DEFINITION")]
 
+if(run.ostrich == TRUE){
+  
+  calibration.options <- RVI.template[RVI.template$GROUP == "CalibrationOptions", c("PARAMETER", "DEFINITION")]
+  
+}
+
 
 ####################################################################
 ##
@@ -171,13 +177,15 @@ cat(file = RVIoutFile, append = T, sep = "",
 cat(file = RVIoutFile, append = T, sep = "",
       "\n",
       ":EndHydrologicProcesses", "\n",
+      "\n",
       "#---------------------------------------------------------", "\n",
-      "# ---- Define HRU Groups ---------------------------------", "\n",
+      "# ---- Define Watershed HRU Groups -----------------------", "\n",
       ":DefineHRUGroups ", paste(watersheds, collapse = ","), "\n"
     
 )
 
 cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
       "#---------------------------------------------------------", "\n",
       "# ---- Specify HRU Groups to Disable  --------------------", "\n"
 )
@@ -192,4 +200,18 @@ cat(file = RVIoutFile, append = T, sep = "",
 )  
 
 write.table(output, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+
+
+if(run.ostrich == TRUE){
+  
+  cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Calibration Specific Commands ---------------------", "\n",
+      "\n"
+  )
+  
+write.table(calibration.options, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)  
+  
+}
   
