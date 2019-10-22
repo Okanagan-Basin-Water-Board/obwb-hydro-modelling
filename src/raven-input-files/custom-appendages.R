@@ -1,12 +1,21 @@
-#################################################################################################################
+#############################################################################################################################################################################
 ##
-## This script adds SubbasinProperties to the *.rvh file for a particular model run. This process is separated from the 
-## rvh-filegenerator.R due to computational efficieny. The processes within rvh-filegenerator.R take a long time to complete
-## whereas this process is fairly minor and quick. In addition, this process is affected by calibration procedures
+## This script handles a series of custom appendages to required Raven input files. The appendages included herein are not *required* (i.e., Raven will execute successfully
+## withuot them); however, they are included to solicit improved model results, and/or support CustomOutput and plotting.
 ##
-## Oct-18-2019 LAB
+## Individual Code blocks are separated by #****************************************#
 ##
-#################################################################################################################
+## Oct-21-2019 LAB
+##
+#############################################################################################################################################################################
+
+
+## **************************************************************************************************************************************************************************
+##
+## This code block adds SubbasinProperties to the *.rvh file for a particular model run. This process is separated from the rvh-filegenerator.R due to computational efficieny.
+## The processes within rvh-filegenerator.R take a long time to complete  whereas this process is fairly minor and quick. In addition, this process is affected by calibration 
+## procedures
+
 
 #########################################################
 ##
@@ -97,7 +106,7 @@ for(i in 1:length(subbasin.property.names)){
 ##
 ##-------------------------------------------------------
 
-## Read in the rvh file to identify HRU number associated with each reservoir
+## Identify the rvh file to append SubbasinProperties to
 main.HRU.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
 
 
@@ -255,5 +264,109 @@ if(run.ostrich == TRUE){
 }
 
 
+## **************************************************************************************************************************************************************************
+##
+## This code block handles the definition, and inclusion of custom HRU groups for all Snow Courses and/or Snow Pillows within a given model run. This process is separated from
+## the *.rvi/*.rvh file generators since it is not *required*. This process allows CustomOutput to provide summary of SNOW by HRU Group (i.e., the HRU that corresponds o each snow
+## course or snow pillow)
 
+##-------------------------------------------------------
+##
+## Define HRU groups for all snow courses/snow pillows within the modelled watershed(s) within the *.rvi file
+##
+##-------------------------------------------------------
+
+
+## Identify the main RVI file to define the snow groups
+main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+
+## Identify the main RVH file to create the snow groups
+main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
+
+
+## ---------------------------------
+## If snow courses are included in the modelled watershed(s), define and create groups in rvi and rvh files
+## ---------------------------------
+if(exists("snow.courses.included")){
+  
+  ## Define snow course groups in the *.rvi file
+  cat(file = main.RVI.file, append = T, sep = "",
+      "\n",
+      "#-------------------------------------------------------", "\n",
+      "#-------- Define Snow Course Groups --------------------", "\n",
+      "\n",
+      ":DefineHRUGroups ", paste(paste(snow.courses.included, "Modelled", sep = "_"), collapse = ","), "\n"
+  )
+  
+  
+  ## Create snow course groups in the *.rvh file
+  for(i in 1:length(snow.courses.included)){
+  
+    HRU_ID <- snow.course.locations$HRU[snow.course.locations$LCTN_ID %in% snow.courses.included[i]]
+  
+  if(i == 1){
+    cat(file = main.RVH.file, append = T, sep = "",
+        "\n",
+        "\n",
+        "#-------------------------------------------------------", "\n",
+        "#-------- Create Snow Course Groups --------------------", "\n",
+        "\n",
+        ":HRUGroup ", paste(paste(snow.courses.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+        HRU_ID, "\n",
+        ":EndHRUGroup", "\n"
+    )} else {
+      cat(file = main.RVH.file, append = T, sep = "",
+          ":HRUGroup ", paste(paste(snow.courses.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+          HRU_ID, "\n",
+          ":EndHRUGroup", "\n"
+      ) 
+    }
+  
+  
+  } # End for loop of snow.courses.included
+} # End if exists("snow.courses.included)
+
+
+
+## ---------------------------------
+## If snow pillows are included in the modelled watershed(s), define and create groups in rvi and rvh files
+## ---------------------------------
+if(exists("snow.pillows.included")){
+  
+  ## Define snow pillow groups in the *.rvi file
+  cat(file = main.RVI.file, append = T, sep = "",
+      "\n",
+      "#-------------------------------------------------------", "\n",
+      "#-------- Define Snow Pillow Groups --------------------", "\n",
+      "\n",
+      ":DefineHRUGroups ", paste(paste(snow.pillows.included, "Modelled", sep = "_"), collapse = ","), "\n"
+  )
+  
+  
+  ## Create snow pillow groups in the *.rvh file
+  for(i in 1:length(snow.pillows.included)){
+    
+    HRU_ID <- snow.pillow.locations$HRU[snow.pillow.locations$LCTN_ID %in% sub('.', '', snow.pillows.included[i])]
+    
+    if(i == 1){
+      cat(file = main.RVH.file, append = T, sep = "",
+          "\n",
+          "\n",
+          "#-------------------------------------------------------", "\n",
+          "#-------- Create Snow Pillow Groups --------------------", "\n",
+          "\n",
+          ":HRUGroup ", paste(paste(snow.pillows.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+          HRU_ID, "\n",
+          ":EndHRUGroup", "\n"
+      )} else {
+        cat(file = main.RVH.file, append = T, sep = "",
+            ":HRUGroup ", paste(paste(snow.pillows.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+            HRU_ID, "\n",
+            ":EndHRUGroup", "\n"
+        ) 
+      }
+    
+    
+  } # End for loop of snow.pillows.included
+} # End if exists("snow.pillows.included)
 
