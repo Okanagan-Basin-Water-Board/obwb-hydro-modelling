@@ -153,7 +153,8 @@ if(nrow(owdm.sub) > 0){
       warmup.demand$tiso <- date.fills
 
       ## Add Raven NA (-1.2345) to entire warm-up period
-      warmup.demand$extraction.total <- -1.2345
+      ## NOTE: 0 is used here as a place holder - Raven currently doesn't respect the -1.2345 blank flag - James will update in due course.
+      warmup.demand$extraction.total <- 0
 
       ## Bind warmup period and tmp together to provide complete timesereis
       tmp <- rbind(warmup.demand, tmp)
