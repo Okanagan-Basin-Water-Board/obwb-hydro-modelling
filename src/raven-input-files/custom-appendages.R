@@ -110,7 +110,7 @@ for(i in 1:length(subbasin.property.names)){
 main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
 
 
-cat(file = main.HRU.file, append = T, sep = "",
+cat(file = main.RVH.file, append = T, sep = "",
     "\n",
     "#-------------------------------------------------------", "\n",
     "#----- Specify Subbasin Properties", "\n",
@@ -119,10 +119,10 @@ cat(file = main.HRU.file, append = T, sep = "",
     ":Units, ", paste(subbasin.units, collapse = ", "), "\n"
 )
 
-write.table(subbasin.properties.table, main.HRU.file, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+write.table(subbasin.properties.table, main.RVH.file, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
 
 
-cat(file = main.HRU.file, append = T, sep = "",
+cat(file = main.RVH.file, append = T, sep = "",
     ":EndSubBasinProperties", "\n"
 )
 
