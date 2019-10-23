@@ -409,6 +409,83 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   
   ###############################
   ##
+  ## Plot Modelled Snow and Observed Snow
+  ##
+  ###############################
+  
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))){
+    
+    ## Read-in modelled snow
+    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
+    
+    dates <- index(snow)
+    
+    if(length(all.snow.courses.included) > 0){
+      
+      for(i in 1:length(all.snow.courses.included)){
+        
+        SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
+        
+        SC.station.watershed <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "GNIS_NAME"])
+        
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        
+        mod.snow <- as.numeric(snow[,SC.station])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste(SC.station.watershed, "- Snow Course", all.snow.courses.included[i]))
+        points(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, pch = 19, col = 'red')
+        
+        legend("topright", legend = c(paste("Modelled SWE at Snow Course", all.snow.courses.included[i]), paste("Observed SWE at Snow Course", all.snow.courses.included[i])),
+               pch = c(NA, 19),
+               col = c("black", "red"),
+               lty = c(1, NA),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.courses.included)
+    
+    
+    
+    if(length(all.snow.pillows.included) > 0){
+      
+      par(mfrow = c(length(all.snow.pillows.included), 1))
+      
+      for(i in 1:length(all.snow.pillows.included)){
+        
+        SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
+        
+        SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "GNIS_NAME"])
+        
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        
+        mod.snow <- as.numeric(snow[,SP.station])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste(SP.station.watershed, " - Snow Pillow", all.snow.pillows.included[i]))
+        lines(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, col = 'red')
+        
+        legend("topright", legend = c(paste("Modelled SWE at Snow Pillow", all.snow.pillows.included[i]), paste("Observed SWE at Snow Pillow", all.snow.pillows.included[i])),
+               col = c("black", "red"),
+               lty = c(1, 1),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.courses.included)
+  } # End if file exists
+  
+  ###############################
+  ##
   ## Modelled snow against observed snow
   ##
   ###############################
