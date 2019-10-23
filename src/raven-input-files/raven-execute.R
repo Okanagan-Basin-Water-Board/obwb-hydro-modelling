@@ -19,18 +19,18 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Reservoir-Demand-Build"
+ws.interest <- "snow-plotting"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Whiteman"
+include.watersheds <- c("Mission", "Whiteman")
 
 ## Specify a run number to associated with outputs
-run.number <- "Oct-21-Whiteman-subProps-tests-1"
+run.number <- "oct-21-agg-snow-4"
 
 ## Add comments to README file.
-run.comments <- "Confirming updated scripts for subbasin properties included."
+run.comments <- "Snow Plotting Functionality"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -168,8 +168,6 @@ if(recreate.rvh == TRUE){
         file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
         }
 
-source("/var/obwb-hydro-modelling/src/raven-input-files/subbasin-properties-generator.R")
-
 source("/var/obwb-hydro-modelling/src/raven-input-files/reservoir-rvh-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvi-filegenerator.R")
@@ -179,6 +177,8 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvp-filegenerator.R")
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/snow-rvt-filegenerator.R")
+
+source("/var/obwb-hydro-modelling/src/raven-input-files/custom-appendages.R")
 
 if(include.water.demand == TRUE){
   
