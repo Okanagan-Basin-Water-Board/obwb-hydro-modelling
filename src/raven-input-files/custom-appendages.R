@@ -107,7 +107,7 @@ for(i in 1:length(subbasin.property.names)){
 ##-------------------------------------------------------
 
 ## Identify the rvh file to append SubbasinProperties to
-main.HRU.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
+main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
 
 
 cat(file = main.HRU.file, append = T, sep = "",
@@ -295,7 +295,7 @@ if(length(all.snow.courses.included) > 0){
       "#-------------------------------------------------------", "\n",
       "#-------- Define Snow Course Groups --------------------", "\n",
       "\n",
-      ":DefineHRUGroups ", paste(paste(all.snow.courses.included, "Modelled", sep = "_"), collapse = ","), "\n"
+      ":DefineHRUGroups ", paste(paste("SC", all.snow.courses.included, sep = "_"), collapse = ","), "\n"
   )
   
   
@@ -311,12 +311,12 @@ if(length(all.snow.courses.included) > 0){
         "#-------------------------------------------------------", "\n",
         "#-------- Create Snow Course Groups --------------------", "\n",
         "\n",
-        ":HRUGroup ", paste(paste(all.snow.courses.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+        ":HRUGroup ", paste(paste("SC", all.snow.courses.included[i], sep = "_"), collapse = ","), "\n",
         HRU_ID, "\n",
         ":EndHRUGroup", "\n"
     )} else {
       cat(file = main.RVH.file, append = T, sep = "",
-          ":HRUGroup ", paste(paste(all.snow.courses.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+          ":HRUGroup ", paste(paste("SC", all.snow.courses.included[i], sep = "_"), collapse = ","), "\n",
           HRU_ID, "\n",
           ":EndHRUGroup", "\n"
       ) 
@@ -333,20 +333,22 @@ if(length(all.snow.courses.included) > 0){
 ## ---------------------------------
 if(length(all.snow.pillows.included) > 0){
   
+  all.snow.pillows.included <- sub('.', '', all.snow.pillows.included)
+  
   ## Define snow pillow groups in the *.rvi file
   cat(file = main.RVI.file, append = T, sep = "",
       "\n",
       "#-------------------------------------------------------", "\n",
       "#-------- Define Snow Pillow Groups --------------------", "\n",
       "\n",
-      ":DefineHRUGroups ", paste(paste(all.snow.pillows.included, "Modelled", sep = "_"), collapse = ","), "\n"
+      ":DefineHRUGroups ", paste(paste("SP", all.snow.pillows.included,sep = "_"), collapse = ","), "\n"
   )
   
   
   ## Create snow pillow groups in the *.rvh file
   for(i in 1:length(all.snow.pillows.included)){
     
-    HRU_ID <- snow.pillow.locations$HRU[snow.pillow.locations$LCTN_ID %in% sub('.', '', all.snow.pillows.included[i])]
+    HRU_ID <- snow.pillow.locations$HRU[snow.pillow.locations$LCTN_ID %in% all.snow.pillows.included[i]]
     
     if(i == 1){
       cat(file = main.RVH.file, append = T, sep = "",
@@ -355,12 +357,12 @@ if(length(all.snow.pillows.included) > 0){
           "#-------------------------------------------------------", "\n",
           "#-------- Create Snow Pillow Groups --------------------", "\n",
           "\n",
-          ":HRUGroup ", paste(paste(all.snow.pillows.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+          ":HRUGroup ", paste(paste("SP", all.snow.pillows.included[i], sep = "_"), collapse = ","), "\n",
           HRU_ID, "\n",
           ":EndHRUGroup", "\n"
       )} else {
         cat(file = main.RVH.file, append = T, sep = "",
-            ":HRUGroup ", paste(paste(all.snow.pillows.included[i], "Modelled", sep = "_"), collapse = ","), "\n",
+            ":HRUGroup ", paste(paste("SP", all.snow.pillows.included[i], sep = "_"), collapse = ","), "\n",
             HRU_ID, "\n",
             ":EndHRUGroup", "\n"
         ) 
