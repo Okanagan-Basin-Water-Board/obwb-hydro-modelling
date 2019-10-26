@@ -98,7 +98,7 @@ for(j in 1:length(include.watersheds)){
       ## If run.ostrich == TRUE, add redircts to the template file too
       ##----------------------------------------------------------------
       
-      if(run.ostrich == TRUE){
+      if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
         
       ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
       OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
@@ -221,7 +221,7 @@ for(j in 1:length(include.watersheds)){
         ## If run.ostrich == TRUE, add redircts to the template file too
         ##----------------------------------------------------------------
         
-        if(run.ostrich == TRUE){
+        if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
           
           
         OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
