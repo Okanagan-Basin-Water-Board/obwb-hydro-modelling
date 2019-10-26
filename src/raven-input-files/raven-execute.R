@@ -13,27 +13,27 @@ require(filesstrings)
 require(mailR)
 require(data.table)
 
-cores <- detectCores() - 1
+cores <- detectCores() - 3
 
 ## Start timer
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "snow-plotting"
+ws.interest <- "oct-25"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- c("Mission", "Whiteman")
+include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "oct-21-agg-snow-4"
+run.number <- "Whiteman-Calibration-9"
 
 ## Add comments to README file.
-run.comments <- "Snow Plotting Functionality"
+run.comments <- "Trial Calibration of whiteman creek"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -145,6 +145,24 @@ if(run.ostrich == TRUE){
   file.symlink(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/Linux/openmpi/2.0.2/Ostrich"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   # file.copy(from = file.path("/var/obwb-hydro-modelling/src/ostrich_src/save_best.sh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 }
+
+#####################################################################
+##
+## Copy input template fies into the run directory to track changes to RVP-template.csv and RVI-template.csv
+##
+#####################################################################
+
+dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "input-templates"), recursive = T)
+
+file.copy(from = file.path("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "input-templates"))
+file.copy(from = file.path("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "input-templates"))
+
+if(run.ostrich == T){
+  
+  file.copy(from = file.path("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/OST-Template.csv"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "input-templates"))
+  
+}
+
 
 #####################################################################
 ##
@@ -277,7 +295,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   
   
   ## Shutdown the VM.
-  system2("sudo", args = "shutdown -h now")
+  # system2("sudo", args = "shutdown -h now")
   
 #####################################################################
 ##
@@ -296,7 +314,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
-  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'))
+  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'), wait = F)
   
   print("Ostrich was not used for model calibration during this run...")
   
