@@ -23,7 +23,7 @@
 ##
 #########################################################
 
-RVP.template.base <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv")
+RVP.template.base <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
 
 ## Isolate only CalibrationGroups and SubbasinProperties
 RVP.template.base <- RVP.template.base[RVP.template.base$GROUP == "CalibrationGroups" | RVP.template.base$GROUP == "SubbasinProperties", ]
@@ -52,7 +52,7 @@ if(nrow(calibration.specials) > 0){
     
     special_parameter <- calibration.specials[i,]
     
-    RVP.template[RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION, "VALUE"] <- special_parameter$VALUE
+    RVP.template[which(RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION), "VALUE"] <- special_parameter$VALUE
     
   }
   
@@ -70,61 +70,73 @@ if(nrow(calibration.specials) > 0){
 ## Isolate only subbasins present within the current model run
 subbasin.properties <- RVP.template[RVP.template$DEFINITION %in% subbasins.present$Subbasin_ID, ]
 
-subbasin.property.names <- names(sort(summary(as.factor(subbasin.properties$PARAMETER)), decreasing = T))
-
-layers <- unique(subbasin.properties$DEFINITION)
-
-subbasin.units <- rep(NA, length(subbasin.property.names))
-
-subbasin.properties.table <- matrix(nrow = length(layers), ncol = length(subbasin.property.names) + 1, NA)
-
-
-## loop over all landuse parameters to populate the landuse.parameter.table
-for(i in 1:length(subbasin.property.names)){
+## If either no subbasin properties are specified for the included watersheds, or if all of the values are NA (this allows grouped parameters to be turned off to control whole watersheds)
+if(nrow(subbasin.properties) >0 & !all(is.na(subbasin.properties$VALUE))){
   
-  para <- subbasin.properties[subbasin.properties$PARAMETER == subbasin.property.names[i],]
+  ## Remove any subbasin properties that are NA
+  subbasin.properties <- subbasin.properties[!is.na(subbasin.properties$VALUE), ]
+
+  subbasin.property.names <- names(sort(summary(as.factor(subbasin.properties$PARAMETER)), decreasing = T))
   
-  extract <- para[, c("DEFINITION", "VALUE")]
+  layers <- unique(subbasin.properties$DEFINITION)
   
-  if(i == 1){
-    ## if i == 1, include the "DEFINITION" column as landuse types. if i !=1, only include the "VALUE" column
-    subbasin.properties.table[,1:2] <- as.matrix(extract)
+  subbasin.units <- rep(NA, length(subbasin.property.names))
+  
+  subbasin.properties.table <- matrix(nrow = length(layers), ncol = length(subbasin.property.names) + 1, NA)
+  
+  
+  ## loop over all landuse parameters to populate the landuse.parameter.table
+  for(i in 1:length(subbasin.property.names)){
     
-  } else { 
-    ## Concatenate the extracted value(s) and "_DEFAULT" to fill any missing specified parameter values. This allows not all paramaters to have to be specified for all landuse classes.
-    subbasin.properties.table[,i+1] <- c(as.matrix(extract[,"VALUE"]), rep("_DEFAULT", length(layers) - nrow(extract)))
+    para <- subbasin.properties[subbasin.properties$PARAMETER == subbasin.property.names[i],]
+    
+    extract <- para[, c("DEFINITION", "VALUE")]
+    
+    if(i == 1){
+      ## if i == 1, include the "DEFINITION" column as landuse types. if i !=1, only include the "VALUE" column
+      subbasin.properties.table[,1:2] <- as.matrix(extract)
+      
+    } else { 
+      ## Concatenate the extracted value(s) and "_DEFAULT" to fill any missing specified parameter values. This allows not all paramaters to have to be specified for all landuse classes.
+      subbasin.properties.table[,i+1] <- c(as.matrix(extract[,"VALUE"]), rep("_DEFAULT", length(layers) - nrow(extract)))
+    }
+    
+    subbasin.units[i] <- unique(para[,"UNITS"])
+    
   }
   
-  subbasin.units[i] <- unique(para[,"UNITS"])
+  
+  ##-------------------------------------------------------
+  ##
+  ## Read in the main *.rvh file to append the subbasin.properties.table to
+  ##
+  ##-------------------------------------------------------
+  
+  ## Identify the rvh file to append SubbasinProperties to
+  main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
+  
+  
+  cat(file = main.RVH.file, append = T, sep = "",
+      "\n",
+      "#-------------------------------------------------------", "\n",
+      "#----- Specify Subbasin Properties", "\n",
+      ":SubBasinProperties", "\n",
+      ":Parameters, ", paste(subbasin.property.names, collapse = ", "), "\n",
+      ":Units, ", paste(subbasin.units, collapse = ", "), "\n"
+  )
+  
+  write.table(subbasin.properties.table, main.RVH.file, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
+  
+  
+  cat(file = main.RVH.file, append = T, sep = "",
+      ":EndSubBasinProperties", "\n"
+  )
+
+} else {
+  
+  print("No Subbasin Properties are included in this model run.")
   
 }
-
-
-##-------------------------------------------------------
-##
-## Read in the main *.rvh file to append the subbasin.properties.table to
-##
-##-------------------------------------------------------
-
-## Identify the rvh file to append SubbasinProperties to
-main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
-
-
-cat(file = main.RVH.file, append = T, sep = "",
-    "\n",
-    "#-------------------------------------------------------", "\n",
-    "#----- Specify Subbasin Properties", "\n",
-    ":SubBasinProperties", "\n",
-    ":Parameters, ", paste(subbasin.property.names, collapse = ", "), "\n",
-    ":Units, ", paste(subbasin.units, collapse = ", "), "\n"
-)
-
-write.table(subbasin.properties.table, main.RVH.file, append = T, col.names = F, row.names = F, sep = ",", quote = F, na = "")
-
-
-cat(file = main.RVH.file, append = T, sep = "",
-    ":EndSubBasinProperties", "\n"
-)
 
 #########################################################
 ##
@@ -140,17 +152,50 @@ if(run.ostrich == TRUE){
   ## Make all columns characters
   RVP.template[,] <- lapply(RVP.template[, ], as.character)
   
+  
+  
+  ## If the special parameter (i.e., calibration group) does not have CAL_MIN / CAL_MAX specified, replace those values across the board to eliminate all from calibration
+  if(nrow(calibration.specials) > 0){
+    
+    for(i in 1:nrow(calibration.specials)){
+      
+      special_parameter <- calibration.specials[i,]
+      
+      if(is.na(special_parameter$CAL_MIN)){
+        
+        RVP.template[which(RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION), "CAL_MIN"] <- special_parameter$CAL_MIN
+        
+        RVP.template[which(RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION), "CAL_MAX"] <- special_parameter$CAL_MAX
+        
+        RVP.template[which(RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION), "VALUE"] <- special_parameter$VALUE
+        
+      }
+      
+    }
+    
+    ## Delete the rows that house the CalibrationGroup definitions
+    # RVP.template <- RVP.template[!RVP.template$GROUP == "CalibrationGroups",]
+    
+  }
+  
+  
   ## Add empty column to house the calibration variable
   RVP.template$CAL_VAR <- NA
   
   ## Those paramaters which are not included in calibration should have their value assigned to the CAL_VAR column
   RVP.template[is.na(RVP.template$CAL_MIN), "CAL_VAR"] <- RVP.template$VALUE[is.na(RVP.template$CAL_MIN)]
   
+  ## Delete rows that are Calibrationgroups AND CAL_MIN is na
+  RVP.template <- RVP.template[!(RVP.template$GROUP == "CalibrationGroups" & is.na(RVP.template$CAL_MIN)),]
+  
   ##-------------------------------------------------------
   ##
   ## Subbasin Properties
   ##
   ##-------------------------------------------------------
+  
+  ## Redefine subbasin.properties so that it honours the removal of grouped variables that should not be included in the calibration
+  subbasin.properties <- RVP.template[RVP.template$DEFINITION %in% subbasins.present$Subbasin_ID, ]
   
   ## Test if subbasin.properties has any values in CAL_MAX then it should be included for calibration.
   ## If NOT all values are NA, generate subbasin.properties.calibrate table and populate.
@@ -161,6 +206,9 @@ if(run.ostrich == TRUE){
     
     ## Isolate only the subasins that are included in the current model run, as well as all CalibrationGroups
     subbasin.properties.calibrate <- RVP.template[RVP.template$DEFINITION %in% subbasins.present$Subbasin_ID | RVP.template$GROUP == "CalibrationGroups", ]
+    
+    ## Remove any subbasin properties that are NA
+    subbasin.properties.calibrate <- subbasin.properties.calibrate[!is.na(subbasin.properties.calibrate$VALUE), ]
     
     ## concatenate all definitions and parameters to make unique calibration names for each entry
     subbasin.properties.calibrate$CAL_VAR[which(is.na(subbasin.properties.calibrate$CAL_VAR))] <- paste(subbasin.properties.calibrate$DEFINITION[which(is.na(subbasin.properties.calibrate$CAL_VAR))], subbasin.properties.calibrate$PARAMETER[which(is.na(subbasin.properties.calibrate$CAL_VAR))], sep = "_")
@@ -371,4 +419,81 @@ if(length(all.snow.pillows.included) > 0){
     
   } # End for loop of snow.pillows.included
 } # End if exists("snow.pillows.included)
+
+
+## If an rvh.tpl file has been generated to allow subbasin calibrations to take place, also append the Snow groups to this file.
+if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))){
+  
+  
+  OstrichRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
+  
+  ## ---------------------------------
+  ## If snow courses are included in the modelled watershed(s), define and create groups in rvi and rvh files
+  ## ---------------------------------
+  if(length(all.snow.courses.included) > 0){
+    
+    ## Create snow course groups in the *.rvh file
+    for(i in 1:length(all.snow.courses.included)){
+      
+      HRU_ID <- snow.course.locations$HRU[snow.course.locations$LCTN_ID %in% all.snow.courses.included[i]]
+      
+      if(i == 1){
+        cat(file = OstrichRVHTemplateFile, append = T, sep = "",
+            "\n",
+            "\n",
+            "#-------------------------------------------------------", "\n",
+            "#-------- Create Snow Course Groups --------------------", "\n",
+            "\n",
+            ":HRUGroup ", paste(paste("SC", all.snow.courses.included[i], sep = "_"), collapse = ","), "\n",
+            HRU_ID, "\n",
+            ":EndHRUGroup", "\n"
+        )} else {
+          cat(file = main.RVH.file, append = T, sep = "",
+              ":HRUGroup ", paste(paste("SC", all.snow.courses.included[i], sep = "_"), collapse = ","), "\n",
+              HRU_ID, "\n",
+              ":EndHRUGroup", "\n"
+          ) 
+        }
+      
+      
+    } # End for loop of snow.courses.included
+  } # End if exists("snow.courses.included)
+  
+  
+  
+  ## ---------------------------------
+  ## If snow pillows are included in the modelled watershed(s), define and create groups in rvi and rvh files
+  ## ---------------------------------
+  if(length(all.snow.pillows.included) > 0){
+    
+    all.snow.pillows.included <- sub('.', '', all.snow.pillows.included)
+
+    ## Create snow pillow groups in the *.rvh.tpl file
+    for(i in 1:length(all.snow.pillows.included)){
+      
+      HRU_ID <- snow.pillow.locations$HRU[snow.pillow.locations$LCTN_ID %in% all.snow.pillows.included[i]]
+      
+      if(i == 1){
+        cat(file = OstrichRVHTemplateFile, append = T, sep = "",
+            "\n",
+            "\n",
+            "#-------------------------------------------------------", "\n",
+            "#-------- Create Snow Pillow Groups --------------------", "\n",
+            "\n",
+            ":HRUGroup ", paste(paste("SP", all.snow.pillows.included[i], sep = "_"), collapse = ","), "\n",
+            HRU_ID, "\n",
+            ":EndHRUGroup", "\n"
+        )} else {
+          cat(file = main.RVH.file, append = T, sep = "",
+              ":HRUGroup ", paste(paste("SP", all.snow.pillows.included[i], sep = "_"), collapse = ","), "\n",
+              HRU_ID, "\n",
+              ":EndHRUGroup", "\n"
+          ) 
+        }
+      
+      
+    } # End for loop of snow.pillows.included
+  } # End if exists("snow.pillows.included)
+  
+}
 
