@@ -89,6 +89,44 @@ for(i in 1:length(OST.template.files)){
 
 RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
 
+
+
+## Make all columns characters
+RVP.template[,] <- lapply(RVP.template[, ], as.character)
+
+## Subset all grouped calibration parameters
+calibration.specials <- RVP.template[RVP.template$GROUP == "CalibrationGroups", ]
+
+
+## If the special parameter (i.e., calibration group) does not have CAL_MIN / CAL_MAX specified, replace those values across the board to eliminate all from calibration
+if(nrow(calibration.specials) > 0){
+  
+  for(i in 1:nrow(calibration.specials)){
+    
+    special_parameter <- calibration.specials[i,]
+    
+    if(is.na(special_parameter$CAL_MIN)){
+      
+      RVP.template[which(RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION), "CAL_MIN"] <- special_parameter$CAL_MIN
+      
+      RVP.template[which(RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION), "CAL_MAX"] <- special_parameter$CAL_MAX
+      
+      RVP.template[which(RVP.template$PARAMETER == special_parameter$PARAMETER & RVP.template$VALUE == special_parameter$DEFINITION), "VALUE"] <- special_parameter$VALUE
+      
+    }
+    
+  }
+  
+  ## Delete the rows that house the CalibrationGroup definitions
+  # RVP.template <- RVP.template[!RVP.template$GROUP == "CalibrationGroups",]
+  
+}
+
+## Delete rows that are Calibrationgroups AND CAL_MIN is na
+RVP.template <- RVP.template[!(RVP.template$GROUP == "CalibrationGroups" & is.na(RVP.template$CAL_MIN)),]
+
+
+
 ## Isolate only parameters that will be included in calibration (i.e., remove parameters that don't have a calibration range specified)
 parameters <- RVP.template[which(!is.na(RVP.template$CAL_MIN)), c("GROUP", "PARAMETER", "DEFINITION", "VALUE", "CAL_MIN", "CAL_MAX")]
 
