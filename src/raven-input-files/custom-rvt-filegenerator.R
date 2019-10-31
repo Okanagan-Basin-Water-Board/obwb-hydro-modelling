@@ -59,14 +59,33 @@ if(nrow(custom.timeseries) > 0){
       
       
       ## ------------------------------------------------
-      ## Check for missing records and generate continuous timeseries for the model period
-      ##------------------------------------------------
+      ##
+      ## Check to see if the data are continuous or irregular records
+      ##
+      ## ------------------------------------------------
       
-      custom.data$Date <- as.Date(custom.data$Date)
+      if(tmp[j, "Observation_Type"] == "Continuous"){
       
-      dates <- data.frame(Date = seq(as.Date(start.date), as.Date(end.date), by = "day"))
+        ## ------------------------------------------------
+        ## Check for missing records and generate continuous timeseries for the model period
+        ##------------------------------------------------
+        
+        custom.data$Date <- as.Date(custom.data$Date)
+        
+        dates <- data.frame(Date = seq(as.Date(start.date), as.Date(end.date), by = "day"))
+        
+        custom.data <- merge(dates, custom.data, by.all = "Date", all.x = T)
+        
+      }
       
-      custom.data <- merge(dates, custom.data, by.all = "Date", all.x = T)
+      if(tmp[j, "Observation_Type"] == "Irregular"){
+        
+        ## Format dates correctly for read-in to Raven
+        custom.data$tiso <- as.POSIXct(custom.data$Date_Time, format = "%m/%d/%Y %H:%M:%S")
+        custom.data$tiso <- strftime(custom.data$tiso, format = "%Y-%m-%d %H:%M:%S")
+        
+      }
+      
 
       ## ------------------------------------------------
       ## If the custom data is a diversion, figure out how it should be handled
@@ -223,6 +242,22 @@ if(nrow(custom.timeseries) > 0){
         } # End Continuous Hydrograph
         
         if(tmp[j, "Observation_Type"] == "Irregular"){
+          
+          ## Make na values = 0
+          custom.data[is.na(custom.data$Mean_Daily_Discharge_m3s), "Mean_Daily_Discharge_m3s"] <- 0
+          
+          cat(file - customRVTfile, sep = "", append = T,
+              "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+              ":IrregularObservations HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), nrow(custom.data), " m3/s", "\n"
+            )
+          
+          write.table(custom.data[,c("Date_Time", "Mean_Daily_Discharge_m3")], customRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+          
+          cat(file = customRVToutFile, append = T, sep = "",
+              ":EndIrregularObservations",
+              "\n"
+          )
+          
 
         ## WRITE IRREGULAR OBSERVATION TYPE
           
@@ -257,7 +292,20 @@ if(nrow(custom.timeseries) > 0){
         
         if(tmp[j, "Observation_Type"] == "Irregular"){
 
-          ## WRITE IRREGULAR OBSERVATION TYPE
+          ## Make na values = 0
+          custom.data[is.na(custom.data$Res_Stage_m), "Res_Stage_m"] <- 0
+          
+          cat(file = customRVTfile, sep = "", append = T,
+              "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+              ":IrregularObservations RESERVOIR_STAGE ", as.character(tmp[j, "Subbasin"]), " ", nrow(custom.data), " m", "\n"
+          )
+          
+          write.table(custom.data[,c("tiso", "Res_Stage_m")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+          
+          cat(file = customRVTfile, append = T, sep = "",
+              ":EndIrregularObservations",
+              "\n"
+          )
           
         } # End Irregular Reservoir Stage
         
@@ -287,7 +335,20 @@ if(nrow(custom.timeseries) > 0){
         
         if(tmp[j, "Observation_Type"] == "Irregular"){
           
-          ## WRITE IRREGULAR OBSERVATION TYPE
+          ## Make na values = 0
+          custom.data[is.na(custom.data$Res_Out_m3s), "Res_Out_m3s"] <- 0
+          
+          cat(file = customRVTfile, sep = "", append = T,
+              "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+              ":IrregularObservations HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), " ", nrow(custom.data), " m3/s", "\n"
+          )
+          
+          write.table(custom.data[,c("tiso", "Res_Out_m3s")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+          
+          cat(file = customRVTfile, append = T, sep = "",
+              ":EndIrregularObservations",
+              "\n"
+          )
           
         } # End Irregular Reservoir Outflow
         
@@ -328,7 +389,7 @@ if(nrow(custom.timeseries) > 0){
         
         OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
         
-        if(i == 1){
+        if(i == 1 & j == 1){
           
           cat(file = OstrichRVTFile, append = T, sep = "",
               "\n",
