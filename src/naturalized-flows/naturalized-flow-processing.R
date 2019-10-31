@@ -444,6 +444,73 @@ for(i in 1:length(required.files)){
 
 } #End for loop of required.files
 
+
+##################################################################################################################
+##
+## Generate summary statistics between weekly averaged model output and naturalized/residual streamflow datasets
+##
+##################################################################################################################
+
+require(gridExtra)
+
+## IF naturalized AND residual datasets exist
+if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "STREAM_RES"] == "Y"){
+  
+  
+  ## Create Summary of Naturalized Streamflow 
+  
+  summary.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow"),
+                        Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
+                                  round(min(Times$Raven.apex), 3),
+                                  round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
+                                  round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
+                                  round(min(Raven.apex.weekly$Weekly.mean), 3))
+    
+  )
+  
+  grid::grid.newpage()
+  grid.table(summary.natural)
+  
+  
+  ## Create a Summary of Residual Streamflow
+  
+  summary.residual <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow"),
+                        Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
+                                  round(min(Times$Raven.apex), 3),
+                                  round(NSE(Raven.apex.weekly$Weekly.mean, res.stream.poi), 3),
+                                  round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
+                                  round(min(Raven.apex.weekly$Weekly.mean), 3))
+  )
+  
+  grid::grid.newpage()
+  grid.table(summary.residual)
+                        
+  
+
+} else {
+  
+  ## Create Summary of Naturalized Streamflow 
+  
+  summary.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow"),
+                                Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
+                                          round(min(Times$Raven.apex), 3),
+                                          round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
+                                          round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
+                                          round(min(Raven.apex.weekly$Weekly.mean), 3))
+                                
+  )
+  
+  grid::grid.newpage()
+  grid.table(summary.natural)
+  
+  
+  
+}
+
+
+
+
+
 # 
 # 
 # 
