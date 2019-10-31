@@ -44,7 +44,7 @@
 # )
 
 # ## Create ephemeral VM
-system2("gcloud", args = paste("compute instances create ", run.number, " --zone=northamerica-northeast1-a --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=", run.number, " --custom-extensions --custom-cpu=8 --custom-memory=20GB --image=raven-ephemeral-vm", sep = ""))
+system2("gcloud", args = paste("compute instances create ", run.number, " --zone=northamerica-northeast1-a --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=", run.number, " --custom-extensions --custom-cpu=8 --custom-memory=30GB --image=raven-ephemeral-vm", sep = ""))
 # 
 # ## Let machine settle
 system2("sleep", args = "5s")
@@ -56,7 +56,7 @@ system2("sleep", args = "5s")
 
 system2("gcloud", args = paste("compute scp --compress --zone=northamerica-northeast1-a --recurse ", file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), " ", Sys.getenv("LOGNAME"), "@", run.number, ":/var/raven", sep = ""))
 
-system2("gcloud", args = paste("compute ssh ", Sys.getenv("LOGNAME"), "@", run.number, " --zone=northamerica-northeast1-a --command='cd /var/raven/", paste(ws.interest, run.number, sep = "-"), "'", sep = ""))
+# system2("gcloud", args = paste("compute ssh ", Sys.getenv("LOGNAME"), "@", run.number, " --zone=northamerica-northeast1-a --command='cd /var/raven/", paste(ws.interest, run.number, sep = "-"), "'", sep = ""))
 
 system2("gcloud", args = paste("compute ssh ", Sys.getenv("LOGNAME"), "@", run.number, " --zone=northamerica-northeast1-a --command='cd /var/raven/", paste(ws.interest, run.number, sep = "-"), ";/usr/bin/mpirun -n 3 /var/raven/", paste(ws.interest, run.number, sep = "-"), "/OstrichMPI'", sep = ""), wait = F, stdout = NULL)
 
