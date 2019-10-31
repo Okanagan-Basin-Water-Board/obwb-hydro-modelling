@@ -652,3 +652,44 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   
   
 }
+
+
+
+ephemeral.calibration <- function(ws.interest, run.number){
+  
+  
+  ## Create Ephemeral VM
+  system2("gcloud", args = paste("compute instances create ", run.number, " --zone=northamerica-northeast1-a --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=", run.number, " --custom-extensions --custom-cpu=8 --custom-memory=10GB --image=raven-ephemeral-vm", sep = ""))
+  
+  ## Create ephemeral.vm.vcontrols.sh
+  ephemeral.vm.controls <- file.path("/var/obwb-hydro-modelling", "ephemeral.vm.controls.sh")
+  
+  cat(file = ephemeral.vm.controls, append = F, sep = "",
+      
+      ## Command to copy all Raven files for given run
+      "sudo gcloud ", paste("compute scp --compress --zone=northamerica-northeast1-a --recurse ", file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), " ", Sys.getenv("LOGNAME"), "@", run.number, ":/var/raven", sep = ""), "\n",
+      
+      ## Change directory to the run directory
+      "cd /var/raven/", paste(ws.interest, run.number, sep = "-"), "\n",
+      
+      ## Execute Ostrich
+      "/usr/bin/mpirun -n 7 ", file.path("/var/raven", paste(ws.interest, run.number, sep = "-"), "OstrichMPI"), "\n",
+      
+      ## Remove all netCDF files to reduce file transfer coming back
+      "sudo rm -r *.nc", "\n",
+      
+      ## Copy calibration results back to master vm
+      "sudo gcloud ", paste("compute scp --compress --zone=northamerica-northeast1-a --recurse ", file.path("/var/raven", paste(ws.interest, run.number, sep = "-")), " ", file.path("obwb-hydro-modelling:/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "calibration-results")), "\n",
+      
+      ## shut down the master vm
+      "sudo shutdown -h now"
+      
+      )
+  
+  ## copy ephemeral.vm.controls to the vm
+  system2("gcloud", args = paste("compute scp --compress --zone=northamerica-northeast1-a --recurse ", ephemeral.vm.controls, " ", Sys.getenv("LOGNAME"), "@", run.number, ":/var/raven", sep = "")) 
+  
+  ## Execute ephemeral.vm.controls on the vm
+  system2("gcloud", args = paste("compute ssh ", Sys.getenv("LOGNAME"), "@", run.number, " --zone=northamerica-northeast1-a --command='cd /var/raven/ ; bash ephemeral.vm.controls.sh'", sep = ""), wait = F, stdout = NULL)
+  
+}
