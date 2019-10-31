@@ -26,7 +26,8 @@ for(i in 1:length(watersheds)){
   
 }
 
-
+## NOTE: THis was discussed with DA and was deemed insignificant - the missing pixels are a result of "gaps" in aquifer shape files. Small slithers exist between some polygons
+## and the polygon-raster conversion happens to place the slither directly through the middle of the pixel results in NA.
 
 # 
 # 
