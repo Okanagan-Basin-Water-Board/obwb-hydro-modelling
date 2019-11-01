@@ -202,7 +202,6 @@ if(nrow(custom.timeseries) > 0){
               ":EndObservationData", "\n"
           )
           
-          
           ##----------------------------------------------
           ##
           ## Write Observation Weights for the calibration/validation period
@@ -385,6 +384,37 @@ if(nrow(custom.timeseries) > 0){
             cat(file = customRVTfile, sep = "", append = T,
                 ":EndObservationData", "\n"
             )
+            
+            ##----------------------------------------------
+            ##
+            ## Write Observation Weights for the calibration/validation period
+            ##
+            ##----------------------------------------------
+            
+            if(validate.model == FALSE){
+              
+              custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+              
+            } else {
+              
+              custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+              
+            }
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                "\n",
+                "# Write ObservationWeights", "\n",
+                ":ObservationWeights RESERVOIR_STAGE ", as.character(tmp[j, "Subbasin"]), "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(custom.data$Date[1])),nrow(custom.data)), "\n"
+            )
+            
+            write.table(custom.data$weights, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                ":EndObservationWeights", "\n"
+            )
+            
+            
           } # End Contiuous Reservoir Stage
           
           if(tmp[j, "Observation_Type"] == "Irregular"){
@@ -424,7 +454,7 @@ if(nrow(custom.timeseries) > 0){
             cat(file = customRVTfile, sep = "", append = T,
                 "\n",
                 "# Write ObservationWeights", "\n",
-                ":IrregularWeights HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), " ",nrow(custom.data), "\n"
+                ":IrregularWeights RESERVOIR_STAGE ", as.character(tmp[j, "Subbasin"]), " ",nrow(custom.data), "\n"
             )
             
             write.table(custom.data[,c("Date_Time", "weights")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
@@ -457,6 +487,36 @@ if(nrow(custom.timeseries) > 0){
             cat(file = customRVTfile, sep = "", append = T,
                 ":EndObservationData", "\n"
             )
+            
+            ##----------------------------------------------
+            ##
+            ## Write Observation Weights for the calibration/validation period
+            ##
+            ##----------------------------------------------
+            
+            if(validate.model == FALSE){
+              
+              custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+              
+            } else {
+              
+              custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+              
+            }
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                "\n",
+                "# Write ObservationWeights", "\n",
+                ":ObservationWeights HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(custom.data$Date[1])),nrow(custom.data)), "\n"
+            )
+            
+            write.table(custom.data$weights, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                ":EndObservationWeights", "\n"
+            )
+            
           } # End Continupus Reservoir Outflow
           
           if(tmp[j, "Observation_Type"] == "Irregular"){
