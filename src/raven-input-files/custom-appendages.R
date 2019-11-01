@@ -500,16 +500,19 @@ if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simula
 
 ## **************************************************************************************************************************************************************************
 ##
-## This code block defines and populates an "AllHRUs" HRUGroup which contains all HRUs within the current model run. This is defined in the *.rvi file and populated in the *.rvh file
+## This code block defines and populates an "AllHRUs" HRUGroup which contains all HRUs within the current model run. This is defined in the *.rvi file and populated in the *.rvh file.
+## In addition, the :AggregatedVariable command is appended AFTER the HRUGroup is defined - this is required for it to operate correctly.
 
 main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
 
 main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
 
+## Grab the HRU table from the main.RVH.file
 HRU.table <- rvh.read(main.RVH.file)
 
 hru.table <- HRU.table$HRUtable
 
+## Identify whuch HRUs are within the present subbasins
 hrus.present <- hru.table[hru.table$SBID %in% subbasins.present$Subbasin_ID, "ID"]
 
 ## Generate a sequence for splitting HRU group entries over multiple lines - 20 HRUs per line
