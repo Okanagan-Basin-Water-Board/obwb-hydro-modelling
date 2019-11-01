@@ -77,6 +77,35 @@ for(j in 1:length(include.watersheds)){
           "\n"
       )
       
+      
+      ##----------------------------------------------
+      ##
+      ## Write Observation Weights for the calibration/validation period
+      ##
+      ##----------------------------------------------
+      
+      if(validate.model == FALSE){
+        
+        snow.course$weights <- ifelse(snow.course$tiso < as.Date(calibration.start) | snow.course$tiso > as.Date(calibration.end), 0, 1)
+        
+      } else {
+        
+        snow.course$weights <- ifelse(snow.course$tiso < as.Date(validation.start) | snow.course$tiso > as.Date(validation.end), 0, 1)
+        
+      }
+      
+      cat(file = SnowRVToutFile, sep = "", append = T,
+          "\n",
+          "# Write ObservationWeights", "\n",
+          ":IrregularWeights SNOW ", HRU_ID, " ", nrow(snow.course), "\n"
+      )
+      
+      write.table(snow.course[,c("tiso", "weights")], SnowRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+      
+      cat(file = SnowRVToutFile, sep = "", append = T,
+          ":EndIrregularWeights", "\n"
+      )
+      
       ## Append :RedirectToFile command to end of main *.rvt file
       main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvt", sep = ""))  
       
@@ -198,6 +227,34 @@ for(j in 1:length(include.watersheds)){
         cat(file = SnowRVToutFile, append = T, sep = "",
             ":EndIrregularObservations",
             "\n"
+        )
+        
+        ##----------------------------------------------
+        ##
+        ## Write Observation Weights for the calibration/validation period
+        ##
+        ##----------------------------------------------
+        
+        if(validate.model == FALSE){
+          
+          snow.pillow$weights <- ifelse(as.Date(snow.pillow$DATE) < as.Date(calibration.start) | as.Date(snow.pillow$DATE) > as.Date(calibration.end), 0, 1)
+          
+        } else {
+          
+          snow.pillow$weights <- ifelse(as.Date(snow.pillow$DATE) < as.Date(validation.start) | as.Date(snow.pillow$DATE) > as.Date(validation.end), 0, 1)
+          
+        }
+        
+        cat(file = SnowRVToutFile, sep = "", append = T,
+            "\n",
+            "# Write ObservationWeights", "\n",
+            ":IrregularWeights SNOW ", HRU_ID, " ", nrow(snow.pillow), "\n"
+        )
+        
+        write.table(snow.pillow[,c("DATE", "weights")], SnowRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+        
+        cat(file = SnowRVToutFile, sep = "", append = T,
+            ":EndIrregularWeights", "\n"
         )
         
         
