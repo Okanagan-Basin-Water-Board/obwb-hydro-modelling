@@ -530,7 +530,7 @@ cat(file = main.RVI.file, append = T, sep = "",
     ":DefineHRUGroups  AllHRUs", "\n",
     "\n",
     ":AggregatedVariable  INT_SOIL  AllHRUs", "\n",
-    ":AggregatedVariable  DEEP_SOIL AllHRUs"
+    ":AggregatedVariable  DEEP_SOIL AllHRUs", "\n"
     )
 
 
@@ -542,7 +542,7 @@ cat(file = main.RVH.file, append = T, sep = "",
     "\n",
     ":HRUGroup  AllHRUs", "\n",
     paste(hrus.present, collapse = ","), "\n",
-    ":EndHRUGroup"
+    ":EndHRUGroup", "\n"
     )
 
 
