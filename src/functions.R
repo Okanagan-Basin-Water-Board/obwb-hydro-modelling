@@ -654,6 +654,31 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
 }
 
 
+## Function to remove the :SuppressOutput command from the rvi file to facilitate plotting of calibration results
+rewrite.output <- function(ws.interest, run.number){
+  
+  main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+  
+  new.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-replace.rvi", sep = ""))
+  
+  con <- file(main.RVI.file, open = 'r')
+  while(TRUE) {
+    line <- readLines(con, n = 1)
+    if(length(line) == 0) break
+    else if(!startsWith(line, ":SuppressOutput")){
+      write(line, file = new.RVI.file, append = TRUE)
+    } 
+  }
+  close(con)
+  
+  file.remove(main.RVI.file)
+  
+  file.rename(new.RVI.file, main.RVI.file)
+  
+}
+
+
+
 
 ephemeral.calibration <- function(ws.interest, run.number){
   
