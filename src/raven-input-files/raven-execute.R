@@ -19,7 +19,7 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "custom-timeseries"
+ws.interest <- "Natural-Calibration"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -27,13 +27,13 @@ ws.interest <- "custom-timeseries"
 include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "base-1996-2010"
+run.number <- "Whiteman-aggregated-2000"
 
 ## Add comments to README file.
-run.comments <- "assessing influence of soil depth"
+run.comments <- "calibration attempt for aggregated variable with 2000 iterations"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -258,16 +258,29 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## Plot a series of model results
   ##
   #####################################################################
-  # require(RavenR)
-  # 
-  # ## Generate a pdf of results
-  # pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
-  # 
-  # plot.calibration.results(ws.interest, run.number, subbasins.present)
-  # 
-  # source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
-  # 
-  # dev.off()
+  
+  ## Remove the :SuppressOutput command from the RvI file
+  rewrite.output(ws.interest, run.number)
+  
+  ## Change the directoyr into the final calibration directory
+  setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model"))
+  
+  ## Complete one more model run to write all model output
+  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'))
+  
+  
+  
+  
+  require(RavenR)
+
+  ## Generate a pdf of results
+  pdf(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
+
+  plot.calibration.results(ws.interest, run.number, subbasins.present)
+
+  source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
+
+  dev.off()
 
   ## Send email to notify of completion
 
