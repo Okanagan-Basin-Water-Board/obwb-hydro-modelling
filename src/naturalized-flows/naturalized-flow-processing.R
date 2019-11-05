@@ -331,7 +331,7 @@ for(i in 1:length(required.files)){
     
   } ## End IF statement for calculation of residual flows
 
-  ##################################################################################################################
+   ##################################################################################################################
   ##
   ## Plot comparisons with Raven model output
   ##
@@ -451,6 +451,7 @@ for(i in 1:length(required.files)){
 ##
 ##################################################################################################################
 
+require(grid)
 require(gridExtra)
 
 ## IF naturalized AND residual datasets exist
@@ -459,63 +460,285 @@ if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "S
   
   ## Create Summary of Naturalized Streamflow 
   
-  summary.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow"),
-                        Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
-                                  round(min(Times$Raven.apex), 3),
-                                  round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
-                                  round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
-                                  round(min(Raven.apex.weekly$Weekly.mean), 3))
+  summary.model.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
+                                      Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
+                                                round(min(Times$Raven.apex), 3),
+                                                round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
+                                                round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
+                                                round(min(Raven.apex.weekly$Weekly.mean), 3),
+                                                round(mean(Times$Raven.apex), 3))
     
   )
   
-  grid::grid.newpage()
-  grid.table(summary.natural)
-  
-  
-  ## Create a Summary of Residual Streamflow
-  
-  summary.residual <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow"),
-                        Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
-                                  round(min(Times$Raven.apex), 3),
-                                  round(NSE(Raven.apex.weekly$Weekly.mean, res.stream.poi), 3),
-                                  round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
-                                  round(min(Raven.apex.weekly$Weekly.mean), 3))
+  summary.naturalized.flows <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
+                                          Value = c(NA,
+                                                    NA,
+                                                    NA,
+                                                    round(nrow(nat.stream.flow.long[nat.stream.flow.long$value <= 0,]), 0),
+                                                    round(min(nat.stream.flow.long$value), 3),
+                                                    round(mean(nat.stream.flow.long$value), 3))
   )
   
   grid::grid.newpage()
-  grid.table(summary.residual)
-                        
+  title.natural.model <- textGrob("Naturalized - Model Summary")
+  title.naturalized.flows <- textGrob("Naturalized - Streamlow Summary")
+  table.natural.model <- tableGrob(summary.model.natural)
+  table.naturalized.flows <- tableGrob(summary.naturalized.flows)
+  grid.arrange(title.natural.model, table.natural.model, title.naturalized.flows, table.naturalized.flows, nrow = 2, ncol = 2)
+  
+ 
+  ## Create Summary of Residual Streamflow 
+  
+  summary.model.residual <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
+                                      Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
+                                                round(min(Times$Raven.apex), 3),
+                                                round(NSE(Raven.apex.weekly$Weekly.mean, res.stream.poi), 3),
+                                                round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
+                                                round(min(Raven.apex.weekly$Weekly.mean), 3),
+                                                round(mean(Times$Raven.apex), 3))
+                                      
+  )
+  
+  summary.residual.flows <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
+                                          Value = c(NA,
+                                                    NA,
+                                                    NA,
+                                                    round(length(res.stream.poi[res.stream.poi <= 0]), 0),
+                                                    round(min(res.stream.poi), 3),
+                                                    round(mean(res.stream.poi), 3))
+  )
+  
   
 
+  grid::grid.newpage()
+  title.residual.model <- textGrob("Residual - Model Summary")
+  title.residual.flows <- textGrob("Residual - Streamlow Summary")
+  table.residual.model <- tableGrob(summary.model.residual)
+  table.residual.flows <- tableGrob(summary.residual.flows)
+  grid.arrange(title.residual.model, table.residual.model, title.residual.flows, table.residual.flows, nrow = 2, ncol = 2)
+  
 } else {
   
   ## Create Summary of Naturalized Streamflow 
   
-  summary.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow"),
-                                Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
-                                          round(min(Times$Raven.apex), 3),
-                                          round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
-                                          round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
-                                          round(min(Raven.apex.weekly$Weekly.mean), 3))
-                                
+  summary.model.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
+                                      Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
+                                                round(min(Times$Raven.apex), 3),
+                                                round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
+                                                round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
+                                                round(min(Raven.apex.weekly$Weekly.mean), 3),
+                                                round(mean(Times$Raven.apex), 3))
+                                      
+  )
+  
+  summary.naturalized.flows <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
+                                          Value = c(NA,
+                                                    NA,
+                                                    NA,
+                                                    round(nrow(nat.stream.flow.long[nat.stream.flow.long$value <= 0,]), 0),
+                                                    round(min(nat.stream.flow.long$value), 3),
+                                                    round(mean(nat.stream.flow.long$value), 3))
   )
   
   grid::grid.newpage()
-  grid.table(summary.natural)
+  title.natural.model <- textGrob("Naturalized - Model Summary")
+  title.naturalized.flows <- textGrob("Naturalized - Streamlow Summary")
+  table.natural.model <- tableGrob(summary.model.natural)
+  table.naturalized.flows <- tableGrob(summary.naturalized.flows)
+  grid.arrange(title.natural.model, table.natural.model, title.naturalized.flows, table.naturalized.flows, nrow = 2, ncol = 2)
+
+}
+
+
+##################################################################################################################
+##
+## Calculate uncertainty bands on naturalized/residual streamflow datasets
+##
+##################################################################################################################
+
+if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "STREAM_RES"] == "Y"){
   
   
+  ## Determine residual and natural uncertainty values
+  naturalized.uncertainty <- nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "NAT_UNCERTAINTY"]
+  
+  residual.uncertainty <- nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "RES_UNCERTAINTY"]
+  
+  ## Calculate upper and lower uncertainty bands for naturalized streamflows
+  upper.naturalized.uncertainty <- nat.stream.flow.long$value + (nat.stream.flow.long$value * naturalized.uncertainty)
+  
+  lower.naturalized.uncertainty <- nat.stream.flow.long$value - (nat.stream.flow.long$value * naturalized.uncertainty)
+  
+  ## Calculate upper and lower uncertainty bands for residual streamflows
+  upper.residual.uncertainty <- res.stream.poi + (res.stream.poi * residual.uncertainty)
+  
+  lower.residual.uncertainty <- res.stream.poi - (res.stream.poi * residual.uncertainty)
+  
+  ## Determine when the uncertainty is met
+  natural.uncertainty.met <- Raven.apex.weekly$Weekly.mean >= lower.naturalized.uncertainty & Raven.apex.weekly$Weekly.mean <= upper.naturalized.uncertainty
+  
+  residual.uncertainty.met <- Raven.apex.weekly$Weekly.mean >= lower.residual.uncertainty & Raven.apex.weekly$Weekly.mean <= upper.residual.uncertainty
+  
+  ## Calculate the number of weeks when the modelled values fall within the uncertainty bounds
+  no.natural.weeks.within.uncertainty <- length(Raven.apex.weekly$Weekly.mean[natural.uncertainty.met == TRUE])
+  
+  no.residual.weeks.within.uncertainty <- length(Raven.apex.weekly$Weekly.mean[residual.uncertainty.met == TRUE])
+  
+  
+} else {
+  
+  ## Determine residual and natural uncertainty values
+  naturalized.uncertainty <- nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "NAT_UNCERTAINTY"]
+  
+  ## Calculate upper and lower uncertainty bands for naturalized streamflows
+  upper.naturalized.uncertainty <- nat.stream.flow.long$value + (nat.stream.flow.long$value * naturalized.uncertainty)
+  
+  lower.naturalized.uncertainty <- nat.stream.flow.long$value - (nat.stream.flow.long$value * naturalized.uncertainty)
+  
+  ## Determine when the uncertainty is met
+  natural.uncertainty.met <- Raven.apex.weekly$Weekly.mean >= lower.naturalized.uncertainty & Raven.apex.weekly$Weekly.mean <= upper.naturalized.uncertainty
+  
+  ## Calculate the number of weeks when the modelled values fall within the uncertainty bounds
+  no.natural.weeks.within.uncertainty <- length(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean >= lower.naturalized.uncertainty & Raven.apex.weekly$Weekly.mean <= upper.naturalized.uncertainty, ] == TRUE)
   
 }
 
 
 
+if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "STREAM_RES"] == "Y"){
+
+  par(mfrow = c(2,1))
+  
+  ##-------------------------------------------------
+  ##
+  ## Plot naturalized streamflows vs. Raven output
+  ##
+  ##-------------------------------------------------
+  
+  raven.natural.uncertainty.test <- data.frame(natural.uncertainty.met = Raven.apex.weekly$Weekly.mean,
+                                       natural.uncertainty.unmet = Raven.apex.weekly$Weekly.mean)
+  
+  raven.natural.uncertainty.test$natural.uncertainty.met[natural.uncertainty.met == FALSE] <- NA
+  raven.natural.uncertainty.test$natural.uncertainty.unmet[natural.uncertainty.met == TRUE] <- NA
+  
+  plot(nat.stream.flow.long$value, type = 'l', ylab = "Mean Weekly Discharge (cms)",
+       main = paste(current.watershed, "Creek Naturalized Streamflow Comparison"),
+       xaxt = "n",
+       xlab = "")
+  
+  polygon(c(1:780, rev(1:780)), c(lower.naturalized.uncertainty, rev(upper.naturalized.uncertainty)),
+          col = 'grey',
+          border = NA)
+  lines(nat.stream.flow.long$value, col = 'black')
+  
+  lines(Raven.apex.weekly$Weekly.mean, col = "red")
+  
+  lines(raven.natural.uncertainty.test$natural.uncertainty.met, col = 'green')
+  
+  legend("topright", legend = c("Naturalized Streamflow (Apex of Fan)", "Raven Output (Apex of Fan) - outside accepted uncertainty", "Raven Output (Apex of Fan) - within accepted uncertainty"),
+         lty = c(1, 1, 1),
+         col = c("black", "red", "green"),
+         bty = "n")
+  
+  abline(h = 0, lty = 3, col = "grey")
+  
+  abline(v = loc, lty = 3, col = "grey")
+  
+  axis(side = 1, at = loc, labels = Days[tag])
+  
+  ##-------------------------------------------------
+  ##
+  ## Plot residual streamflows vs. Raven output
+  ##
+  ##-------------------------------------------------
+  
+  raven.residual.uncertainty.test <- data.frame(residual.uncertainty.met = Raven.apex.weekly$Weekly.mean,
+                                               residual.uncertainty.unmet = Raven.apex.weekly$Weekly.mean)
+  
+  raven.residual.uncertainty.test$residual.uncertainty.met[residual.uncertainty.met == FALSE] <- NA
+  raven.residual.uncertainty.test$residual.uncertainty.unmet[residual.uncertainty.met == TRUE] <- NA
+  
+  plot(nat.stream.flow.long$value, type = 'l', ylab = "Mean Weekly Discharge (cms)",
+       main = paste(current.watershed, "Creek Naturalized Streamflow Comparison"),
+       xaxt = "n",
+       xlab = "")
+  
+  polygon(c(1:780, rev(1:780)), c(lower.residual.uncertainty, rev(upper.residual.uncertainty)),
+          col = 'grey',
+          border = NA)
+  lines(nat.stream.flow.long$value, col = 'black')
+  
+  lines(Raven.apex.weekly$Weekly.mean, col = "red")
+  
+  lines(raven.residual.uncertainty.test$residual.uncertainty.met, col = 'green')
+  
+  legend("topright", legend = c("Naturalized Streamflow (Apex of Fan)", "Raven Output (Apex of Fan) - outside accepted uncertainty", "Raven Output (Apex of Fan) - within accepted uncertainty"),
+         lty = c(1, 1, 1),
+         col = c("black", "red", "green"),
+         bty = "n")
+  
+  abline(h = 0, lty = 3, col = "grey")
+  
+  abline(v = loc, lty = 3, col = "grey")
+  
+  axis(side = 1, at = loc, labels = Days[tag])
+  
+} else {
+  
+  ##-------------------------------------------------
+  ##
+  ## Plot naturalized streamflows vs. Raven output
+  ##
+  ##-------------------------------------------------
+  
+  raven.natural.uncertainty.test <- data.frame(natural.uncertainty.met = Raven.apex.weekly$Weekly.mean,
+                                               natural.uncertainty.unmet = Raven.apex.weekly$Weekly.mean)
+  
+  raven.natural.uncertainty.test$natural.uncertainty.met[natural.uncertainty.met == FALSE] <- NA
+  raven.natural.uncertainty.test$naturaluncertainty.unmet[natural.uncertainty.met == TRUE] <- NA
+  
+  plot(nat.stream.flow.long$value, type = 'l', ylab = "Mean Weekly Discharge (cms)",
+       main = paste(current.watershed, "Creek Naturalized Streamflow Comparison"),
+       xaxt = "n",
+       xlab = "")
+  
+  polygon(c(1:780, rev(1:780)), c(lower.naturalized.uncertainty, rev(upper.naturalized.uncertainty)),
+          col = 'grey',
+          border = NA)
+  lines(nat.stream.flow.long$value, col = 'black')
+  
+  lines(Raven.apex.weekly$Weekly.mean, col = "red")
+  
+  lines(raven.natural.uncertainty.test$natural.uncertainty.met, col = 'green')
+  
+  legend("topright", legend = c("Naturalized Streamflow (Apex of Fan)", "Raven Output (Apex of Fan) - outside accepted uncertainty", "Raven Output (Apex of Fan) - within accepted uncertainty"),
+         lty = c(1, 1, 1),
+         col = c("black", "red", "green"),
+         bty = "n")
+  
+  abline(h = 0, lty = 3, col = "grey")
+  
+  abline(v = loc, lty = 3, col = "grey")
+  
+  axis(side = 1, at = loc, labels = Days[tag])
+  
+}
 
 
-# 
-# 
-# 
-# plot(nat.stream.flow.long$value, raven.weekly$weekly, pch =19, xlab = "Whiteman Creek Naturalized Streamflow", ylab = "Raven Output")
-# 
-# 
+## Generate summary of number of weeks within uncertainty
 
-# NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value)
+natural.uncertainty.summary <- data.frame(Summary = c("Number of weeks where accepted uncertainty is met", "Percentage of time accepted uncertainty is met"),
+                                          Value = c(no.natural.weeks.within.uncertainty,
+                                                    (no.natural.weeks.within.uncertainty / length(Raven.apex.weekly$Weekly.mean)*100)))
+
+residual.uncertainty.summary <- data.frame(Summary = c("Number of weeks where accepted uncertainty is met", "Percentage of time accepted uncertainty is met"),
+                                          Value = c(no.residual.weeks.within.uncertainty,
+                                                    (no.residual.weeks.within.uncertainty / length(Raven.apex.weekly$Weekly.mean)*100)))
+
+
+grid::grid.newpage()
+title.natural.uncertainty <- textGrob("Naturalized - Model Summary")
+title.residual.uncertainty <- textGrob("Residual - Model Summary")
+table.natural.uncertainty <- tableGrob(natural.uncertainty.summary)
+table.residual.uncertainty <- tableGrob(residual.uncertainty.summary)
+grid.arrange(title.natural.uncertainty, table.natural.uncertainty, title.residual.uncertainty, table.residual.uncertainty, nrow = 2, ncol = 2)
