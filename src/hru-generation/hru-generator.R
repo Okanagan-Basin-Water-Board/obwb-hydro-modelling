@@ -154,8 +154,7 @@ aquifer.values <- values(aquifers.ok)
 
 
 ## Remove unneeded items from workspace
-rm(aquifers, aquifers.ok, dem, dem.ok, landcover, landcover.ok, slope.aspect, slope, aspect, slope.ok, aspect.ok,
-   soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape, okanagan.basin)
+rm(aquifers, aquifers.ok, dem, dem.ok, landcover, landcover.ok, slope.aspect, slope, aspect, slope.ok, aspect.ok, soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape, okanagan.basin)
 
 gc()
 
