@@ -10,176 +10,256 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 library(sf)
 library(plyr)
 library(stringr)
+library(raster)
 
 ## Read in GIS information
-soils.layers <- st_read(dsn = "/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BC_Soil_Map.gdb", layer = "BCSLF_Soil_Layer_File")
+# soils.layers <- st_read(dsn = "/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BC_Soil_Map.gdb", layer = "BCSLF_Soil_Layer_File")
 
-soils.poly <- st_read(dsn = "/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BC_Soil_Map.gdb", layer = "BC_Soil_Surveys")
+# soils.poly <- st_read(dsn = "/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BC_Soil_Map.gdb", layer = "BC_Soil_Surveys")
 
-# The below two lines are remnants of test files completed locally by LB - these were csv exports of attribute tables specifically for soils polygons within the Okanagan
-# soils.poly <- read.csv("P:/20188215/00_HYDRO_MODELING/Environmental_Sciences/04.00_Environmental_Assessments/02_Model Setup/Data/Raw/Updated soils/BC_Soil_Surveys_selection.csv")
-# soils.layers <- read.csv("P:/20188215/00_HYDRO_MODELING/Environmental_Sciences/04.00_Environmental_Assessments/02_Model Setup/Data/Raw/Updated soils/BCSLF_Soil_Layer_File.csv")
+## Read in GIS information, clipped to the Okanagan. Reading in the whole BC datasets (above) returned an error when trying to clip to the Okanagan
+bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
-## Isolate unique soil symbols within BC
-bc.soils <- as.character(unique(soils.poly$SOILSYM_1))
+soils.layers <- read.csv("/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BCSLF_Soil_Layer_File.csv")
 
-## Isolate only records with soil symbol mapped/attached
-bc.soils.layers <- soils.layers[soils.layers$Soil_Symbol %in% bc.soils,]
+soils.poly.base <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/soils/Soil_Clip.shp")
 
-## Redefine which soil symbols should be queried
-bc.soils <- as.character(unique(bc.soils.layers$Soil_Symbol))
+model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/EFN_WS.shp")
 
-## Replace -9 (i.e., NA) with 0 values so they're not included in totals
-bc.soils.layers$TSAND[bc.soils.layers$TSAND == -9] <- 0
-bc.soils.layers$TSILT[bc.soils.layers$TSILT == -9] <- 0
-bc.soils.layers$TCLAY[bc.soils.layers$TCLAY == -9] <- 0
-bc.soils.layers$KSAT[bc.soils.layers$KSAT == -9] <- 0
+#############################################################################################
+##
+## Convert soils polygons and model watersheds to spatial objects
+## Define the crs for each
+## Isolate all watershed names
+## Intersect the two so that only soil polygons within the model watersheds are retained
+## Append a unique tag to the soils polygons, depending on their watershed
 
+model.watersheds <- as(model.watersheds, "Spatial")
+
+soils.poly.base <- as(soils.poly.base, "Spatial")
+
+crs(model.watersheds) <- bc.albers
+
+crs(soils.poly.base) <- bc.albers
+
+watersheds <- model.watersheds$GNIS_NAME
+
+## Intersect soils polygons with watersheds
+soils.poly.base <- intersect(soils.poly.base, model.watersheds)
+
+## Create unique tag
+soils.poly.base$tag <- paste(soils.poly.base$SOILSYM_1, soils.poly.base$GNIS_NAME, sep = "_")
+
+
+#############################################################################
+##
+## Setup the output to house results, and specify the horizons to be included in the thickness calculation
+## NOTE: C horizon (Parent material) is not included in the thickness calculation as it not an "active" soil layer.
+##    The C horizon is included in the final profiles to act as the GW store.
+##
 
 ## Specify which horizons should be included in the thickness calculations
 horizons <- c("B", "BC", "AB", "BA", "A", "AC")
 
 ## Create empty dataframe to bind results to
-output <- data.frame(matrix(NA, ncol = ncol(bc.soils.layers)+5, nrow = 0))
+output <- data.frame(matrix(NA, ncol = ncol(soils.layers)+8, nrow = 0))
 
-for(i in 1:length(bc.soils)){
+#############################################################################
+##
+## Loop over each watershed and identify watershed-specific soil information
+##
+
+for(j in 1:length(watersheds)){
   
-  tmp <- bc.soils.layers[bc.soils.layers$Soil_Symbol == bc.soils[i],]
+  soils.poly <- soils.poly.base[soils.poly.base$GNIS_NAME == watersheds[j], ]
+
+  ## Isolate unique soil symbols within BC
+  bc.soils <- as.character(unique(soils.poly$SOILSYM_1))
   
-  tsand <- sum(tmp$TSAND)
+  ## Isolate only records with soil symbol mapped/attached
+  bc.soils.layers <- soils.layers[soils.layers$Soil_Symbol %in% bc.soils,]
   
-  tsilt <- sum(tmp$TSILT)
+  ## Redefine which soil symbols should be queried
+  bc.soils <- as.character(unique(bc.soils.layers$Soil_Symbol))
   
-  tclay <- sum(tmp$TCLAY)
+  ## Replace -9 (i.e., NA) with 0 values so they're not included in totals
+  bc.soils.layers$TSAND[bc.soils.layers$TSAND == -9] <- 0
+  bc.soils.layers$TSILT[bc.soils.layers$TSILT == -9] <- 0
+  bc.soils.layers$TCLAY[bc.soils.layers$TCLAY == -9] <- 0
+  bc.soils.layers$KSAT[bc.soils.layers$KSAT == -9] <- 0
   
-  total <- sum(tsand, tsilt, tclay, na.rm = T)
   
   
-  textures <- c(tsand, tsilt, tclay)
   
-  labels <- c("SAN", "SIL", "CLA")
-  
-  ## Determine the rank of the texture classes
-  order(textures, decreasing = T)
-  
-  if(total == 0){dominant <- tmp$HZN_MAS
-  
-  } else {
+  for(i in 1:length(bc.soils)){
     
-    ## order the labels to match the rank of the texture classes
-    dominant <- paste(labels[order(textures, decreasing = T)], collapse = "-")
-  }
-  
-  tmp$dominant <- dominant
-  
-  #########################################################################
-  ## Calculate percentage makeup
-  
-  if(total == 0){frac <- NA
-  
-  } else {
+    tmp <- bc.soils.layers[bc.soils.layers$Soil_Symbol == bc.soils[i],]
     
-    sand.frac <- round((tsand / total) * 100, -1)
+    tsand <- sum(tmp$TSAND)
     
-    silt.frac <- round((tsilt / total) * 100, -1)
+    tsilt <- sum(tmp$TSILT)
     
-    clay.frac <- round((tclay / total) * 100, -1)
+    tclay <- sum(tmp$TCLAY)
+    
+    total <- sum(tsand, tsilt, tclay, na.rm = T)
     
     
-    fractions <- c(sand.frac, silt.frac, clay.frac)
+    textures <- c(tsand, tsilt, tclay)
     
-    order(fractions, decreasing = T)
+    labels <- c("SAN", "SIL", "CLA")
     
-    frac <- paste(fractions[order(fractions, decreasing = T)], collapse = "-")
+    ## Determine the rank of the texture classes
+    order(textures, decreasing = T)
     
-  }
-  
-  tmp$frac <- frac
-  
-  #########################################################################
-  ## Determine low/med/high dominant proportion
-  
-  if(total == 0){flag <- NA
-  
-  } else {
+    if(total == 0){dominant <- tmp$HZN_MAS
     
-    dom.frac <- fractions[order(fractions, decreasing = T)][1]
+    } else {
+      
+      ## order the labels to match the rank of the texture classes
+      dominant <- paste(labels[order(textures, decreasing = T)], collapse = "-")
+    }
     
-    # if(!is.na(dom.frac)){
-    if(dom.frac >0 & dom.frac < 50){flag <- "low"}
-    if(dom.frac >= 50 & dom.frac < 75){flag <- "mod"}
-    if(dom.frac >= 75 & dom.frac <= 100){flag <- "high"}
-    # } else {flag <- "oops"}
-  }
-  
-  tmp$flag <- flag
-  
-  
-  
-  ##########################################################################
-  ## Calculate soil profile thickness
-  
-  if(total == 0){depth <- sum(tmp$HZN_THICK)
-  } else {
+    tmp$dominant <- dominant
     
-    ## sum the thickness of specified horizons. Note that str_trim is needed to trim false white space (i.e., random spaces) from the tmp object
-    thickness <- sum(tmp$HZN_THICK[which(str_trim(as.character(tmp$HZN_MAS), side = "both") %in% horizons)])
+    #########################################################################
+    ## Calculate percentage makeup
     
-    if(thickness > 0 & thickness <= 75){depth <- "shallow"}
-    if(thickness > 75 & thickness <= 150){depth <- "medium"}
-    if(thickness > 150){depth <- "deep"}
-  }
-  
-  tmp$depth <- depth
-  
-  ##########################################################################
-  ## Add soil type tag
-  
-  if(total == 0){soil_type <- NA
-  } else {
+    if(total == 0){frac <- NA
     
-    soil_type <- paste(labels[order(textures, decreasing = T)][1], flag, depth, sep = "-")
+    } else {
+      
+      sand.frac <- round((tsand / total) * 100, -1)
+      
+      silt.frac <- round((tsilt / total) * 100, -1)
+      
+      clay.frac <- round((tclay / total) * 100, -1)
+      
+      
+      fractions <- c(sand.frac, silt.frac, clay.frac)
+      
+      order(fractions, decreasing = T)
+      
+      frac <- paste(fractions[order(fractions, decreasing = T)], collapse = "-")
+      
+    }
     
-  }
+    tmp$frac <- frac
+    
+    #########################################################################
+    ## Determine low/med/high dominant proportion
+    
+    if(total == 0){flag <- NA
+    
+    } else {
+      
+      dom.frac <- fractions[order(fractions, decreasing = T)][1]
+      
+      # if(!is.na(dom.frac)){
+      if(dom.frac >0 & dom.frac < 50){flag <- "low"}
+      if(dom.frac >= 50 & dom.frac < 75){flag <- "mod"}
+      if(dom.frac >= 75 & dom.frac <= 100){flag <- "high"}
+      # } else {flag <- "oops"}
+    }
+    
+    tmp$flag <- flag
+    
+    
+    
+    ##########################################################################
+    ## Calculate soil profile thickness
+    
+    if(total == 0){depth <- sum(tmp$HZN_THICK)
+    } else {
+      
+      ## sum the thickness of specified horizons. Note that str_trim is needed to trim false white space (i.e., random spaces) from the tmp object
+      thickness <- sum(tmp$HZN_THICK[which(str_trim(as.character(tmp$HZN_MAS), side = "both") %in% horizons)])
+      
+      if(thickness > 0 & thickness <= 75){depth <- "shallow"}
+      if(thickness > 75 & thickness <= 150){depth <- "medium"}
+      if(thickness > 150){depth <- "deep"}
+    }
+    
+    tmp$depth <- depth
+    
+    ##########################################################################
+    ## Add soil type tag
+    
+    if(total == 0){soil_type <- NA
+    } else {
+      
+      soil_type <- paste(labels[order(textures, decreasing = T)][1], flag, depth, sep = "-")
+      
+    }
+    
+    tmp$soil_type <- soil_type
+    
+    
+    ##########################################################################
+    ## Address custom soil types
+    
+    tmp[tmp$Soil_Symbol == "BC$GP~~~~~N", "soil_type"] <- "GRAVEL_PIT" ## Gravel Pit
+    
+    tmp[tmp$Soil_Symbol == "BC$DK~~~~~N", "soil_type"] <- "DIKE" ## Dike
+    
+    tmp[tmp$Soil_Symbol == "BC$CF~~~~~N", "soil_type"] <- "CUT_FILL" ## Cut and Fill
+    
+    tmp[tmp$Soil_Symbol == "BC$MA~~~~~N", "soil_type"] <- "MARL" ## MARL
+    
+    
+    ##########################################################################
+    ## append watershed to soil type
+    tmp$watershed <- watersheds[j]
+    
+    tmp$base_soil_type <- tmp$soil_type
+    
+    tmp$soil_type <- paste(tmp$soil_type, watersheds[j], sep = "_")
+    
+    ##########################################################################
+    ## Address RAVEN custom soil types
+    
+    tmp[tmp$Soil_Symbol == "BCZZZ~~~~~N", "soil_type"] <- "LAKE" # OPEN WATER
+    
+    tmp[tmp$Soil_Symbol == "BCUUU~~~~~N", "soil_type"] <- "URBAN" ## Unclassified Urban
+    
+    tmp[tmp$Soil_Symbol == "BC$BR~~~~~N" | tmp$Soil_Symbol == "BC$UR~~~~~N" | tmp$Soil_Symbol == "BC$AR~~~~~N", "soil_type"] <- "ROCK" ## Bedrock Basic; Undifferentiated Bedrock; Bedrock Acidic
+    
+    tmp[tmp$Soil_Symbol == "BCWGL~~~~~N" | tmp$Soil_Symbol == "BCDKLca~~~N" | tmp$Soil_Symbol == "BCDKLca~~~A", "soil_type"] <- "LAKE" ## Willgress Lake; Darke Lake
+    
+    
+    ##########################################################################
+    ## Create Tag
+    
+    tmp$tag <- paste(tmp$SOIL_ID, watersheds[j], sep = "_")
+    
+    
+    ##########################################################################
+    ## Assign the same names to output to allow successful rbind
+    
+    names(output) <- names(tmp)
+    
+    output <- rbind(output, tmp)
+    
+  } # End bs.soils loop
   
-  tmp$soil_type <- soil_type
-  
-  ##########################################################################
-  ## Assign the same names to output to allow successful rbind
-  
-  names(output) <- names(tmp)
-  
-  output <- rbind(output, tmp)
-  
-}
+  print(paste(watersheds[j], "Watershed complete"))
+
+} # End watersheds loop
 
 print(paste("There are", length(unique(output$soil_type)), "unique soil types identified"))
-
-##########################################################################
-## Address custom soil types
-
-
-output[output$Soil_Symbol == "BCZZZ~~~~~N", "soil_type"] <- "LAKE" # OPEN WATER
-
-output[output$Soil_Symbol == "BCUUU~~~~~N", "soil_type"] <- "URBAN" ## Unclassified Urban
-
-output[output$Soil_Symbol == "BC$GP~~~~~N", "soil_type"] <- "GRAVEL_PIT" ## Gravel Pit
-
-output[output$Soil_Symbol == "BC$DK~~~~~N", "soil_type"] <- "DIKE" ## Dike
-
-output[output$Soil_Symbol == "BC$CF~~~~~N", "soil_type"] <- "CUT_FILL" ## Cut and Fill
-
-output[output$Soil_Symbol == "BC$BR~~~~~N" | output$Soil_Symbol == "BC$UR~~~~~N" | output$Soil_Symbol == "BC$AR~~~~~N", "soil_type"] <- "ROCK" ## Bedrock Basic; Undifferentiated Bedrock; Bedrock Acidic
-
-output[output$Soil_Symbol == "BC$MA~~~~~N", "soil_type"] <- "MARL" ## MARL
-
-output[output$Soil_Symbol == "BCWGL~~~~~N" | output$Soil_Symbol == "BCDKLca~~~N" | output$Soil_Symbol == "BCDKLca~~~A", "soil_type"] <- "LAKE" ## Willgress Lake; Darke Lake
-
-
 
 
 ## Write out master soils CSV for remapping soils tif. This must be imported to ArcGIS, and a raster generated using the new soil_type parameters
 write.csv(output, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soils-output.csv")
+
+##########################################################################
+## Merge table and polygons & Write Shapefile
+
+require(rgdal)
+
+Final.Soils <- merge(soils.poly.base, output, by = 'tag', duplicateGeoms = TRUE)
+
+## Export to shape file
+writeOGR(obj=Final.Soils, dsn="/var/obwb-hydro-modelling/input-data/processed/spatial/soils", layer="Soil_type", driver="ESRI Shapefile") # this is in geographical projection
 
 ####################################################################################################################################################
 ####################################################################################################################################################
