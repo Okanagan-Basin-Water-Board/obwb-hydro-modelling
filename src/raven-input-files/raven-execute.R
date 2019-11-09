@@ -19,7 +19,7 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Natural-Calibration"
+ws.interest <- "Testing-Nov"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -27,13 +27,13 @@ ws.interest <- "Natural-Calibration"
 include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "Whiteman-aggregated-2000"
+run.number <- "Whiteman-Updated-Soils"
 
 ## Add comments to README file.
-run.comments <- "calibration attempt for aggregated variable with 2000 iterations"
+run.comments <- "Testing new soil layers"
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
