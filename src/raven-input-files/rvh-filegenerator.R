@@ -150,7 +150,21 @@ if(nrow(HRU.output) != nrow(HRU.output.clean)){
 
 
 ## Replace "NA" soil profiles with most common soil profile
-HRU.output.clean[which(is.na(HRU.output.clean[,"SOIL_PROFILE"])), "SOIL_PROFILE"] <- as.character(soil.codes$soil_type[soil.codes$Value == getmode(HRU.table$soils)])
+# HRU.output.clean[which(is.na(HRU.output.clean[,"SOIL_PROFILE"])), "SOIL_PROFILE"] <- as.character(soil.codes$soil_type[soil.codes$Value == getmode(HRU.table$soils)])
+
+## Replace missing soil profiles (i.e., soil profile = "-") with the most common within the corresponding subbasin
+missing.soil.profiles.id <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "_"), "ID"]
+
+missing.soil.profiles.basin <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "_"), "BASIN_ID"]
+
+for(i in 1:length(missing.soil.profiles.basin)){
+  
+  subbasin.common.soil.profile <- getmode(HRU.output.clean[HRU.output.clean[, "BASIN_ID"] ==  missing.soil.profiles.basin[i], "SOIL_PROFILE"])
+  
+  HRU.output.clean[HRU.output.clean[, "ID"] == missing.soil.profiles.id[i], "SOIL_PROFILE"] <- subbasin.common.soil.profile
+  
+}
+
 
 ## Replace soil profiles underneath "WATER" Landuse and "WATER" Vegetation HRUs with LAKE profiles - this turns off all soil processed under open water HRUs.
 HRU.output.clean[which(HRU.output.clean[,"LAND_USE_CLASS"] == "WATER" & HRU.output.clean[,"VEG_CLASS"] == "WATER"), "SOIL_PROFILE"] <- "LAKE"
