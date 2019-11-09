@@ -142,10 +142,20 @@ for(i in 1:nrow(HRU.output)){
 # ## Remove HRUs with zero area.
 HRU.output.clean <- HRU.output[!as.numeric(HRU.output[,"AREA"]) <= 0,]
 
+
+if(nrow(HRU.output) != nrow(HRU.output.clean)){
+  stop(print("Some HRUs were removed due to zero area. Review HRU generation."))
+}
+
+
+
 ## Replace "NA" soil profiles with most common soil profile
 HRU.output.clean[which(is.na(HRU.output.clean[,"SOIL_PROFILE"])), "SOIL_PROFILE"] <- as.character(soil.codes$soil_type[soil.codes$Value == getmode(HRU.table$soils)])
 
-# 
+## Replace soil profiles underneath "WATER" Landuse and "WATER" Vegetation HRUs with LAKE profiles - this turns off all soil processed under open water HRUs.
+HRU.output.clean[which(HRU.output.clean[,"LAND_USE_CLASS"] == "WATER" & HRU.output.clean[,"VEG_CLASS"] == "WATER"), "SOIL_PROFILE"] <- "LAKE"
+
+
 # ## re-order the table so that all HRUs for each subbasin are next to each other
 # HRU.output <- HRU.output[order(HRU.output[,"BASIN_ID"]),]
 # 
@@ -164,6 +174,11 @@ HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "VEG_CLASS"] <-
 
 HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "SOIL_PROFILE"] <- "LAKE"
 
+
+## Write HRU Table to csv incase adjustments are needed
+save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raven-HRU-table.RData")
+
+# write.csv(HRU.output.clean, "/var/obwb-hydro-modelling/input-data/processed/spatial/HRU-table.csv")
 ##################################################################################################
 ##
 ## Generate required Subbasin output table (in format required by RAVEN)
