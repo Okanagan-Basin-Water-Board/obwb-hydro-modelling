@@ -63,7 +63,7 @@ if(nrow(custom.timeseries) > 0){
       ##
       ## ------------------------------------------------
       
-      if(as.Date(custom.data$Date[1]) > start.date & as.Date(custom.data$Date[1]) < end.date){
+      if((as.Date(custom.data$Date[1]) <= start.date & as.Date(custom.data$Date[1]) < end.date) | (as.Date(custom.data$Date[1]) > start.date & as.Date(custom.data$Date[1]) < end.date)){
         
         
         ## ------------------------------------------------
