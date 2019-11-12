@@ -1,5 +1,5 @@
 GROUP,PARAMETER,DEFINITION,FROM,TO
-Time,StartDate,01/01/1994,,
+Time,StartDate,06/01/1994,,
 Time,EndDate,12/31/2010,,
 Time,TimeStep,1,,
 FileControl,RunName,,,
