@@ -153,9 +153,9 @@ if(nrow(HRU.output) != nrow(HRU.output.clean)){
 # HRU.output.clean[which(is.na(HRU.output.clean[,"SOIL_PROFILE"])), "SOIL_PROFILE"] <- as.character(soil.codes$soil_type[soil.codes$Value == getmode(HRU.table$soils)])
 
 ## Replace missing soil profiles (i.e., soil profile = "-") with the most common within the corresponding subbasin
-missing.soil.profiles.id <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "_"), "ID"]
+missing.soil.profiles.id <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "-"), "ID"]
 
-missing.soil.profiles.basin <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "_"), "BASIN_ID"]
+missing.soil.profiles.basin <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "-"), "BASIN_ID"]
 
 for(i in 1:length(missing.soil.profiles.basin)){
   
