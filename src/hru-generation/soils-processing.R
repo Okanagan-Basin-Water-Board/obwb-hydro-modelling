@@ -48,7 +48,7 @@ watersheds <- model.watersheds$GNIS_NAME
 soils.poly.base <- intersect(soils.poly.base, model.watersheds)
 
 ## Create unique tag
-soils.poly.base$tag <- paste(soils.poly.base$SOILSYM_1, soils.poly.base$GNIS_NAME, sep = "_")
+soils.poly.base$tag <- paste(soils.poly.base$SOILSYM_1, gsub(" ", "-", soils.poly.base$GNIS_NAME), sep = "-")
 
 
 #############################################################################
@@ -212,7 +212,7 @@ for(j in 1:length(watersheds)){
     
     tmp$base_soil_type <- tmp$soil_type
     
-    tmp$soil_type <- paste(tmp$soil_type, watersheds[j], sep = "_")
+    tmp$soil_type <- paste(tmp$soil_type, gsub(" ", "-", watersheds[j]), sep = "-")
     
     ##########################################################################
     ## Address RAVEN custom soil types
@@ -229,9 +229,9 @@ for(j in 1:length(watersheds)){
     ##########################################################################
     ## Create Tag
     
-    tmp$tag <- paste(tmp$SOIL_ID, watersheds[j], sep = "_")
+    tmp$tag <- paste(tmp$SOIL_ID, gsub(" ", "-", watersheds[j]), sep = "-")
     
-    
+
     ##########################################################################
     ## Assign the same names to output to allow successful rbind
     
