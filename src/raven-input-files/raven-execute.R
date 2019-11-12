@@ -24,13 +24,13 @@ ws.interest <- "Testing-Nov"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Whiteman"
+include.watersheds <- "Vernon"
 
 ## Specify a run number to associated with outputs
-run.number <- "Whiteman-Updated-Soils"
+run.number <- "vernon-kal-obs"
 
 ## Add comments to README file.
-run.comments <- "Testing new soil layers"
+run.comments <- "Add Kal Lake level observations as custom timeseries"
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -186,8 +186,6 @@ if(recreate.rvh == TRUE){
         file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
         }
 
-source("/var/obwb-hydro-modelling/src/raven-input-files/reservoir-rvh-filegenerator.R")
-
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvi-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvp-filegenerator.R")
@@ -195,6 +193,8 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvp-filegenerator.R")
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/snow-rvt-filegenerator.R")
+
+source("/var/obwb-hydro-modelling/src/raven-input-files/reservoir-rvh-rvt-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/custom-appendages.R")
 
@@ -331,6 +331,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
   system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'), wait = F)
+  
   
   print("Ostrich was not used for model calibration during this run...")
   
