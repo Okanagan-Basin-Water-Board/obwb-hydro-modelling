@@ -24,13 +24,16 @@ ws.interest <- "Testing-Nov"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Vernon"
+include.watersheds <- c("Whiteman", "Powers")
 
 ## Specify a run number to associated with outputs
-run.number <- "vernon-kal-obs"
+run.number <- "custom-disable"
 
 ## Add comments to README file.
-run.comments <- "Add Kal Lake level observations as custom timeseries"
+run.comments <- "custom disable select subbasins"
+
+## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions)
+disable.subbasins <- c(2407, 2408)
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
