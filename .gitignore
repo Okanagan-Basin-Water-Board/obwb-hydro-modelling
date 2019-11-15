@@ -43,3 +43,6 @@ src/output-processing/ostrich-output-processing.R
 src/raven-input-files-backup/
 src/raven-input-files/archive/raven-execute-fyke.R
 src/raven_src/
+input-data/raw/parameter-codes/archive/subbasin_codes-based.csv
+input-data/processed/spatial/Raven-HRU-table.RData
+input-data/raw/custom-timeseries/
