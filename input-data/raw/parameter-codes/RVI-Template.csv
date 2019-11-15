@@ -27,6 +27,8 @@ HydrologicalProcesses,SnowBalance,SNOBAL_SIMPLE_MELT,SNOW,SNOW_LIQ
 HydrologicalProcesses,-->Overflow,RAVEN_DEFAULT,SNOW_LIQ,PONDED_WATER
 HydrologicalProcesses,Infiltration,INF_HBV,PONDED_WATER,MULTIPLE
 HydrologicalProcesses,Flush,RAVEN_DEFAULT,SURFACE_WATER,INT_SOIL
+HydrologicalProcesses,-->Conditional,HRU_TYPE,IS_NOT,LAKE
+HydrologicalProcesses,-->Conditional,HRU_TYPE,IS_NOT,ROCK
 HydrologicalProcesses,SoilEvaporation,SOILEVAP_HBV,TOP_SOIL,ATMOSPHERE
 HydrologicalProcesses,CapillaryRise,RISE_HBV,INT_SOIL,TOP_SOIL
 HydrologicalProcesses,LakeEvaporation,LAKE_EVAP_BASIC,DEEP_SOIL,ATMOSPHERE
@@ -39,5 +41,8 @@ OutputOptions,EvaluationMetrics,PCT_BIAS,,
 OutputOptions,EvaluationMetrics,R2,,
 #OutputOptions,WriteForcingFunctions,,
 OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_HRU_GROUP,,
+OutputOptions,CustomOutput,MONTHLY AVERAGE SNOW_LIQ BY_BASIN,,
+OutputOptions,CustomOutput,MONTHLY AVERAGE SNOW BY_BASIN,,
+OutputOptions,CustomOutput,MONTHLY AVERAGE SOIL[1] BY_BASIN,,
 CalibrationOptions,SuppressOutput
 CalibrationOptions,SilentMode
