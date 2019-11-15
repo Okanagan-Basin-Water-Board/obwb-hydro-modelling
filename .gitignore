@@ -46,3 +46,4 @@ src/raven_src/
 input-data/raw/parameter-codes/archive/subbasin_codes-based.csv
 input-data/processed/spatial/Raven-HRU-table.RData
 input-data/raw/custom-timeseries/
+archive/
