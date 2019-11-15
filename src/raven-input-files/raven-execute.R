@@ -24,13 +24,13 @@ ws.interest <- "Testing-Nov"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- c("Whiteman", "Powers")
+include.watersheds <- c("Penticton", "McDougall")
 
 ## Specify a run number to associated with outputs
-run.number <- "custom-disable"
+run.number <- "greyback-hayman"
 
 ## Add comments to README file.
-run.comments <- "custom disable select subbasins"
+run.comments <- "Test inclusion of custom reservoir for Greyback"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions)
 disable.subbasins <- c(2407, 2408)
@@ -65,6 +65,8 @@ validation.end <- "2017-12-31"
 
 
 if(manage.reservoirs == TRUE & include.water.demand == FALSE){stop("In order to manage reservoirs to satisfy downstream demand, water demand must be included in the model run. Set include.water.demand == TRUE")}
+
+if(length(disable.subbasins) > 0){warning(paste("The following subbasins are disabled: ", paste(disable.subbasins, collapse = ", "), ". Ensure that this is correct.", sep = ""))}
 
 #####################################################################
 ##
