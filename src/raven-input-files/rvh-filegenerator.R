@@ -228,23 +228,25 @@ Subbasin.output[, 4] <- "DEFAULT_TRAP"
 
 Subbasin.output[, 5] <- "_AUTO"
 
+Subbasin.output[, 6] <- as.character(subbasin.codes$Gauged) ## Pull the gauged fla (i.e., 1/0) from the subbasin_codes.csv rather than using the lines below to determine which subbasins are gauged.
+
 ## Assign zero reach length to those subbasins which are reservoirs
 Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Reservoir_name != "<Null>"], 5] <- 0
 
-## Assign all subbasins a 0 so that they are ungauged. Following lines overwrite this behaviour for subbasins that should be gauged
-Subbasin.output[, 6] <- 0
-
-## Flag all subbasins which have a WSC station associated with them to be gauged (1). All other subbasins are ungauged (0)
-Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Hydrometric_stn != "<Null>"], 6] <- 1
-
-## Flag all subbasins which are a reservoir. All other subbasins are ungauged (0)
-Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Reservoir_name != "<Null>"], 6] <- 1
-
-
-## Flag all subbasin are either: The Apex of the Fan (Reports_to_Fan == "A") OR are the mouth of the creek (Downstream_ID == -1)
-Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Reports_to_Fan == "A"], 6] <- 1
-
-Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Downstream_ID == -1], 6] <- 1
+# ## Assign all subbasins a 0 so that they are ungauged. Following lines overwrite this behaviour for subbasins that should be gauged
+# Subbasin.output[, 6] <- 0
+# 
+# ## Flag all subbasins which have a WSC station associated with them to be gauged (1). All other subbasins are ungauged (0)
+# Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Hydrometric_stn != "<Null>"], 6] <- 1
+# 
+# ## Flag all subbasins which are a reservoir. All other subbasins are ungauged (0)
+# Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Reservoir_name != "<Null>"], 6] <- 1
+# 
+# 
+# ## Flag all subbasin are either: The Apex of the Fan (Reports_to_Fan == "A") OR are the mouth of the creek (Downstream_ID == -1)
+# Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Reports_to_Fan == "A"], 6] <- 1
+# 
+# Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.codes$Downstream_ID == -1], 6] <- 1
 
 
 ###########################################################################
