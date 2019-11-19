@@ -24,13 +24,13 @@ ws.interest <- "Testing-Nov"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- c("Penticton", "McDougall")
+include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "greyback-hayman"
+run.number <- "gauged-update"
 
 ## Add comments to README file.
-run.comments <- "Test inclusion of custom reservoir for Greyback"
+run.comments <- "Test the update to pull gauged flags from subbasin_codes.csv now"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions)
 disable.subbasins <- c(2407, 2408)
