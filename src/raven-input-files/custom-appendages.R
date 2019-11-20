@@ -498,52 +498,52 @@ if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simula
 }
 
 
-## **************************************************************************************************************************************************************************
-##
-## This code block defines and populates an "AllHRUs" HRUGroup which contains all HRUs within the current model run. This is defined in the *.rvi file and populated in the *.rvh file.
-## In addition, the :AggregatedVariable command is appended AFTER the HRUGroup is defined - this is required for it to operate correctly.
-
-main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
-
-main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
-
-## Grab the HRU table from the main.RVH.file
-HRU.table <- rvh.read(main.RVH.file)
-
-hru.table <- HRU.table$HRUtable
-
-## Identify whuch HRUs are within the present subbasins
-hrus.present <- hru.table[hru.table$SBID %in% subbasins.present$Subbasin_ID, "ID"]
-
-## Generate a sequence for splitting HRU group entries over multiple lines - 20 HRUs per line
-split <- seq(20, length(hrus.present), by= 20)
-
-## Add "\n" to each 20th HRU - this forces a line break
-hrus.present[split] <- paste(hrus.present[split], "\n", sep = "")
-
-## Define the hru group in the RVI file.
-cat(file = main.RVI.file, append = T, sep = "",
-    "\n",
-    "# ---------------------------------------------", "\n",
-    "# Define AllHRUs Group - all HRUs active within current model run", "\n",
-    "\n",
-    ":DefineHRUGroups  AllHRUs", "\n",
-    "\n",
-    ":AggregatedVariable  INT_SOIL  AllHRUs", "\n",
-    ":AggregatedVariable  DEEP_SOIL AllHRUs", "\n"
-    )
-
-
-## Populate the HRUGroup in the main RVH file
-cat(file = main.RVH.file, append = T, sep = "", 
-    "\n",
-    "# ---------------------------------------------", "\n",
-    "# Define AllHRUs Group - all HRUs active within current model run", "\n",
-    "\n",
-    ":HRUGroup  AllHRUs", "\n",
-    paste(hrus.present, collapse = ","), "\n",
-    ":EndHRUGroup", "\n"
-    )
+# ## **************************************************************************************************************************************************************************
+# ##
+# ## This code block defines and populates an "AllHRUs" HRUGroup which contains all HRUs within the current model run. This is defined in the *.rvi file and populated in the *.rvh file.
+# ## In addition, the :AggregatedVariable command is appended AFTER the HRUGroup is defined - this is required for it to operate correctly.
+# 
+# main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
+# 
+# main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+# 
+# ## Grab the HRU table from the main.RVH.file
+# HRU.table <- rvh.read(main.RVH.file)
+# 
+# hru.table <- HRU.table$HRUtable
+# 
+# ## Identify whuch HRUs are within the present subbasins
+# hrus.present <- hru.table[hru.table$SBID %in% subbasins.present$Subbasin_ID, "ID"]
+# 
+# ## Generate a sequence for splitting HRU group entries over multiple lines - 20 HRUs per line
+# split <- seq(20, length(hrus.present), by= 20)
+# 
+# ## Add "\n" to each 20th HRU - this forces a line break
+# hrus.present[split] <- paste(hrus.present[split], "\n", sep = "")
+# 
+# ## Define the hru group in the RVI file.
+# cat(file = main.RVI.file, append = T, sep = "",
+#     "\n",
+#     "# ---------------------------------------------", "\n",
+#     "# Define AllHRUs Group - all HRUs active within current model run", "\n",
+#     "\n",
+#     ":DefineHRUGroups  AllHRUs", "\n",
+#     "\n",
+#     ":AggregatedVariable  INT_SOIL  AllHRUs", "\n",
+#     ":AggregatedVariable  DEEP_SOIL AllHRUs", "\n"
+#     )
+# 
+# 
+# ## Populate the HRUGroup in the main RVH file
+# cat(file = main.RVH.file, append = T, sep = "", 
+#     "\n",
+#     "# ---------------------------------------------", "\n",
+#     "# Define AllHRUs Group - all HRUs active within current model run", "\n",
+#     "\n",
+#     ":HRUGroup  AllHRUs", "\n",
+#     paste(hrus.present, collapse = ","), "\n",
+#     ":EndHRUGroup", "\n"
+#     )
 
 
 ## **************************************************************************************************************************************************************************
