@@ -24,13 +24,13 @@ ws.interest <- "Testing-Nov"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Whiteman"
+include.watersheds <- c("Whiteman", "Vaseux", "Inkaneep")
 
 ## Specify a run number to associated with outputs
-run.number <- "gauged-update"
+run.number <- "disagg-tests-2"
 
 ## Add comments to README file.
-run.comments <- "Test the update to pull gauged flags from subbasin_codes.csv now"
+run.comments <- "Testing the inclusion of disaggregated weekly naturalized streamflow datasets"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions)
 disable.subbasins <- c(2407, 2408)
@@ -198,6 +198,8 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvp-filegenerator.R")
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/snow-rvt-filegenerator.R")
+
+source("/var/obwb-hydro-modelling/src/naturalized-flows/nat-flow-disaggregation.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/reservoir-rvh-rvt-filegenerator.R")
 
