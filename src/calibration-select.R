@@ -1,5 +1,8 @@
 require(stringr)
 
+## Append naturalized flow datasets to WSC stations included as possible calibration targets
+stations.included <- c(stations.included, paste(include.watersheds, "_Nat_Q", sep = ""))
+
 if(length(stations.included) > 1){
 
   if(!is.na(Sys.getenv("RSTUDIO", unset = NA))){
