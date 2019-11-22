@@ -3,8 +3,8 @@ require(stringr)
 ## For now, only include naturalized streamflow datasets as targets for calibration (and not for validation) - this does not respect the calibration/validation weights.
 if(validate.model == FALSE){
 
-  ## Append naturalized flow datasets to WSC stations included as possible calibration targets
-  stations.included <- c(stations.included, paste(include.watersheds, "_Nat_Q", sep = ""))
+  ## Append naturalized flow datasets to WSC stations included as possible calibration targets (with the exception of Vernon Creek since no dataset is available here).
+  stations.included <- c(stations.included, paste(include.watersheds[include.watersheds != "Vernon"], "_Nat_Q", sep = ""))
 
   }
 
