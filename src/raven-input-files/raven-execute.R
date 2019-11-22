@@ -27,7 +27,7 @@ ws.interest <- "Testing-Nov"
 include.watersheds <- c("Whiteman", "Vaseux", "Inkaneep")
 
 ## Specify a run number to associated with outputs
-run.number <- "disagg-tests-2"
+run.number <- "disagg-tests-8"
 
 ## Add comments to README file.
 run.comments <- "Testing the inclusion of disaggregated weekly naturalized streamflow datasets"
@@ -183,13 +183,35 @@ if(recreate.rvh == TRUE){
 
   source("/var/obwb-hydro-modelling/src/raven-input-files/rvh-filegenerator.R")
 
-  file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-  file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+  if(include.water.demand == TRUE){
+    
+    print("Existing RESIDUAL *.rvh file being used for this model run...")
+    file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master_residual.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+    file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master_residual.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+    
+  } else {
+    
+    print("Existing NATURAL *.rvh file being used for this model run...")
+    file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master_natural.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+    file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master_natural.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+    
+  }
+  
+} else {if(include.water.demand == TRUE){
+  
+  print("Existing RESIDUAL *.rvh file being used for this model run...")
+  file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master_residual.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master_residual.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
 
-} else {print("Existing rvh file is being used for this model run...")
-        file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-        file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
-        }
+} else {
+
+  print("Existing NATURAL *.rvh file being used for this model run...")
+  file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master_natural.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+  file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Master_natural.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+
+  }
+}
+
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/rvi-filegenerator.R")
 
@@ -199,7 +221,7 @@ source("/var/obwb-hydro-modelling/src/raven-input-files/rvt-filegenerator.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/snow-rvt-filegenerator.R")
 
-source("/var/obwb-hydro-modelling/src/naturalized-flows/nat-flow-disaggregation.R")
+# source("/var/obwb-hydro-modelling/src/naturalized-flows/nat-flow-disaggregation.R")
 
 source("/var/obwb-hydro-modelling/src/raven-input-files/reservoir-rvh-rvt-filegenerator.R")
 
