@@ -19,6 +19,9 @@ require(lubridate)
 library(magrittr)
 library(ggplot2)
 
+# script-specific watershed looping variable
+disagg.watersheds <- include.watersheds[include.watersheds != "Vernon"]
+
 # WSC gauges for daily:weekly ratio computation
 ratio.gauges <- c("Whiteman" = "08NM174", "Camp" = "08NM134",
                   "Vaseux" = "08NM171", "Coldstream" = "08NM142",
@@ -49,8 +52,8 @@ nfs <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/natu
 ## List all files (all Associated Naturalized Streamflow files)
 filenames <- list.files("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/")
 
-## Identify which file is required to be read in based on the "include.watersheds" variable
-required.files <- filenames[sapply(include.watersheds, grep, filenames)]
+## Identify which file is required to be read in based on the "disagg.watersheds" variable
+required.files <- filenames[sapply(disagg.watersheds, grep, filenames)]
 
 ###################################################################################################################################################
 ##
@@ -132,8 +135,11 @@ ratio.df <- data.frame()
 # creating vector of the watersheds to be disaggregated for the current
 # model run(s). Saves a bit of time by not pulling WSC data from HYDAT for
 # gauges not needed for current run.
-current.ratio.gauges <- nfs$WSC_ID[nfs$WATERSHED %in% include.watersheds]
+
+current.ratio.gauges <- nfs$WSC_ID[nfs$WATERSHED %in% disagg.watersheds]
 current.ratio.gauges <- unique(unlist(strsplit(paste(current.ratio.gauges, collapse = ", "), ", ")))
+
+
 
 for(i in 1:length(current.ratio.gauges)){
   # if Whiteman, Trepanier or Coldstream Ck, pull that gauge and Camp Creek 
@@ -215,14 +221,14 @@ for(i in 1:length(current.ratio.gauges)){
 ratio.df %<>% mutate(week.year = paste(Week, Year, sep = "-"))
 
 #### start disaggregation for-loop here
-for (i in 1:length(include.watersheds)){
+for (i in 1:length(disagg.watersheds)){
   
   # set name of .xlsx worksheet to load from file
-  required.tab <- paste(include.watersheds[i], "Nat Q_EFN-POI")
+  required.tab <- paste(disagg.watersheds[i], "Nat Q_EFN-POI")
   
   # read in worksheet with EFN data for current watershed
   nat.stream.flow <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
-                                         required.files[grep(include.watersheds[i], required.files)]),
+                                         required.files[grep(disagg.watersheds[i], required.files)]),
                                sheet = required.tab)
   
   ## Identify the column which contains "UNADJUSTED" - this is within the "UNADJUSTED FOR LONG-TERM CONDITIONS" 
@@ -258,7 +264,7 @@ for (i in 1:length(include.watersheds)){
                          "start" = NA, "end" = NA)
   
   # look up WSC gauges to use for disaggregation of EFN flows 
-  nfs_row <- which(nfs$WATERSHED == include.watersheds[i])
+  nfs_row <- which(nfs$WATERSHED == disagg.watersheds[i])
   wsc.gauge <- unlist(strsplit(nfs$WSC_for_EFN[nfs_row], ", "))
   wsc.id <- ratio.gauges[names(ratio.gauges) %in% wsc.gauge]
   
@@ -306,7 +312,7 @@ for (i in 1:length(include.watersheds)){
   
   # Penticton's rules are a bit more complex. Average Two Forty and 
   # Two Forty One Creek, and then average that with Vaseux
-  if(include.watersheds[i] == "Penticton"){
+  if(disagg.watersheds[i] == "Penticton"){
     
     # Penticton Creek has slightly more complex rules for disagg.
     # Average the daily disaggregation ratios for 240 and 241 creeks, and
@@ -325,7 +331,7 @@ for (i in 1:length(include.watersheds)){
       summarize(Daily_Nat_Q = mean(Daily_Nat_Q),
                 Week = unique(Week), Year = unique(Year)) %>%
       ungroup() %>%
-      mutate(EFN_watershed = include.watersheds[i])
+      mutate(EFN_watershed = disagg.watersheds[i])
 
   } else {
    
@@ -340,7 +346,7 @@ for (i in 1:length(include.watersheds)){
                 Week = unique(Week),
                 Year = unique(Year)) %>%
       ungroup() %>%
-      mutate(EFN_WATERSHED = include.watersheds[i])
+      mutate(EFN_WATERSHED = disagg.watersheds[i])
   }
   
   ###################################################################################################################################################
@@ -349,18 +355,18 @@ for (i in 1:length(include.watersheds)){
   ##
   ###################################################################################################################################################
   
-  DailyNatQRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows", paste(include.watersheds[i], "_Nat_Q", ".rvt", sep = ""))
+  DailyNatQRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows", paste(disagg.watersheds[i], "_Nat_Q", ".rvt", sep = ""))
   
   main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
   
-  apex.subbasin <- subbasin.codes[gsub(" Creek", "", subbasin.codes$GNIS_NAME) == include.watersheds[i] & subbasin.codes$Reports_to_Fan == "A", "Subbasin_ID"]
+  apex.subbasin <- subbasin.codes[gsub(" Creek", "", subbasin.codes$GNIS_NAME) == disagg.watersheds[i] & subbasin.codes$Reports_to_Fan == "A", "Subbasin_ID"]
   
   
   ## Make na values = -1.2345
   out.df[is.na(out.df$Daily_Nat_Q), "Daily_Nat_Q"] <- -1.2345
   
   cat(file = DailyNatQRVTFile, sep = "", append = T,
-      "# Custom rvt file for daily disaggregated naturalized streamflow datasets for ", as.character(include.watersheds[i]), " Creek watershed", "\n",
+      "# Custom rvt file for daily disaggregated naturalized streamflow datasets for ", as.character(disagg.watersheds[i]), " Creek watershed", "\n",
       ":ObservationData HYDROGRAPH " , as.character(apex.subbasin), " m3/s", "\n",
       sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(out.df$Date[1])),nrow(out.df)), "\n"
   )
@@ -415,13 +421,13 @@ for (i in 1:length(include.watersheds)){
         "#-------------------------------------------------------", "\n",
         "#-------- Redirect to Daily Naturalized Flows ----------", "\n",
         "\n",
-        ":RedirectToFile  ", paste("daily_naturalized_flows/", include.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
+        ":RedirectToFile  ", paste("daily_naturalized_flows/", disagg.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
     )
     
   } else {
     
     cat(file = main.RVT.file, append = T, sep = "",
-        ":RedirectToFile  ", paste("daily_naturalized_flows/", include.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
+        ":RedirectToFile  ", paste("daily_naturalized_flows/", disagg.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
     )
     
   } # End else
@@ -445,13 +451,13 @@ for (i in 1:length(include.watersheds)){
           "#-------------------------------------------------------", "\n",
           "#-------- Redirect to Custom Timeseries ----------------", "\n",
           "\n",
-          ":RedirectToFile  ", paste("daily_naturalized_flows/", include.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
+          ":RedirectToFile  ", paste("daily_naturalized_flows/", disagg.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
       )
       
     } else {
       
       cat(file = OstrichRVTFile, append = T, sep = "",
-          ":RedirectToFile  ", paste("daily_naturalized_flows/", include.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
+          ":RedirectToFile  ", paste("daily_naturalized_flows/", disagg.watersheds[i], "_Nat_Q", ".rvt", sep = ""), "\n"
       )
       
     } # End else
@@ -502,8 +508,8 @@ for (i in 1:length(include.watersheds)){
 # ## List all files (all Associated Naturalized Streamflow files)
 # filenames <- list.files("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/")
 # 
-# ## Identify which file is required to be read in based on the "include.watersheds" variable
-# required.files <- filenames[gsub( " .*$", "", filenames) %in% include.watersheds]
+# ## Identify which file is required to be read in based on the "disagg.watersheds" variable
+# required.files <- filenames[gsub( " .*$", "", filenames) %in% disagg.watersheds]
 # 
 # 
 # 
@@ -529,7 +535,7 @@ for (i in 1:length(include.watersheds)){
 ###  Tidying up loose ends AJS 22-11-2019
 
 # # vector of watersheds to process
-# include.watersheds <- c("Whiteman", "Equesis", "Coldstream", "Inkaneep", 
+# disagg.watersheds <- c("Whiteman", "Equesis", "Coldstream", "Inkaneep", 
 #                         "McDougall", "McLean", "Mill", "Mission", "Naramata",
 #                         "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", 
 #                         "Shuttleworth", "Trepanier", "Trout", "Vaseux")
