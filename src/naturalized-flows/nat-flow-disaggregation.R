@@ -18,17 +18,13 @@ require(tidyhydat)
 require(lubridate)
 library(magrittr)
 library(ggplot2)
-#require(plyr)
 
-# for AJS, set wd to let RStudio server File pane show files
-# setwd("/var/obwb-hydro-modelling/input-data")
-
-# LB: Can we just pull these from the naturalized-flows-summary csv file for the watersheds that are included? That way we're not extracting all stations from HYDAT if we're only modelling on watershed
 # WSC gauges for daily:weekly ratio computation
 ratio.gauges <- c("Whiteman" = "08NM174", "Camp" = "08NM134",
                   "Vaseux" = "08NM171", "Coldstream" = "08NM142",
                   "Trepanier" = "08NM041", "Shatford" = "08NM037",
-                  "Inkaneep" = "08NM200", "West Kettle River" = "08NN015")
+                  "Inkaneep" = "08NM200", "West Kettle River" = "08NN015",
+                  "Two Forty" = "08NM240", "Two Forty One" = "08NM241")
 
 ## Create a subdirectory to house all naturalized streamflow timeseries
 dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows"))
@@ -38,51 +34,11 @@ subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-c
 ## Specify the location where the HYDAT database is saved
 hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
 
-# vector of watersheds to process
-# include.watersheds <- c("Whiteman", "Equesis", "Inkaneep", "McDougall",
-#                         "McLean", "Mission", "Naramata", "Naswhito",
-#                         "Powers", "Shingle", "Shorts", "Shuttleworth",
-#                         "Trepanier", "Trout", "Vaseux")
-
 # read in naturalized-flows-summary to append 'lookup' info. Which WSC 
 # gauge(s) to apply to which watershed, and in what proportion 
-
 ## Read in master Naturalized flows map file
-#nfs <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/naturalized-flows-summary.csv")
-nfs <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/naturalized-flows-summary.csv")
-
-# change column classes to avoid error is disaggregation for loop
-nfs$WSC_for_EFN <- as.character(nfs$WSC_for_EFN)
-nfs$WSC_weeks_years <- as.character(nfs$WSC_weeks_years)
-
-
-### which WSC gauge(s)'s daily Q to use to disaggregate weekly EFN streamflows
-### WSC_ID to make it easier to join with HYDAT timeseries dataframe
-# nfs[, c("WSC_for_EFN", "WSC_ID")] <- NA
-# nfs[nfs$WATERSHED %in% c("Equesis", "Naswhito", "Shorts", "Whiteman"), c("WSC_for_EFN", "WSC_ID")] <- rep(c("Whiteman", "08NM174"), each = 4)
-# nfs[nfs$WATERSHED %in% c("McLean", "Naramata", "Shuttleworth", "Vaseux"), c("WSC_for_EFN", "WSC_ID")] <- rep(c("Vaseux", "08NM171"), each = 4)
-# nfs[nfs$WATERSHED %in% c("Trepanier", "Powers"), c("WSC_for_EFN", "WSC_ID")] <- rep(c("Trepanier", "08NM041"), each = 2)
-# nfs[nfs$WATERSHED == "Inkaneep", c("WSC_for_EFN", "WSC_ID")] <- c(paste("Vaseux", "Inkaneep", sep = ", "),
-#                                                                    paste("08NM171", "08NM200", sep = ", "))
-# nfs[nfs$WATERSHED == "McDougall", c("WSC_for_EFN", "WSC_ID")] <- c(paste("Whiteman", "Camp", sep = ", "),
-#                                                                     paste("08NM174", "08NM134", sep = ", "))
-# nfs[nfs$WATERSHED == "Mission", c("WSC_for_EFN", "WSC_ID")] <- c("West Kettle River", "08NN015")
-# nfs[nfs$WATERSHED == "Shingle", c("WSC_for_EFN", "WSC_ID")] <- c("Shatford", "08NM037")
-# nfs[nfs$WATERSHED == "Trout", c("WSC_for_EFN", "WSC_ID")] <- c("Camp", "08NM134")
-# # Coldstream, Mill, Penticton don't have rules yet. AJS 18-11-2019
-# nfs[nfs$WATERSHED == "Coldstream", c("WSC_for_EFN", "WSC_ID")] <- c(NA, NA)
-# nfs[nfs$WATERSHED == "Mill", c("WSC_for_EFN", "WSC_ID")] <- c(NA, NA)
-# nfs[nfs$WATERSHED == "Penticton", c("WSC_for_EFN", "WSC_ID")] <- c(NA, NA)
-# 
-# # rules regarding which years to use which WSC data, and in what proportion (e.g., average 2 WSC gauge data)
-# nfs[, c("WSC_weeks_years", "WSC_proportion")] <- NA
-# nfs[, c("WSC_weeks_years", "WSC_proportion")] <- rep(c("1-1996 to 52-2010", 1), each = nrow(nfs))
-# nfs[nfs$WATERSHED == "Inkaneep", c("WSC_weeks_years")] <- paste("1-1996 to 10-2006", "11-2006 to 52-2010", sep = ", ")
-# nfs[nfs$WATERSHED == "McDougall", "WSC_proportion"] <- 0.5
-# 
-# # rules done. Write naturalized-flows-summary.csv to file
-# write.csv(nfs, "./raw/naturalized-flows/naturalized-flows-summary_AJS.csv",
-#           row.names = FALSE)
+nfs <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/naturalized-flows-summary.csv",
+                stringsAsFactors = FALSE)
 
 ###################################################################################################################################################
 ##
@@ -90,12 +46,10 @@ nfs$WSC_weeks_years <- as.character(nfs$WSC_weeks_years)
 ##
 ###################################################################################################################################################
 
-
 ## List all files (all Associated Naturalized Streamflow files)
 filenames <- list.files("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/")
 
 ## Identify which file is required to be read in based on the "include.watersheds" variable
-#required.files <- filenames[gsub( " .*$", "", filenames) %in% include.watersheds]
 required.files <- filenames[sapply(include.watersheds, grep, filenames)]
 
 ###################################################################################################################################################
@@ -171,42 +125,39 @@ Times$week.year <- paste(Times$Week, Times$Year, sep = "-")
 # daily Q to weekly Q and compute, for each day, daily Q : weekly averge Q
 # ratio. These ratios will be used to disaggregate the weekly naturalized
 # streamflows.
-# 
-# N.B. some gaps exist in WSC daily Q data. This is ok because Raven can 
-# calibrate with gaps in data. The number of dail ynaturalized streamflow 
-# obs. (computed) will match the number of WSC daily obs.
-
-# ratio.gauges
-# getwd()
 
 # output dataframe to hold WSC-derived daily:weekly Q ratios
 ratio.df <- data.frame()
 
-for(i in 1:length(ratio.gauges)){
+# creating vector of the watersheds to be disaggregated for the current
+# model run(s). Saves a bit of time by not pulling WSC data from HYDAT for
+# gauges not needed for current run.
+current.ratio.gauges <- nfs$WSC_ID[nfs$WATERSHED %in% include.watersheds]
+current.ratio.gauges <- unique(unlist(strsplit(paste(current.ratio.gauges, collapse = ", "), ", ")))
+
+for(i in 1:length(current.ratio.gauges)){
   # if Whiteman, Trepanier or Coldstream Ck, pull that gauge and Camp Creek 
-  # from HYDAT, and use Camp Creek to fill missing data in Whiteman
+  # from HYDAT, and use Camp Creek to fill missing data
   #  else
   # pull data from HYDAT and process as normal
   
-  if(ratio.gauges[i] %in% c("08NM174", "08NM041", "08NM142")){
-  #if(ratio.gauges[i] == "08NM174"){
+  if(current.ratio.gauges[i] %in% c("08NM174", "08NM041", "08NM142")){
   # pull WSC daily discharge for current gauge from time period of interest
-  wsc.daily <- hy_daily_flows(ratio.gauges[i], 
+  wsc.daily <- hy_daily_flows(current.ratio.gauges[i], 
                               hydat_path = hydat_here,
                               start_date = min(Days), end_date = max(Days))
   
   # Camp Creek data to fill missing Whiteman Creek days
-  wsc.daily2 <- hy_daily_flows(ratio.gauges[ratio.gauges == "08NM134"],
+  wsc.daily2 <- hy_daily_flows("08NM134",
                                hydat_path = hydat_here,
                                start_date = min(Days), end_date = max(Days))
   
-
   # join Times to WSC data to extend gauge timeseries to full length
   # of timeseries. Due to nature of full_join, some rows of STATION_NUMBER
   # will now be NA. Adjust accordingly.
   wsc.daily <- wsc.daily %>% mutate(Date = ymd(Date)) %>%
     full_join(Times, by = c("Date" = "date")) %>%
-    mutate(STATION_NUMBER = ratio.gauges[i])
+    mutate(STATION_NUMBER = current.ratio.gauges[i])
   
   # Dates with missing Whiteman, Trepanier, or Coldstream data
   no.data <- wsc.daily$Date[is.na(wsc.daily$Value)]
@@ -219,7 +170,7 @@ for(i in 1:length(ratio.gauges)){
   wsc.daily$Value[wsc.daily$Date %in% no.data] <- Q_sub
    
   # group by unique Year-Week combinations, compute weekly average discharge.
-  # full_join returns all unique rows. may not be necessary if gaps are irrelevant?
+  # full_join returns all unique rows. 
   # 1st mutate computes mean Q by each Year-Week group
   # ungroup removes grouping from the dataframe, all pipe calculations are
   # once again done row by row
@@ -232,7 +183,7 @@ for(i in 1:length(ratio.gauges)){
   
   } else {
     # pull WSC daily discharge for current gauge from time period of interest
-    wsc.daily <- hy_daily_flows(ratio.gauges[i], 
+    wsc.daily <- hy_daily_flows(current.ratio.gauges[i], 
                                 hydat_path = hydat_here,
                                 start_date = min(Days), end_date = max(Days))
     
@@ -244,44 +195,24 @@ for(i in 1:length(ratio.gauges)){
     # once again done row by row
     temp.df <- wsc.daily %>% mutate(Date = ymd(Date)) %>%
       full_join(Times, by = c("Date" = "date")) %>%
-      mutate(STATION_NUMBER = ratio.gauges[i]) %>%
+      mutate(STATION_NUMBER = current.ratio.gauges[i]) %>%
       group_by(Year, Week) %>%
       mutate(Weekly_Q = mean(Value)) %>%
       ungroup() %>%
       mutate(ratio = Value / Weekly_Q) %>%
+      mutate(ratio = case_when(Value == 0 ~ 0,
+                               Weekly_Q == 0 ~ 0,
+                               Value != 0 & Weekly_Q != 0 ~ Value / Weekly_Q)) %>%
       rename("Q" = Value) 
   }
   
-  # checking code for correct computations
-  # mean(test$Value[163:169]) == test$Weekly_Q[163:169]
-  # {test$Value[5400] / test$Weekly_Q[5400]} == test$ratio[5400]
-  
-  # another example of piping sing the %<>% operator.
-  # these two lines achieve the same result: 
-  # ratio.df %<>% rbind(temp.df)
+  # compiling single dataframe of WSC gauge streamflow and daily:weekly Q ratios
   ratio.df <- rbind(ratio.df, temp.df)
   
 } # end daily:Weekly ratio for-loop 
 
 # make week-year column for disaggregation look-up 
 ratio.df %<>% mutate(week.year = paste(Week, Year, sep = "-"))
-
-# find which stations and days still have NAs
-## Inkaneep NAs are pre- week 11 2006, so that's ok as per
-## naturalized-flow-summary rules. 
-# na.df <- ratio.df %>%
-#   filter(is.na(Q))
-# 
-# unique(na.df$STATION_NUMBER)
-# 
-# View(na.df %>% filter(STATION_NUMBER == "08NM200"))
-
-## In naturalized streamflow summary csv, specify which station(s) should be used to determine the daily distribution.
-## Retrieve these data from HYDAT for the 1996-2010 period of interest
-# whiteman <- hy_daily_flows("08NM174", hydat_path = "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3",
-#                            start_date = "1996-01-01", end_date = "2010-12-31")
-
-## Read in the naturalized streamflow dataset
 
 #### start disaggregation for-loop here
 for (i in 1:length(include.watersheds)){
@@ -331,6 +262,10 @@ for (i in 1:length(include.watersheds)){
   wsc.gauge <- unlist(strsplit(nfs$WSC_for_EFN[nfs_row], ", "))
   wsc.id <- ratio.gauges[names(ratio.gauges) %in% wsc.gauge]
   
+  # reorder wsc.id so match the same order of wsc.gauge, otherwise data
+  # gets misattributed (wrong WSC ID) in the following steps
+  wsc.id <- wsc.id[match(wsc.gauge, names(wsc.id))]
+  
   # look up proportion of WSC flows to apply to disaggregation 
   wsc.prop <- nfs$WSC_proportion[nfs_row]
   
@@ -343,12 +278,15 @@ for (i in 1:length(include.watersheds)){
   wsc.start <- unlist(lapply(wsc.years[[1]], "[", 1))
   wsc.end <- unlist(lapply(wsc.years[[1]], "[", 2))
   
+  # building dataframe of disaggregation rules
   rules.df <- data.frame("wsc.gauge" = wsc.gauge, 
                          "wsc.id" = wsc.id,
                          "wsc.prop" = wsc.prop,
                          "start" = wsc.start,
                          "end" = wsc.end, stringsAsFactors = FALSE)
   
+  # grabbing start and end dates for each disaggregation WSC gauge so that
+  # the ratio.df can be filtered by WSC gauge and its relevent time period
   start <- rules.df %>% left_join(Times, by = c("start" = "week.year")) %>%
     group_by(start) %>%
     filter(date %in% min(date)) 
@@ -359,46 +297,51 @@ for (i in 1:length(include.watersheds)){
   rules.df$end <- ymd(end$date)
   
   # filter flow ratio dataset to only the WSC gauges to be used for
-  # disaggregation
+  # disaggregation and for the relevant time period for each gauge
   disagg.df <- ratio.df %>%
     filter(STATION_NUMBER %in% wsc.id) %>%
     left_join(rules.df, by = c("STATION_NUMBER" = "wsc.id")) %>%
     group_by(STATION_NUMBER) %>%
     filter(Date >= start & Date <= end)
   
-  # plot Q vs. Date to see if filtering process worked properly. For
-  # Inkaneep, Q timeseries should be split between Vaseux and Inkaneep.
-  # for McDougall, both Whiteman and Camp should span the entire timespan
-  # disagg.df %>%
-  #   ggplot(aes(x = Date, y = Q, colour = STATION_NUMBER)) +
-  #   geom_line() +
-  #   theme_bw()
+  # Penticton's rules are a bit more complex. Average Two Forty and 
+  # Two Forty One Creek, and then average that with Vaseux
+  if(include.watersheds[i] == "Penticton"){
     
-   
-  # piped version of the originial workflow. Provided as an example.
-  out.df <- disagg.df %>%
-    left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
-    rename("Weekly_Nat_Q" = value) %>%
-    mutate(Daily_Nat_Q = Weekly_Nat_Q * ratio * wsc.prop) %>%
-    group_by(Date) %>%
-    summarize(Daily_Nat_Q = sum(Daily_Nat_Q),
-              Week = unique(Week),
-              Year = unique(Year)) %>%
-    ungroup() %>%
-    mutate(EFN_WATERSHED = include.watersheds[i])
+    # Penticton Creek has slightly more complex rules for disagg.
+    # Average the daily disaggregation ratios for 240 and 241 creeks, and
+    # average those means with the Vaseux creek daily disagg. ratios. Then
+    # disaggregate the weekly naturalized Q 
+    out.df <- disagg.df %>%
+      mutate(rule = case_when(STATION_NUMBER == "08NM171" ~ 2,
+                              STATION_NUMBER == "08NM240" ~ 1,
+                              STATION_NUMBER == "08NM241" ~ 1)) %>%
+      left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
+      rename("Weekly_Nat_Q" = value) %>%
+      group_by(rule, Date) %>%
+      summarize(Daily_Nat_Q = unique(Weekly_Nat_Q) * mean(ratio),
+                Week = unique(Week), Year = unique(Year)) %>%
+      ungroup %>% group_by(Date) %>%
+      summarize(Daily_Nat_Q = mean(Daily_Nat_Q),
+                Week = unique(Week), Year = unique(Year)) %>%
+      ungroup() %>%
+      mutate(EFN_watershed = include.watersheds[i])
 
-  # # plot to check disaggregation of Q
-  # out.df %>%
-  #   ggplot(aes(x = Date, y = Daily_Nat_Q)) +
-  #   geom_line() +
-  #   theme_bw()
-  # 
-  # # plot to compare WSC daily Q vs. disaggregated EFN Q
-  # out.df %>% left_join(disagg.df, by = "Date") %>%
-  #   ggplot(aes(x = Date)) +
-  #   geom_line(aes(y = Q, colour = "WSC")) +
-  #   geom_line(aes(y = Daily_Nat_Q, colour = "EFN")) +
-  #   theme_bw()
+  } else {
+   
+    # join EFN streamflow data to WSC data, disaggregate weekly naturalized Q per
+    # WSC gauge, then sum the disaggregated daily proportions.
+    out.df <- disagg.df %>%
+      left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
+      rename("Weekly_Nat_Q" = value) %>%
+      mutate(Daily_Nat_Q = Weekly_Nat_Q * ratio * wsc.prop) %>%
+      group_by(Date) %>%
+      summarize(Daily_Nat_Q = sum(Daily_Nat_Q),
+                Week = unique(Week),
+                Year = unique(Year)) %>%
+      ungroup() %>%
+      mutate(EFN_WATERSHED = include.watersheds[i])
+  }
   
   ###################################################################################################################################################
   ##
@@ -581,16 +524,102 @@ for (i in 1:length(include.watersheds)){
 # 
 # 
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+###  Tidying up loose ends AJS 22-11-2019
 
+# # vector of watersheds to process
+# include.watersheds <- c("Whiteman", "Equesis", "Coldstream", "Inkaneep", 
+#                         "McDougall", "McLean", "Mill", "Mission", "Naramata",
+#                         "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", 
+#                         "Shuttleworth", "Trepanier", "Trout", "Vaseux")
 
-#------------------------------------------------------------------------v
-# temporary scratch pad AJS 14 nov 2019
-# getwd()
+# ### which WSC gauge(s)'s daily Q to use to disaggregate weekly EFN streamflows
+# ### WSC_ID to make it easier to join with HYDAT timeseries dataframe
+# nfs[, c("WSC_for_EFN", "WSC_ID")] <- NA
+# nfs[nfs$WATERSHED %in% c("Equesis", "Mill", "Naswhito", "Shorts", "Whiteman"), c("WSC_for_EFN", "WSC_ID")] <- rep(c("Whiteman", "08NM174"), each = 5)
+# nfs[nfs$WATERSHED %in% c("McLean", "Naramata", "Shuttleworth", "Vaseux"), c("WSC_for_EFN", "WSC_ID")] <- rep(c("Vaseux", "08NM171"), each = 4)
+# nfs[nfs$WATERSHED %in% c("Trepanier", "Powers"), c("WSC_for_EFN", "WSC_ID")] <- rep(c("Trepanier", "08NM041"), each = 2)
+# nfs[nfs$WATERSHED == "Penticton", c("WSC_for_EFN", "WSC_ID")] <- c(paste("Two Forty", "Two Forty One", "Vaseux", sep = ", "),
+#                                                                    paste("08NM240", "08NM241", "08NM171", sep = ", "))
+# nfs[nfs$WATERSHED == "Inkaneep", c("WSC_for_EFN", "WSC_ID")] <- c(paste("Vaseux", "Inkaneep", sep = ", "),
+#                                                                    paste("08NM171", "08NM200", sep = ", "))
+# nfs[nfs$WATERSHED == "McDougall", c("WSC_for_EFN", "WSC_ID")] <- c(paste("Whiteman", "Camp", sep = ", "),
+#                                                                     paste("08NM174", "08NM134", sep = ", "))
+# nfs[nfs$WATERSHED == "Mission", c("WSC_for_EFN", "WSC_ID")] <- c("West Kettle River", "08NN015")
+# nfs[nfs$WATERSHED == "Shingle", c("WSC_for_EFN", "WSC_ID")] <- c("Shatford", "08NM037")
+# nfs[nfs$WATERSHED == "Trout", c("WSC_for_EFN", "WSC_ID")] <- c("Camp", "08NM134")
+# nfs[nfs$WATERSHED == "Coldstream", c("WSC_for_EFN", "WSC_ID")] <- c("Coldstream", "08NM142")
 # 
-# nfs.df <- read.csv("./raw/naturalized-flows/naturalized-flows-summary.csv",
-#                    header = TRUE)
+# 
+# # rules regarding which years to use which WSC data, and in what proportion (e.g., average 2 WSC gauge data)
+# nfs[, c("WSC_weeks_years", "WSC_proportion")] <- NA
+# nfs[, c("WSC_weeks_years", "WSC_proportion")] <- rep(c("1-1996 to 52-2010", 1), each = nrow(nfs))
+# nfs[nfs$WATERSHED == "Inkaneep", c("WSC_weeks_years")] <- paste("1-1996 to 10-2006", "11-2006 to 52-2010", sep = ", ")
+# nfs[nfs$WATERSHED == "McDougall", "WSC_proportion"] <- 0.5
+# nfs[nfs$WATERSHED == "Penticton", "WSC_proportion"] <- 0.5
+# 
+# # change column classes to avoid error in disaggregation for loop
+# # nfs$WSC_proportion <- as.numeric(nfs$WSC_proportion)
+# # nfs$WSC_for_EFN <- as.character(nfs$WSC_for_EFN)
+# # nfs$WSC_weeks_years <- as.character(nfs$WSC_weeks_years)
+# # nfs$WSC_for_EFN <- as.character(nfs$WSC_for_EFN)
+# 
+# # rules done. Write naturalized-flows-summary.csv to file
+# write.csv(nfs, "./raw/naturalized-flows/naturalized-flows-summary_AJS.csv",
+#           row.names = FALSE)
 
+# find which stations and days still have NAs
+## Inkaneep NAs are pre- week 11 2006, so that's ok as per
+## naturalized-flow-summary rules. 
+# na.df <- ratio.df %>%
+#   filter(is.na(Q))
+# 
+# unique(na.df$STATION_NUMBER)
+# 
+# View(na.df %>% filter(STATION_NUMBER == "08NM200"))
 
-#------------------------------------------------------------------------
+# plot Q vs. Date to see if filtering process worked properly. For
+# Inkaneep, Q timeseries should be split between Vaseux and Inkaneep.
+# for McDougall, both Whiteman and Camp should span the entire timespan
+# disagg.df %>%
+#   ggplot(aes(x = Date, y = Q, colour = STATION_NUMBER)) +
+#   geom_line() +
+#   theme_bw()
 
+# # compute mean annual discharge as QA/QC
+# # piping black magic to save intermediate steps
+# mad <- out.df %>%
+#   left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
+#   rename("Weekly_Nat_Q" = value) %>%
+#   group_by(Year) %T>%
+#   write.csv("./raw/naturalized-flows/AJS_temp/Penticton_EFN_disagg.csv",
+#             row.names = FALSE) %>%
+#   summarize(MAD_daily_disagg = mean(Daily_Nat_Q),
+#             MAD_weekly_EFN = mean(Weekly_Nat_Q)) %T>%
+#   write.csv("./raw/naturalized-flows/AJS_temp/Penticton_disagg_MAD.csv",
+#             row.names = FALSE)
 
+# compute mean annual discharge as QA/QC
+# mad <- out.df %>%
+#   left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
+#   rename("Weekly_Nat_Q" = value) %>%
+#   group_by(Year) %>%
+#   summarize(MAD_daily_disagg = mean(Daily_Nat_Q),
+#             MAD_weekly_EFN = mean(Weekly_Nat_Q))
+# 
+# # # plot to check disaggregation of Q
+# out.df %>%
+#   ggplot(aes(x = Date, y = Daily_Nat_Q)) +
+#   geom_line() +
+#   theme_bw()
+#  
+# # # plot to compare WSC daily Q vs. disaggregated EFN Q
+# out.df %>% left_join(disagg.df, by = "Date") %>%
+#   ggplot(aes(x = Date)) +
+#   geom_line(aes(y = Q, colour = "WSC")) +
+#   geom_line(aes(y = Daily_Nat_Q, colour = "EFN")) +
+#   theme_bw()
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
