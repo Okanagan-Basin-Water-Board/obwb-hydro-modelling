@@ -682,9 +682,62 @@ rewrite.output <- function(ws.interest, run.number){
 
 ephemeral.calibration <- function(ws.interest, run.number){
   
-  
   ## Create Ephemeral VM
   system2("gcloud", args = paste("compute instances create ", run.number, " --zone=northamerica-northeast1-a --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=", run.number, " --custom-extensions --custom-cpu=8 --custom-memory=10GB --image=raven-ephemeral-vm", sep = ""))
+  
+  ## Write a bash script to control what happens on the ephemeral VM:
+  # - change directory into /var/raven/run-name
+  # - execute ostrich
+  # - execute an R script thqt performs plotting of calibration results
+  # - find and delete all NetCDF files to reduce file size for transfer back to Master VM
+  # - create "complete.txt"
+  ephemeral.vm.controls <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "ephemeral.vm.controls.sh")
+  
+  cat(file = ephemeral.vm.controls, append = F, sep = "",
+      
+      ## Change directory to the run directory
+      "cd /var/raven/", paste(ws.interest, run.number, sep = "-"), "\n",
+      
+      ## Execute Ostrich
+      "/usr/bin/mpirun -n 7 ", file.path("/var/raven", paste(ws.interest, run.number, sep = "-"), "OstrichMPI"), "\n",
+      
+      ## Execute an Rscript to plot the results
+      "Rscript ", paste(ws.interest, "-", run.number, "-plot-results.R", sep = ""), "\n",
+      
+      ## Find NetCDF files and delete them
+      "find . -name '*.nc' -type f -delete", "\n",
+      
+      ## Create "complete.txt" to signal that Master VM that it's all done
+      "touch ", file.path("/var/raven", paste(ws.interest, run.number, sep = "-"), "complete.txt"), "\n"
+      
+      )
+  
+  
+  ## Write an Rscript that will handle all plotting functions once calibration is complete
+  # - Define all required variables
+  # - Define rewrite output function
+  # - Define plot.calibration.results function
+  # - Execute rewrite output function
+  # - Execute plot.calibration.results function
+  
+  plotting.script <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, "-plot-results.R", sep = ""))
+  
+  
+  ## Copy initial Raven run/results and Ostrich input files and executables to the ephemeral VM
+  
+  ## Execute Ostrich on the ephemeral VM
+  
+  ## Plot the results of the calibration
+  
+  ## Create some sign of success
+  
+  ## copy back all results
+  
+  ## Turn off & destroy the ephemeral VM
+  
+  
+  
+  
   
   ## Create ephemeral.vm.vcontrols.sh
   ephemeral.vm.controls <- file.path("/var/obwb-hydro-modelling", "ephemeral.vm.controls.sh")
@@ -700,14 +753,18 @@ ephemeral.calibration <- function(ws.interest, run.number){
       ## Execute Ostrich
       "/usr/bin/mpirun -n 7 ", file.path("/var/raven", paste(ws.interest, run.number, sep = "-"), "OstrichMPI"), "\n",
       
-      ## Remove all netCDF files to reduce file transfer coming back
-      "sudo rm -r *.nc", "\n",
+      "Rscript plot-results.R", "\n",
       
-      ## Copy calibration results back to master vm
-      "sudo gcloud ", paste("compute scp --compress --zone=northamerica-northeast1-a --recurse ", file.path("/var/raven", paste(ws.interest, run.number, sep = "-")), " ", file.path("obwb-hydro-modelling:/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "calibration-results")), "\n",
+      "touch success.txt"
       
-      ## shut down the master vm
-      "sudo shutdown -h now"
+      # ## Remove all netCDF files to reduce file transfer coming back
+      # "sudo rm -r *.nc", "\n",
+      # 
+      # ## Copy calibration results back to master vm
+      # "sudo gcloud ", paste("compute scp --compress --zone=northamerica-northeast1-a --recurse ", file.path("/var/raven", paste(ws.interest, run.number, sep = "-")), " ", file.path("obwb-hydro-modelling:/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "calibration-results")), "\n",
+      # 
+      # ## shut down the master vm
+      # "sudo shutdown -h now"
       
       )
   
