@@ -22,9 +22,9 @@ bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000
 
 soils.layers <- read.csv("/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BCSLF_Soil_Layer_File.csv")
 
-soils.poly.base <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/soils/Soil_Clip.shp")
+soils.poly.base <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/soils/Soil_Clip_final.shp")
 
-model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/EFN_WS.shp")
+model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Boundaries_Final.shp")
 
 #############################################################################################
 ##
