@@ -1,4 +1,9 @@
 #!/bin/bash
+
+echo "Ensure that soil_type.tif has been generated from Dan"
+
+sleep 10
+
 echo ------------ Generating HRUs --------------------------------
 Rscript hru-generation/hru-generator.R
 echo ------------ Done generating HRUs ---------------------------
