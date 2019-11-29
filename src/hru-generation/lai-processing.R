@@ -22,11 +22,11 @@ library(methods)
 ## Read in GIS data except for the LAI *.tif files
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
-landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Patched_EOSD2.tif", crs = bc.albers)
+landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/eosd_urban41.tif", crs = bc.albers)
 
 vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
 
-model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/EFN_WS.shp", crs = bc.albers)
+model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Boundaries_Final.shp", crs = bc.albers)
 
 ## New version of raster package does not seem to support "sf" objects for cropping/masking. So shapefile must be converted to spatialpolygon
 model.watersheds.shape <- as(model.watersheds, "Spatial")
@@ -82,7 +82,7 @@ max <- data.frame("Bin_type" = results.mean$Bin_type, "MAX_LAI" = apply(results.
 
 
 ## Identify vegetation bins which should not have variable LAI
-exclusions <- c("NO_DATA", "NON_VEGETATED", "SHADOW", "SNOW_ICE", "WATER")
+exclusions <- c("NO_DATA", "NON_VEGETATED", "SHADOW", "SNOW_ICE", "WATER", "URBAN")
 
 ## Set maximum to zero for appropriate excluded vegetation bins
 max[max$Bin_type %in% exclusions, "MAX_LAI"] <- 0
