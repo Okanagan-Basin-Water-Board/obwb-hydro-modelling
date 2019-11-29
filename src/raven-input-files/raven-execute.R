@@ -19,21 +19,21 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Diversion-working"
+ws.interest <- "Nov-new-spatial"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Trepanier"
+include.watersheds <- "Penticton"
 
 ## Specify a run number to associated with outputs
-run.number <- "Trepanier-example"
+run.number <- "penticton-test"
 
 ## Add comments to README file.
-run.comments <- "Example natural timeseries output to allow generation of script(s) to deal with diversions to/from model watersheds under natural conditions"
+run.comments <- "Historic run for Penticton Creek"
 
-## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions)
-disable.subbasins <- c(2407, 2408)
+## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
+disable.subbasins <- c(2407, 2408, 2422, 2421, 2416, 1415, 255)
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -99,7 +99,7 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
 
       paste("- Run completed on ", Sys.time()), "\n",
       paste("- Run completed by ", Sys.getenv("LOGNAME")), "\n",
-      if(recreate.rvh == FALSE){paste("- *.rvh file generated on ", file.info("/var/obwb-hydro-modelling/simulations/Master.rvh")$mtime, " was used for this model run")}
+      if(recreate.rvh == FALSE){paste("- *.rvh file generated on ", file.info("/var/obwb-hydro-modelling/simulations/Master_natural.rvh")$mtime, " was used for this model run")} # Note: Master_natural.rvh and Master_residual.rvh are generated at the same time, so the file.info is the same, regardless of which one is used for the current model run.
     else {"- New *.rvh file generated"}, "\n",
       if(run.ostrich == FALSE){"- Ostrich was not used for model calibration"}
     else {"- Ostrich was used for model calibration"}, "\n",
@@ -107,9 +107,9 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
     else {"- Water demand data were included in this model run"}, "\n",
 
       "- Run completed using climate data last modified as follows:", "\n",
-      paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.DRAFT.nc")$mtime), "\n",
-      paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.DRAFT.nc")$mtime), "\n",
-      paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc")$mtime), "\n",
+      paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.V1.nc")$mtime), "\n",
+      paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.V1.nc")$mtime), "\n",
+      paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.V1.nc")$mtime), "\n",
 
       paste("- Model Diagnostics were calculated for the period", calibration.start, "to", calibration.end), "\n",
     "\n", 
@@ -137,9 +137,9 @@ sink(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, past
 ##  - Ostrich executable (if required)
 #####################################################################
 
-file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.DRAFT.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.DRAFT.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.DRAFT.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.V1.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.V1.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.V1.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 
 # file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src.175/src/raven_rev.exe"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/Raven.exe"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
@@ -274,6 +274,16 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## If reservoirs are included in the model, move the reservoirs folder into the model folder
   if(dir.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))){
     system2("mv", paste(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"), file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"), sep =" "))
+  }
+  
+  ## If daily naturalized flows folder exists, move it to the model folder
+  if(dir.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "daily_naturalized_flows"))){
+    system2("mv", paste(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "daily_naturalized_flows"), file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"), sep =" "))
+  }
+  
+  ## If the owdm folder exists, move it to the model folder
+  if(dir.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm"))){
+    system2("mv", paste(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm"), file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"), sep =" "))
   }
 
   print("Beginning Ostrich Calibration...")
