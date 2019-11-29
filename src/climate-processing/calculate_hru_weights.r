@@ -180,7 +180,7 @@ if(Var == "pr"){
 }
 
 
-ncout <- nc_create(file.path(output.dir, paste(Var, ".HRU.timeseries.DRAFT.nc", sep="")), list(HRU_def), force_v4=T)
+ncout <- nc_create(file.path(output.dir, paste(Var, ".HRU.timeseries.V1.nc", sep="")), list(HRU_def), force_v4=T)
 
 ncvar_put(ncout,HRU_def,CLIMts)
 
