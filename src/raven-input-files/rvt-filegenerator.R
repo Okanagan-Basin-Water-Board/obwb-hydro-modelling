@@ -157,11 +157,11 @@ if(length(station.no) > 0) {
 ## read in RVH file to compute the number of HRUs
 HRUs <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
 
-precip.forcing.filename <- "pr.HRU.timeseries.DRAFT.nc"
+precip.forcing.filename <- "pr.HRU.timeseries.V1.nc"
 
-tasmax.forcing.filename <- "tasmax.HRU.timeseries.DRAFT.nc"
+tasmax.forcing.filename <- "tasmax.HRU.timeseries.V1.nc"
 
-tasmin.forcing.filename <- "tasmin.HRU.timeseries.DRAFT.nc"
+tasmin.forcing.filename <- "tasmin.HRU.timeseries.V1.nc"
 
 
 ## Get dimensions of netcdf file - only uses tasmin since all are the same dimensions
