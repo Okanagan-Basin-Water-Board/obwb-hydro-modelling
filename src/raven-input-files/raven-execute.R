@@ -27,16 +27,16 @@ ws.interest <- "Nov-new-spatial"
 include.watersheds <- "Penticton"
 
 ## Specify a run number to associated with outputs
-run.number <- "penticton-test"
+run.number <- "penticton-test-cal"
 
 ## Add comments to README file.
-run.comments <- "Historic run for Penticton Creek"
+run.comments <- "Test run to see if rvp-template-update script works as intended"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2422, 2421, 2416, 1415, 255)
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -48,7 +48,7 @@ recreate.rvh <- FALSE
 include.water.demand <- FALSE
 
 # Should reservoir parameters be included in the calibration?
-calibrate.reservoirs <- FALSE
+calibrate.reservoirs <- TRUE
 
 ## Should reservoirs be managed to satisfy downstream demand?
 manage.reservoirs <- FALSE
