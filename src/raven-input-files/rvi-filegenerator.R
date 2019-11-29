@@ -180,7 +180,11 @@ cat(file = RVIoutFile, append = T, sep = "",
       "\n",
       "#---------------------------------------------------------", "\n",
       "# ---- Define Watershed HRU Groups -----------------------", "\n",
-      ":DefineHRUGroups ", paste(watersheds, collapse = ","), "\n"
+      ":DefineHRUGroups ", paste(watersheds, collapse = ","), "\n",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "#----- Define HRU Group for all HRUs with Zero Soil Depth-", "\n",
+      ":DefineHRUGroups Zero_Soils", "\n"
     
 )
 
