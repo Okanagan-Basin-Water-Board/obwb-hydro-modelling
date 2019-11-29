@@ -1,6 +1,6 @@
 GROUP,PARAMETER,DEFINITION,FROM,TO
-Time,StartDate,06/01/1994,,
-Time,EndDate,12/31/1998,,
+Time,StartDate,06/01/1968,,
+Time,EndDate,12/31/1981,,
 Time,TimeStep,1,,
 FileControl,RunName,,,
 Methods,Method,ORDERED_SERIES,,
@@ -29,6 +29,7 @@ HydrologicalProcesses,Infiltration,INF_HBV,PONDED_WATER,MULTIPLE
 HydrologicalProcesses,Flush,RAVEN_DEFAULT,SURFACE_WATER,INT_SOIL
 HydrologicalProcesses,-->Conditional,HRU_TYPE,IS_NOT,LAKE
 HydrologicalProcesses,-->Conditional,HRU_TYPE,IS_NOT,ROCK
+HydrologicalProcesses,-->Conditional,HRU_GROUP,IS_NOT,Zero_Soils
 HydrologicalProcesses,SoilEvaporation,SOILEVAP_HBV,TOP_SOIL,ATMOSPHERE
 HydrologicalProcesses,CapillaryRise,RISE_HBV,INT_SOIL,TOP_SOIL
 HydrologicalProcesses,LakeEvaporation,LAKE_EVAP_BASIC,DEEP_SOIL,ATMOSPHERE
