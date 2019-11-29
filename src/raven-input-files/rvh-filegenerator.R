@@ -13,6 +13,10 @@ require(plyr)
 ## Generate required functions
 source("/var/obwb-hydro-modelling/src/functions.R")
 
+## Specify the subbasin ID for Brenda Mines - this is used to replace landuse/vegetation cover under natural conditions
+bm.subbasin.id <- 2709
+
+
 #################################################3
 ##
 ## Read-in required datasets and variables
@@ -153,10 +157,10 @@ if(nrow(HRU.output) != nrow(HRU.output.clean)){
 ## Replace "NA" soil profiles with most common soil profile
 # HRU.output.clean[which(is.na(HRU.output.clean[,"SOIL_PROFILE"])), "SOIL_PROFILE"] <- as.character(soil.codes$soil_type[soil.codes$Value == getmode(HRU.table$soils)])
 
-## Replace missing soil profiles (i.e., soil profile = "-") with the most common within the corresponding subbasin
-# missing.soil.profiles.id <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "-"), "ID"]
+## Replace missing soil profiles (i.e., soil profile = " ") with the most common within the corresponding subbasin
+# missing.soil.profiles.id <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == " "), "ID"]
 
-missing.soil.profiles.basin <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "-"), "BASIN_ID"]
+missing.soil.profiles.basin <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == " "), "BASIN_ID"]
 
 unique.missing.soil.profiles.basin <- unique(missing.soil.profiles.basin)
 
@@ -171,9 +175,9 @@ for(i in 1:length(unique.missing.soil.profiles.basin)){
   SP.proportion <- ddply(sub.df, .(SOIL_PROFILE), summarize, total = sum(as.numeric(as.character(AREA))))
   
   ## Identify the most common land use calss that is NOT "NON-VEGETATED"
-  common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != "-", "total"])), "SOIL_PROFILE"]
+  common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != " ", "total"])), "SOIL_PROFILE"]
   
-  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.missing.soil.profiles.basin[i] & HRU.output.clean[, "SOIL_PROFILE"] == "-"), "SOIL_PROFILE"] <- as.character(common.SP)
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.missing.soil.profiles.basin[i] & HRU.output.clean[, "SOIL_PROFILE"] == " "), "SOIL_PROFILE"] <- as.character(common.SP)
   
   # subbasin.common.soil.profile <- getmode(HRU.output.clean[HRU.output.clean[, "BASIN_ID"] ==  missing.soil.profiles.basin[i], "SOIL_PROFILE"])
   
@@ -338,14 +342,41 @@ for(i in 1:length(watersheds)){
   )
 }
 
+######################################################################
+##
+## Generate HRU Group for zero depth soils (i.e., Gravel Pit, Cut fill, Dike, Urban)
+##
+
+tomatch <- c("GRAVEL_PIT", "CUT_FILL", "DIKE", "URBAN")
+
+matches <- unique (grep(paste(tomatch,collapse="|"), 
+                        HRU.output.clean[,"SOIL_PROFILE"], value=TRUE))
+
+zero.soils <- HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] %in% matches, "ID"]
+
+## Generate a sequence for splitting HRU group entries over multiple lines - 20 HRUs per line
+split <- seq(20, length(zero.soils), by= 20)
+
+zero.soils[split] <- paste(zero.soils[split], "\n", sep = "")
+
+
+cat(file = RVHoutFile.Residual, append = T, sep = "",
+    paste(":HRUGroup", "Zero_Soils", sep = ' '), "\n",
+    paste(zero.soils, collapse = ","), "\n",
+    ":EndHRUGroup", "\n"
+)
+
+
+##################################################################################################
 ##################################################################################################
 ##
 ## Create a "Natural" *.rvh file
 ##
 ##################################################################################################
+##################################################################################################
 
-## Identify the subbasins that have "NON-VEGETATED" land use types
-non.veg.subbasin <- HRU.output.clean[which(HRU.output.clean[, "LAND_USE_CLASS"] == "NON_VEGETATED"), "BASIN_ID"]
+## Identify the subbasins that have "URBAN" land use types
+non.veg.subbasin <- HRU.output.clean[which(HRU.output.clean[, "LAND_USE_CLASS"] == "URBAN"), "BASIN_ID"]
 
 ## Identify all unique subbasins with "NON-VEGETATED" land use types
 unique.non.veg.subbasin <- unique(non.veg.subbasin)
@@ -368,13 +399,13 @@ for(i in 1:length(unique.non.veg.subbasin)){
   ## Calculate the total area covered by each land use class
   LUC.proportion <- ddply(sub.df, .(LAND_USE_CLASS), summarize, total = sum(as.numeric(as.character(AREA))))
   
-  ## Identify the most common land use calss that is NOT "NON-VEGETATED"
-  common.LUC <- LUC.proportion[which(LUC.proportion$total == max(LUC.proportion[LUC.proportion$LAND_USE_CLASS != "NON_VEGETATED", "total"])), "LAND_USE_CLASS"]
+  ## Identify the most common land use calss that is NOT "URBAN"
+  common.LUC <- LUC.proportion[which(LUC.proportion$total == max(LUC.proportion[LUC.proportion$LAND_USE_CLASS != "URBAN", "total"])), "LAND_USE_CLASS"]
   
   # original <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == unique.non.veg.subbasin[i], ]
   
-  ## Replace all "NON_VEGETATED" Land use types with the most common other land use class
-  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.non.veg.subbasin[i] & HRU.output.clean[, "LAND_USE_CLASS"] == "NON_VEGETATED"), "LAND_USE_CLASS"] <- as.character(common.LUC)
+  ## Replace all "URBAN" Land use types with the most common other land use class
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.non.veg.subbasin[i] & HRU.output.clean[, "LAND_USE_CLASS"] == "URBAN"), "LAND_USE_CLASS"] <- as.character(common.LUC)
   
   
   ##-----------------------------------------
@@ -385,10 +416,10 @@ for(i in 1:length(unique.non.veg.subbasin)){
   
   VC.proportion <- ddply(sub.df, .(VEG_CLASS), summarize, total = sum(as.numeric(as.character(AREA))))
   
-  common.VC <- VC.proportion[which(VC.proportion$total == max(VC.proportion[VC.proportion$VEG_CLASS != "NON_VEGETATED", "total"])), "VEG_CLASS"]
+  common.VC <- VC.proportion[which(VC.proportion$total == max(VC.proportion[VC.proportion$VEG_CLASS != "URBAN", "total"])), "VEG_CLASS"]
   
-  ## Replace all "NON_VEGETATED" vegetation class with the most common other vegetation class
-  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.non.veg.subbasin[i] & HRU.output.clean[, "VEG_CLASS"] == "NON_VEGETATED"), "VEG_CLASS"] <- as.character(common.VC)
+  ## Replace all "URBAN" vegetation class with the most common other vegetation class
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.non.veg.subbasin[i] & HRU.output.clean[, "VEG_CLASS"] == "URBAN"), "VEG_CLASS"] <- as.character(common.VC)
   
   
   ##-----------------------------------------
@@ -404,7 +435,44 @@ for(i in 1:length(unique.non.veg.subbasin)){
   ## Replace all "URBAN" soil profiles with the most common other soil profile
   HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.non.veg.subbasin[i] & HRU.output.clean[, "SOIL_PROFILE"] == "URBAN"), "SOIL_PROFILE"] <- as.character(common.SP)
   
+  
 }
+
+
+##-----------------------------------------
+##
+## Replace all Land use / vegetation within Brenda Mines subbasin with FORESTED / CONIFEROUS and most common soil profile
+##
+##-----------------------------------------
+
+## Identify all HRUs that are within the gievn subbasin
+BM.sub <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == bm.subbasin.id, c("AREA", "LAND_USE_CLASS", "VEG_CLASS", "SOIL_PROFILE")]
+
+## Convert to a datafram
+sub.df <- as.data.frame(BM.sub)
+
+#-------------------
+## Replace and vegetation
+#-------------------
+HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == bm.subbasin.id), "LAND_USE_CLASS"] <- "FORESTED"
+
+HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == bm.subbasin.id), "VEG_CLASS"] <- "CONIFEROUS"
+
+#-----------------
+## Replace soil profile
+#-------------------
+
+SP.proportion <- ddply(sub.df, .(SOIL_PROFILE), summarize, total = sum(as.numeric(as.character(AREA))))
+
+common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != "URBAN", "total"])), "SOIL_PROFILE"]
+
+HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == bm.subbasin.id), "SOIL_PROFILE"] <- as.character(common.SP)
+
+
+##############################################################################################
+##
+## Write Natural RVH file
+##
 
 
 RVHoutFile.Natural <- file.path("/var/obwb-hydro-modelling/simulations/Master_natural.rvh")
@@ -474,10 +542,32 @@ for(i in 1:length(watersheds)){
   )
 }
 
-## Replace all "urban" soils with the most common other soil type in each subbasin
+
+######################################################################
+##
+## Generate HRU Group for zero depth soils (i.e., Gravel Pit, Cut fill, Dike, Urban)
+##
+
+tomatch <- c("GRAVEL_PIT", "CUT_FILL", "DIKE", "URBAN")
+
+matches <- unique (grep(paste(tomatch,collapse="|"), 
+                        HRU.output.clean[,"SOIL_PROFILE"], value=TRUE))
+
+zero.soils <- HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] %in% matches, "ID"]
+
+## Generate a sequence for splitting HRU group entries over multiple lines - 20 HRUs per line
+split <- seq(20, length(zero.soils), by= 20)
+
+zero.soils[split] <- paste(zero.soils[split], "\n", sep = "")
 
 
-## Update Raven-execute.R to determine which of these two rvh files should be copied over for a given model run
+cat(file = RVHoutFile.Natural, append = T, sep = "",
+    paste(":HRUGroup", "Zero_Soils", sep = ' '), "\n",
+    paste(zero.soils, collapse = ","), "\n",
+    ":EndHRUGroup", "\n"
+)
+
+
 
 
 print("ALL DONE!")
