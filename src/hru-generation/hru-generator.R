@@ -5,6 +5,8 @@
 ## Feb-15-2019 LAB
 ###########################################################################################
 
+tmp.loc <- "/var/obwb-hydro-modelling/input-data/processed/spatial/temp"
+
 ##########################
 ## LOAD REQUIRED PACKAGES
 ##########################
@@ -34,10 +36,10 @@ source("/var/obwb-hydro-modelling/src/functions.R")
 ##
 ## Read-in required sptial datasets:
 ##  - Okanagan-overlapping DEM (20 m Resolution): DEM_alb.tif (Overlapping Okanagan required to allow correct calculation of slope/aspect before clipping)
-##  - Okanagan Landcover Raster (30 m Resolution - Resampled to 20 m Resolution to match DEM): Patched_EOSD2.tif
+##  - Okanagan Landcover Raster (30 m Resolution - Resampled to 20 m Resolution to match DEM): eosd_urban41.tif
 ##  - Okanagan Parent Soils Raster (resampled to 20m resolution): Soils_PM1.tif
 ##  - Okanagan Aquifers Shapefile (OBWB Aquifers): OBWB_Aquifer.tif
-##  - Model domain subbasins (as delineated by Associated): WS_Raster5.tif
+##  - Model domain subbasins (as delineated by Associated): WS_Raster_Final.tif
 ##
 ##  - Okanagan Basin Shapefile: FW_Atlas_OK_Basin.shp
 ##  - Named/mapped watersheds included in model domain: EFN_WS.shp
@@ -54,23 +56,23 @@ dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/DEM_Fix2.tif", c
 
 # dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/archive/DEM_alb.tif", crs = bc.albers)
 
-landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Patched_EOSD2.tif", crs = bc.albers)
+landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/eosd_urban41.tif", crs = bc.albers)
 
 # soils <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Soils_PM1.tif", crs = bc.albers)
 
-soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/Soil_type.tif", crs = bc.albers)
+soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/Soils_final.tif", crs = bc.albers)
 
 aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquifer.tif", crs = bc.albers)
 
-subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster5.tif", crs = bc.albers)
+subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster_Final_ID.tif", crs = bc.albers)
 
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
 
 
-okanagan.basin <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/FW_Atlas_OK_Basin.shp", crs = bc.albers)
+#okanagan.basin <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/FW_Atlas_OK_Basin.shp", crs = bc.albers)
 
-model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/EFN_WS.shp", crs = bc.albers)
+model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Boundaries_Final.shp", crs = bc.albers)
 
 ## New version of raster package does not seem to support "sf" objects for cropping/masking. So shapefile must be converted to spatialpolygon
 model.watersheds.shape <- as(model.watersheds, "Spatial")
@@ -122,15 +124,31 @@ coords <- coordinates(dem.ok)
 ##
 ## ----------------------------------------
 
-coords.subbasin <- coordinates(subbasin.ok)
+coords.slope <- coordinates(slope.ok)
+
+coords.aspect <- coordinates(aspect.ok)
 
 coords.landcover <- coordinates(landcover.ok)
 
-if(all.equal(coords, coords.subbasin) != TRUE | all.equal(coords, coords.landcover) != TRUE){
+coords.soils <- coordinates(soils.ok)
+
+coords.aquifers <- coordinates(aquifers.ok)
+
+coords.subbasin <- coordinates(subbasin.ok)
+
+if(all.equal(coords, coords.slope) != TRUE |
+   all.equal(coords, coords.aspect) != TRUE |
+   all.equal(coords, coords.landcover) != TRUE |
+   all.equal(coords, coords.soils) != TRUE |
+   all.equal(coords, coords.aquifers) != TRUE |
+   all.equal(coords, coords.subbasin) != TRUE){
   stop("Coordinates do not match. Ensure all input datasets are reprojected and snapped to the same grid. Use DEM_fix2.tif as the base grid.")
+} else{
+  print("Coordinates match...continue mapping HRUs")
+  rm(coords.slope, coords.aspect, coords.landcover, coords.soils, coords.aquifers, coords.subbasin)
 }
 
-rm(coords.subbasin, coords.landcover)
+
 
 ## ----------------------------------------
 ##
@@ -153,8 +171,11 @@ soils.values <- values(soils.ok)
 aquifer.values <- values(aquifers.ok)
 
 
+## TEMP SAVE #1
+# save.image(file = file.path(tmp.loc, "temp1.RData"))
+
 ## Remove unneeded items from workspace
-rm(aquifers, aquifers.ok, dem, dem.ok, landcover, landcover.ok, slope.aspect, slope, aspect, slope.ok, aspect.ok, soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape, okanagan.basin)
+rm(aquifers, aquifers.ok, dem, dem.ok, landcover, landcover.ok, slope.aspect, slope, aspect, slope.ok, aspect.ok, soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape)
 
 gc()
 
@@ -223,9 +244,8 @@ DT$landcover.bin <- ifelse(landcover.values <= 11, 300, # No data / Unclassified
                     ifelse(landcover.values == 40 | landcover.values == 100| landcover.values == 110, 306, # Bryoids / Herbs / Grassland
                     ifelse(landcover.values >= 120 & landcover.values <= 122, 307, # Agriculture / Agriculture Cropland / Agriculture Pasture Forage
                     ifelse(landcover.values >=50 & landcover.values <= 52, 308, # Shrubland / Shrub Tall / Shrub Low
-                    ifelse(landcover.values >200, 309, 300)))))))))) # Forest-Trees / Coniferous / Coniferous Dense / Coniferous Open / Coniferous Sparse
-                                                                  # Broadleaf / Broadleaf / Broadleaf Dense / Broadleaf Open / Broadleaf Sparse
-                                                                  # Mixedwood / Mixedwood Dense / Mixedwood Open / Mixedwood Sparse
+                    ifelse(landcover.values >200 & landcover.values < 1033, 309, # Forest-Trees / Coniferous / Coniferous Dense / Coniferous Open / Coniferous Sparse / Broadleaf / Broadleaf / Broadleaf Dense / Broadleaf Open / Broadleaf Sparse / Mixedwood / Mixedwood Dense / Mixedwood Open / Mixedwood Sparse
+                    ifelse(landcover.values == 1033, 310, 300)))))))))))  # URBAN
 ## Determine aspect bins
 
 DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
@@ -253,6 +273,11 @@ DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
 ## NOTE: Cannot use complete.cases as aquifers as empty under lakes, so it removed HRUs from Kal & Wood lakes
 ########################################
 
+## TEMP SAVE #2
+# save.image(file = file.path(tmp.loc, "temp2.RData"))
+
+soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil_attributes.csv",
+                       col.names = c("OID", "Value", "Count", "soil_type"))
 
 
 DT.revert <- DT
@@ -260,12 +285,17 @@ DT.revert <- DT
 ## Assign cells with no aquifer information (i.e., under lakes) with 0 so that they're not removed
 DT[is.na(DT$aquifer), "aquifer"] <- 0
 
-## Assign the most common soil type to all cells with missing soils information
-DT[is.na(DT$soils), "soils"] <- getmode(DT[!is.na(DT$soils), "soils"])
+# ## Assign the most common soil type to all cells with missing soils information - this fills a couple of areas that had no soil polygon available with the most common for the Okanagan
+# DT[is.na(DT$soils), "soils"] <- getmode(DT[!is.na(DT$soils), "soils"])
 
+## For pixels with missing soil information, assign them the "blank" soil profile value - this will be replaced with the most common soil type for each subbasin in the rvh file
+DT[is.na(DT$soils), "soils"] <- soil.codes[soil.codes$soil_type == " ", "Value"]
+
+## Remove areas outside the model watershed (i.e., subbasin = NA)
+DT <- DT[!is.na(DT$subbasin), ]
 
 ## Remove incomplete cases (i.e., dead area outside of the model watersheds)
-DT <- DT[complete.cases(DT),]
+# DT <- DT[complete.cases(DT),]
 
 # NOTE: Remove all cells with empty elevation data
 # DT <- DT[!is.na(DT$slope)]
@@ -326,6 +356,8 @@ aspect.bin <- DT$aspect.bin
 
 raw.ID <- as.numeric(DT$ID)
 
+soils.type <- DT$soils
+
 
 print("Writing spatial layers to file...")
 
@@ -367,6 +399,14 @@ raw.m.ID <- do.call(cbind, list(x, y, raw.ID))
 raw.r.ID <- rasterFromXYZ(raw.m.ID, crs = bc.albers)
 
 writeRaster(raw.r.ID, "/var/obwb-hydro-modelling/input-data/processed/spatial/raw-HRU-id.tif", overwrite = T)
+
+
+## write soils to raster
+m.soils.type <- do.call(cbind, list(x, y, soils.type))
+
+r.soils.type <- rasterFromXYZ(m.soils.type, crs = bc.albers)
+
+writeRaster(r.soils.type, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils.tif", overwrite = T)
 
 print("Done writing spatial layers...")
 
@@ -428,6 +468,8 @@ plot(r.elevation.bin, col = colpalette, main = "Elevation bins")
 plot(r.landcover.bin, col = colpalette, main = "Landcover bins")
 
 plot(r.aspect.bin, col = colpalette, main = "Aspect bins")
+
+plot(r.soils.type, col = colpalette, main = "Soils")
 
 dev.off()
 
