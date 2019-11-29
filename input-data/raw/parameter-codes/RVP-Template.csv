@@ -24,6 +24,7 @@ LandUseParameter,MELT_FACTOR,SHRUBLAND,2.147757,mm/d/C,1,10
 LandUseParameter,MELT_FACTOR,WETLAND,2.141228,mm/d/C,1,10
 LandUseParameter,MELT_FACTOR,AGRICULTURE,3.717656,mm/d/C,1,10
 LandUseParameter,MELT_FACTOR,FORESTED,1.265884,mm/d/C,1,10
+LandUseParameter,MELT_FACTOR,URBAN,2,mm/d/C,1,10
 LandUseParameter,MELT_FACTOR,LAKE,0,mm/d/C,,
 LandUseParameter,REFREEZE_FACTOR,[DEFAULT],3,mm/d/C,0,10
 LandUseParameter,REFREEZE_FACTOR,NO_DATA,_DEFAULT,mm/d/C,,
@@ -36,6 +37,7 @@ LandUseParameter,REFREEZE_FACTOR,SHRUBLAND,4.603638,mm/d/C,1,10
 LandUseParameter,REFREEZE_FACTOR,WETLAND,7.065762,mm/d/C,1,10
 LandUseParameter,REFREEZE_FACTOR,AGRICULTURE,4.569627,mm/d/C,1,10
 LandUseParameter,REFREEZE_FACTOR,FORESTED,2.771256,mm/d/C,1,10
+LandUseParameter,REFREEZE_FACTOR,URBAN,1,mm/d/C,0,10
 LandUseParameter,REFREEZE_FACTOR,LAKE,0,mm/d/C,0,10
 SoilParameter,SAT_WILT,[DEFAULT],0.2539915,mm,0,1
 SoilParameter,MAX_CAP_RISE_RATE,[DEFAULT],20.45809,mm,0,1000
@@ -1533,6 +1535,7 @@ VegetationParameter,RAIN_ICEPT_FACT,BROADLEAF,0.512318,none,0,1
 VegetationParameter,RAIN_ICEPT_FACT,BROADLEAF_DENSE,0.3488313,none,0,1
 VegetationParameter,RAIN_ICEPT_FACT,BROADLEAF_OPEN,0.7449103,none,0,1
 VegetationParameter,RAIN_ICEPT_FACT,LAKE,0,none,0,1
+VegetationParameter,RAIN_ICEPT_FACT,URBAN,_DEFAULT,none,,
 VegetationParameter,SNOW_ICEPT_FACT,[DEFAULT],0,none,0,1
 VegetationParameter,SNOW_ICEPT_FACT,NO_DATA,_DEFAULT,none,,
 VegetationParameter,SNOW_ICEPT_FACT,SHADOW,_DEFAULT,none,,
@@ -1551,6 +1554,7 @@ VegetationParameter,SNOW_ICEPT_FACT,BROADLEAF,0.1076468,none,0,1
 VegetationParameter,SNOW_ICEPT_FACT,BROADLEAF_DENSE,0.3525465,none,0,1
 VegetationParameter,SNOW_ICEPT_FACT,BROADLEAF_OPEN,0.7480637,none,0,1
 VegetationParameter,SNOW_ICEPT_FACT,LAKE,0,none,0,1
+VegetationParameter,SNOW_ICEPT_FACT,URBAN,_DEFAULT,none,,
 VegetationParameter,MAX_SNOW_CAPACITY,[DEFAULT],0,mm,0,10
 VegetationParameter,MAX_SNOW_CAPACITY,NO_DATA,_DEFAULT,mm,,
 VegetationParameter,MAX_SNOW_CAPACITY,SHADOW,_DEFAULT,mm,,
@@ -1569,6 +1573,7 @@ VegetationParameter,MAX_SNOW_CAPACITY,BROADLEAF,2.489061,mm,0,9
 VegetationParameter,MAX_SNOW_CAPACITY,BROADLEAF_DENSE,7.064642,mm,0,15
 VegetationParameter,MAX_SNOW_CAPACITY,BROADLEAF_OPEN,11.73123,mm,0,12
 VegetationParameter,MAX_SNOW_CAPACITY,LAKE,0,mm,0,10
+VegetationParameter,MAX_SNOW_CAPACITY,URBAN,_DEFAULT,mm,,
 VegetationParameter,MAX_CAPACITY,[DEFAULT],2.993709,mm,0,5
 VegetationParameter,MAX_CAPACITY,NO_DATA,_DEFAULT,mm,,
 VegetationParameter,MAX_CAPACITY,SHADOW,_DEFAULT,mm,,
@@ -1587,6 +1592,7 @@ VegetationParameter,MAX_CAPACITY,BROADLEAF,0.9452739,mm,0,10
 VegetationParameter,MAX_CAPACITY,BROADLEAF_DENSE,1.473043,mm,0,10
 VegetationParameter,MAX_CAPACITY,BROADLEAF_OPEN,9.942594,mm,0,10
 VegetationParameter,MAX_CAPACITY,LAKE,0,mm,0,10
+VegetationParameter,MAX_CAPACITY,URBAN,_DEFAULT,mm,,
 VegetationParameter,SVF_EXTINCTION,[DEFAULT],4.939018,mm,0,5
 VegetationParameter,SVF_EXTINCTION,NO_DATA,_DEFAULT,mm,,
 VegetationParameter,SVF_EXTINCTION,SHADOW,_DEFAULT,mm,,
@@ -1605,6 +1611,7 @@ VegetationParameter,SVF_EXTINCTION,BROADLEAF,_DEFAULT,mm,,
 VegetationParameter,SVF_EXTINCTION,BROADLEAF_DENSE,_DEFAULT,mm,,
 VegetationParameter,SVF_EXTINCTION,BROADLEAF_OPEN,_DEFAULT,mm,,
 VegetationParameter,SVF_EXTINCTION,LAKE,0,mm,0,5
+VegetationParameter,SVF_EXTINCTION,URBAN,_DEFAULT,mm,,
 VegetationParameter,ALBEDO,[DEFAULT],0,none,,
 VegetationParameter,ALBEDO,NO_DATA,0,none,,
 VegetationParameter,ALBEDO,SHADOW,0,none,,
@@ -1623,6 +1630,7 @@ VegetationParameter,ALBEDO,BROADLEAF,0.1303378,none,,
 VegetationParameter,ALBEDO,BROADLEAF_DENSE,0.1915739,none,,
 VegetationParameter,ALBEDO,BROADLEAF_OPEN,0.1505605,none,,
 VegetationParameter,ALBEDO,LAKE,0.05604502,none,,
+VegetationParameter,ALBEDO,URBAN,0.1364508,none,,
 SubbasinProperties,TIME_CONC,3108,Shorts,d,Shorts,Shorts
 SubbasinProperties,TIME_CONC,3107,Shorts,d,Shorts,Shorts
 SubbasinProperties,TIME_CONC,3106,Shorts,d,Shorts,Shorts
