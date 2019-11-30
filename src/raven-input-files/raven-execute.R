@@ -242,7 +242,7 @@ if(include.water.demand == TRUE){
 ##
 #####################################################################
 if(run.ostrich == TRUE & exists("stations.included") == TRUE){
-
+  
   ## Request user input on which WSC station the model should be calibrated to.
   source("/var/obwb-hydro-modelling/src/calibration-select.R")
   
@@ -363,7 +363,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   if(run.ostrich == TRUE){
     
     print(paste("There are no WSC stations within the ", include.watersheds, " Creek watershed(s). No calibration is possible. One execution of Raven will be completed.", sep = ""))
-  
+    
   }
   
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
