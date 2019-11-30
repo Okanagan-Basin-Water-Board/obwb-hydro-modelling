@@ -10,6 +10,7 @@ input-data/processed/spatial/raw-HRU-id.tif
 input-data/processed/spatial/snow/archive/
 input-data/processed/spatial/soils/
 input-data/processed/spatial/subbasin.tif
+input-data/processed/spatial/soils.tif
 input-data/processed/spatial/tidy-HRU-id.tif
 input-data/raw/climate/
 input-data/raw/naturalized-flows/
@@ -47,3 +48,4 @@ input-data/raw/parameter-codes/archive/subbasin_codes-based.csv
 input-data/processed/spatial/Raven-HRU-table.RData
 input-data/raw/custom-timeseries/
 archive/
+input-data/processed/spatial/temp/
