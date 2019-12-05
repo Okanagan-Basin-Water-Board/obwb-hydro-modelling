@@ -133,7 +133,7 @@ OBJECTID,GEOMETRY,GNIS_NAME,AREA_HA,GEOMETRY_Length,GEOMETRY_Area,Subbasin_ID,Su
 311,Polygon,Shingle Creek,0,22749.7086,17658522.63,2503,Shingle Creek2503,2511,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
 190,Polygon,Shingle Creek,0,7762.894203,2047294.083,2501,Shingle Creek2501,-1,Y,<Null>,08NM150,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 382,Polygon,Powers Creek,0,11173.14117,4640301.316,2423,Powers Creek2423,2422,<Null>,<Null>,<Null>,<Null>,<Null>,Tadpole Lake _Div,_AUTO,_AUTO,1
-384,Polygon,Powers Creek,0,1670.31829,61776.44965,2422,Powers Creek2422,2421,<Null>,Tadpole Lake,<Null>,<Null>,<Null>,Tadpole Lake _Div,_AUTO,_AUTO,0
+384,Polygon,Powers Creek,0,1670.31829,61776.44965,2422,Powers Creek2422,2421,<Null>,Tadpole,<Null>,<Null>,<Null>,Tadpole Lake _Div,_AUTO,_AUTO,0
 322,Polygon,Powers Creek,0,10704.54096,4779879.508,2421,Powers Creek2421,2416,<Null>,<Null>,<Null>,<Null>,<Null>,Alocin Diversion,_AUTO,_AUTO,0
 267,Polygon,Powers Creek,0,13643.71787,5199792.424,2420,Powers Creek2420,2419,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
 92,Polygon,Powers Creek,0,2230.807183,185298.7949,2419,Powers Creek2419,2405,<Null>,Paynter,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
