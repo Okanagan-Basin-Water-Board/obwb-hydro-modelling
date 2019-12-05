@@ -484,15 +484,88 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
     } # End if statement (length of all.snow.courses.included)
   } # End if file exists
   
-  ###############################
-  ##
-  ## Modelled snow against observed snow
-  ##
-  ###############################
   
-  # snow.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = "SC_*|SP_*")
- 
-}
+  ##------------------------------------------
+  ##
+  ## Plot Modelled Snow (BASIN AVERAGE) against Observed Snow
+  ##
+  ##------------------------------------------
+  
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))){
+    
+    ## Read-in modelled snow
+    # CALIBRATION FILE LOC
+    # snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
+    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
+    
+    dates <- index(snow)
+    
+    
+    if(length(all.snow.courses.included) > 0){
+      
+      for(i in 1:length(all.snow.courses.included)){
+        
+        SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
+        
+        SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "Subbasin_ID"])
+        
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        
+        mod.snow <- as.numeric(snow[,as.character(SC.station.subbasin)])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste("Subbasin", SC.station.subbasin, "- Snow Course", all.snow.courses.included[i]))
+        points(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, pch = 19, col = 'red')
+        
+        legend("topright", legend = c(paste("Daily Average Modelled SWE in Subbasin", SC.station.subbasin), paste("Observed SWE at Snow Course", all.snow.courses.included[i])),
+               pch = c(NA, 19),
+               col = c("black", "red"),
+               lty = c(1, NA),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.courses.included)
+    
+    
+    if(length(all.snow.pillows.included) > 0){
+      
+      par(mfrow = c(length(all.snow.pillows.included), 1))
+      
+      for(i in 1:length(all.snow.pillows.included)){
+        
+        SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
+        
+        SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "Subbasin_ID"])
+        
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        
+        mod.snow <- as.numeric(snow[,as.character(SP.station.subbasin)])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste("Subbasin", SP.station.subbasin, " - Snow Pillow", all.snow.pillows.included[i]))
+        lines(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, col = 'red')
+        
+        legend("topright", legend = c(paste("Daily Average Modelled SWE in Subbasin", SP.station.subbasin), paste("Observed SWE at Snow Pillow", all.snow.pillows.included[i])),
+               col = c("black", "red"),
+               lty = c(1, 1),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.pillows.included)
+  } # End if file exists
+  
+  
+} # End Function
 
 
 plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
@@ -644,14 +717,163 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
     }  
     
   }
-  ##############################
+
+  ###############################
   ##
-  ## Plot Subbasin Network
+  ## Plot Modelled Snow and Observed Snow
   ##
   ###############################
   
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))){
+     
+    ## Read-in modelled snow
+    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
+    
+    dates <- index(snow)
+    
+    if(length(all.snow.courses.included) > 0){
+      
+      for(i in 1:length(all.snow.courses.included)){
+        
+        SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
+        
+        SC.station.watershed <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "GNIS_NAME"])
+        
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        
+        mod.snow <- as.numeric(snow[,SC.station])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste(SC.station.watershed, "- Snow Course", all.snow.courses.included[i]))
+        points(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, pch = 19, col = 'red')
+        
+        legend("topright", legend = c(paste("Modelled SWE at Snow Course", all.snow.courses.included[i]), paste("Observed SWE at Snow Course", all.snow.courses.included[i])),
+               pch = c(NA, 19),
+               col = c("black", "red"),
+               lty = c(1, NA),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.courses.included)
+    
+    
+    
+    if(length(all.snow.pillows.included) > 0){
+      
+      par(mfrow = c(length(all.snow.pillows.included), 1))
+      
+      for(i in 1:length(all.snow.pillows.included)){
+        
+        SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
+        
+        SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "GNIS_NAME"])
+        
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        
+        mod.snow <- as.numeric(snow[,SP.station])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste(SP.station.watershed, " - Snow Pillow", all.snow.pillows.included[i]))
+        lines(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, col = 'red')
+        
+        legend("topright", legend = c(paste("Modelled SWE at Snow Pillow", all.snow.pillows.included[i]), paste("Observed SWE at Snow Pillow", all.snow.pillows.included[i])),
+               col = c("black", "red"),
+               lty = c(1, 1),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.courses.included)
+  } # End if file exists
   
-}
+  
+  ##------------------------------------------
+  ##
+  ## Plot Modelled Snow (BASIN AVERAGE) against Observed Snow
+  ##
+  ##------------------------------------------
+  
+  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))){
+    
+    ## Read-in modelled snow
+    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
+    
+    dates <- index(snow)
+    
+    
+    if(length(all.snow.courses.included) > 0){
+      
+      for(i in 1:length(all.snow.courses.included)){
+        
+        SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
+        
+        SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "Subbasin_ID"])
+        
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+      
+        mod.snow <- as.numeric(snow[,as.character(SC.station.subbasin)])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste("Subbasin", SC.station.subbasin, "- Snow Course", all.snow.courses.included[i]))
+        points(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, pch = 19, col = 'red')
+        
+        legend("topright", legend = c(paste("Daily Averaged Modelled SWE in Subbasin", SC.station.subbasin), paste("Observed SWE at Snow Course", all.snow.courses.included[i])),
+               pch = c(NA, 19),
+               col = c("black", "red"),
+               lty = c(1, NA),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.courses.included)
+    
+    
+    if(length(all.snow.pillows.included) > 0){
+      
+      par(mfrow = c(length(all.snow.pillows.included), 1))
+      
+      for(i in 1:length(all.snow.pillows.included)){
+        
+        SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
+        
+        SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "Subbasin_ID"])
+       
+        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+   
+        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+   
+        mod.snow <- as.numeric(snow[,as.character(SP.station.subbasin)])
+        
+        plot(dates, mod.snow, type = 'l',
+             ylim = c(0, max(mod.snow, obs.snow$V3, na.rm = T)),
+             xlab = "Date",
+             ylab = "Snow Water Equivalent (SWE) (mm)",
+             main = paste("Subbasin", SP.station.subbasin, " - Snow Pillow", all.snow.pillows.included[i]))
+        lines(as.POSIXct(obs.snow$V1, format = "%Y-%m-%d"), obs.snow$V3, col = 'red')
+        
+        legend("topright", legend = c(paste("Daily Averaged Modelled SWE in Subbasin", SP.station.subbasin), paste("Observed SWE at Snow Pillow", all.snow.pillows.included[i])),
+               col = c("black", "red"),
+               lty = c(1, 1),
+               bty = "n")
+        
+      } # End for loop
+    } # End if statement (length of all.snow.pillows.included)
+  } # End if file exists
+  
+} # End function
 
 
 ## Function to remove the :SuppressOutput command from the rvi file to facilitate plotting of calibration results
