@@ -14,6 +14,8 @@ useful.var <- OST.template[OST.template$VARIABLE == "Useful", c("TYPE", "DEFINIT
 
 response.var <- OST.template[OST.template$VARIABLE == "Response", c("TYPE", "DEFINITION")]
 
+constraint.var <- OST.template[OST.template$VARIABLE == "Constraint", c("TYPE", "DEFINITION")]
+
 algorithm.defs <- OST.template[OST.template$VARIABLE == "Algorithm", c("TYPE", "DEFINITION")]
 
 seed.var <- OST.template[OST.template$VARIABLE == "Seed", c("TYPE", "DEFINITION")]
@@ -290,11 +292,22 @@ for(i in 1:length(calibration.stations)){
 }
 
 # row <- which(grepl(paste(calibration.stations, collapse = "|"), diag$filename))
-col <- which(colnames(diag) == "DIAG_NASH_SUTCLIFFE")
+col.response <- which(colnames(diag) == "DIAG_NASH_SUTCLIFFE")
 
 key <- "OST_NULL"
 
 token <- "','"
+
+
+#####################################
+## Create constraints table
+####################################
+
+constraint.var.names <- paste(constraint.var$DEFINITION, calibration.stations, sep = "_")
+
+col.constraint <- which(colnames(diag) == "DIAG_PCT_BIAS")
+
+
 
 
 ###################################################################
@@ -367,7 +380,8 @@ cat(file = OSTInFile, append = T, sep = "",
     "BeginResponseVars", "\n",
     "# Name, Filename, Keyword, Line, Col, Token", "\n",
     
-    paste(paste(response.var.names, response.var.file, ";", key, row, col, token, sep = " "), "\n")
+    paste(paste(response.var.names, response.var.file, ";", key, row, col.response, token, sep = " "), "\n"), "\n",
+    paste(paste(constraint.var.names, response.var.file, ";", key, row, col.constraint, token, sep = " "), "\n"), "\n"
 )
 
 cat(file = OSTInFile, append = T, sep = "",
@@ -379,7 +393,10 @@ cat(file = OSTInFile, append = T, sep = "",
     "BeginTiedRespVars", "\n",
     "# Name, Number of parameters, Parameter Names, Type, Type_Data", "\n",
     
-    paste("NegNS", length(response.var.names), paste(response.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights) * -1, collapse = " ")), "\n"
+    paste("NegNS", length(response.var.names), paste(response.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights) * -1, collapse = " ")), "\n",
+
+    paste("PBias",  length(constraint.var.names), paste(constraint.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights), collapse = " ")), "\n"
+
 )
 
 cat(file = OSTInFile, append = T, sep = "",
@@ -400,7 +417,8 @@ cat(file = OSTInFile, append = T, sep = "",
     "# ---- Set Constraints -----------------------------------", "\n",
     "\n",
     "BeginConstraints", "\n",
-    "# No constraints", "\n"
+    "# name type  penalty lwr upr resp.var", "\n",
+    "PbiasConst general 0.01 -10.0  10.0  PBias", "\n"
 )
 
 cat(file = OSTInFile, append = T, sep = "",
