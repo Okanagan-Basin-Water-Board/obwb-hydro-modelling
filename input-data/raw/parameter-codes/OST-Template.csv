@@ -12,3 +12,4 @@ Algorithm,MaxIterations,12
 Algorithm,UseInitialParamValues,,
 Seed,RandomSeed,123456
 Response,ResponseVariable,NS
+Constraint,ConstraintVariable,PBias
