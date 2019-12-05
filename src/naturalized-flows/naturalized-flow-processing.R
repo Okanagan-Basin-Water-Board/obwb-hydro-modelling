@@ -727,18 +727,18 @@ if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "S
 
 ## Generate summary of number of weeks within uncertainty
 
-natural.uncertainty.summary <- data.frame(Summary = c("Number of weeks where accepted uncertainty is met", "Percentage of time accepted uncertainty is met"),
-                                          Value = c(no.natural.weeks.within.uncertainty,
-                                                    (no.natural.weeks.within.uncertainty / length(Raven.apex.weekly$Weekly.mean)*100)))
-
-residual.uncertainty.summary <- data.frame(Summary = c("Number of weeks where accepted uncertainty is met", "Percentage of time accepted uncertainty is met"),
-                                          Value = c(no.residual.weeks.within.uncertainty,
-                                                    (no.residual.weeks.within.uncertainty / length(Raven.apex.weekly$Weekly.mean)*100)))
-
-
-grid::grid.newpage()
-title.natural.uncertainty <- textGrob("Naturalized - Model Summary")
-title.residual.uncertainty <- textGrob("Residual - Model Summary")
-table.natural.uncertainty <- tableGrob(natural.uncertainty.summary)
-table.residual.uncertainty <- tableGrob(residual.uncertainty.summary)
-grid.arrange(title.natural.uncertainty, table.natural.uncertainty, title.residual.uncertainty, table.residual.uncertainty, nrow = 2, ncol = 2)
+# natural.uncertainty.summary <- data.frame(Summary = c("Number of weeks where accepted uncertainty is met", "Percentage of time accepted uncertainty is met"),
+#                                           Value = c(no.natural.weeks.within.uncertainty,
+#                                                     (no.natural.weeks.within.uncertainty / length(Raven.apex.weekly$Weekly.mean)*100)))
+# 
+# residual.uncertainty.summary <- data.frame(Summary = c("Number of weeks where accepted uncertainty is met", "Percentage of time accepted uncertainty is met"),
+#                                           Value = c(no.residual.weeks.within.uncertainty,
+#                                                     (no.residual.weeks.within.uncertainty / length(Raven.apex.weekly$Weekly.mean)*100)))
+# 
+# 
+# grid::grid.newpage()
+# title.natural.uncertainty <- textGrob("Naturalized - Model Summary")
+# title.residual.uncertainty <- textGrob("Residual - Model Summary")
+# table.natural.uncertainty <- tableGrob(natural.uncertainty.summary)
+# table.residual.uncertainty <- tableGrob(residual.uncertainty.summary)
+# grid.arrange(title.natural.uncertainty, table.natural.uncertainty, title.residual.uncertainty, table.residual.uncertainty, nrow = 2, ncol = 2)
