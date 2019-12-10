@@ -41,6 +41,8 @@ landcover.values <- values(landcover.ok)
 ## Read in all LAI *.tif files
 months <- 1:12
 
+scaling.factor <- 0.1
+
 lai.var.names <- paste("lai_", months, sep = "")
 
 data <- data.frame(coords)
@@ -53,7 +55,7 @@ for(i in months){
   
   assign(lai.var.names[i], lai)
  
-  data <- cbind(data, values(lai))
+  data <- cbind(data, (values(lai) * scaling.factor))
   
   print(i)
    
@@ -97,6 +99,14 @@ LAI <- data.frame(Bin_Type = results.mean$Bin_type, LAI)
 
 ## Set all exclusions to 0
 LAI[LAI$Bin_Type %in% exclusions, grepl("lai", names(LAI))] <- 0
+
+
+###################################################################
+##
+## MANUAL ADJUSTMENTS
+
+## Set no change to Coniferous, Coniferous_Open, and Coniferous_Dense
+LAI[LAI$Bin_Type %in% c("CONIFEROUS", "CONIFEROUS_OPEN", "CONIFEROUS_DENSE"), grepl("lai", names(LAI))] <- 1
 
 
 write.csv(max, "/var/obwb-hydro-modelling/input-data/processed/spatial/lai/max-lai.csv", row.names = FALSE)
