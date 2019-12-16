@@ -209,6 +209,17 @@ HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "VEG_CLASS"] <-
 HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "SOIL_PROFILE"] <- "LAKE"
 
 
+##################################################################################################
+##
+## For HRUs with ROCK SOIL_PROFILE, replace LAND_USE_CLASS and VEG_CLASS with NON_VEGETATED (simply to represent no canopy)
+##
+##################################################################################################
+
+HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN", "LAND_USE_CLASS"] <- "NON_VEGETATED"
+
+HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN", "VEG_CLASS"] <- "NON_VEGETATED"
+
+
 ## Write HRU Table to csv incase adjustments are needed
 save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raven-HRU-table.RData")
 
@@ -467,6 +478,17 @@ SP.proportion <- ddply(sub.df, .(SOIL_PROFILE), summarize, total = sum(as.numeri
 common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != "URBAN", "total"])), "SOIL_PROFILE"]
 
 HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == bm.subbasin.id), "SOIL_PROFILE"] <- as.character(common.SP)
+
+
+##################################################################################################
+##
+## For all ROCK HRUs that have had a canopy introduced, revert them to NON-VEGETATED (simply to represent no canopy)
+##
+##################################################################################################
+
+HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN", "LAND_USE_CLASS"] <- "NON_VEGETATED"
+
+HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN", "VEG_CLASS"] <- "NON_VEGETATED"
 
 
 ##############################################################################################
