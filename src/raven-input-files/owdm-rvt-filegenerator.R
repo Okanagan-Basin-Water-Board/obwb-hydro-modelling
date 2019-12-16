@@ -22,7 +22,9 @@ RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-cod
 
 subbasins <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
 
-owdm <- read.csv("/var/obwb-hydro-modelling/input-data/raw/owdm/okanagan_2019.09.19.csv")
+owdm <- read.csv("/var/obwb-hydro-modelling/input-data/raw/owdm/OWDM_water_demands_timeseries.csv")
+
+colnames(owdm) <- c("subbasin", "day", "year", "extraction.total")
 
 ##-------------------------------------------------------------------
 ##
@@ -52,7 +54,7 @@ owdm.sub <- owdm[owdm$watershed %in% include.watersheds,]
 owdm.sub <- merge(owdm.sub, subbasins[,c("SubBasin_name", "Subbasin_ID")], by.x = "subbasin", by.y = "SubBasin_name", all.x = T, all.y = F)
 
 ## Calculate the total irrigation as the sum of indoor and all outdoor irrigation needs
-owdm.sub$extraction.total <- rowSums(owdm.sub[,c("indoor", "outdoor_domestic", "outdoor_animal", "outdoor_other_irrigation")])
+# owdm.sub$extraction.total <- rowSums(owdm.sub[,c("indoor", "outdoor_domestic", "outdoor_animal", "outdoor_other_irrigation")])
 
 ## Paste year and day together
 owdm.sub$date <- paste(owdm.sub$year, owdm.sub$day, sep = "-")
