@@ -86,7 +86,7 @@ max <- data.frame("Bin_type" = results.mean$Bin_type, "MAX_LAI" = apply(results.
 ## Identify vegetation bins which should not have variable LAI
 exclusions <- c("NO_DATA", "NON_VEGETATED", "SHADOW", "SNOW_ICE", "WATER", "URBAN")
 
-## Set maximum to zero for appropriate excluded vegetation bins
+## Set maximum to zero for appropriate excluded vegetation bins - these vegetation classes do not have LAI
 max[max$Bin_type %in% exclusions, "MAX_LAI"] <- 0
 
 
@@ -98,7 +98,13 @@ LAI <- results.mean[,grepl("lai", names(results.mean))] / max$MAX_LAI
 LAI <- data.frame(Bin_Type = results.mean$Bin_type, LAI)
 
 ## Set all exclusions to 0
-LAI[LAI$Bin_Type %in% exclusions, grepl("lai", names(LAI))] <- 0
+# LAI[LAI$Bin_Type %in% exclusions, grepl("lai", names(LAI))] <- 0
+
+## Delete all vegetation type and exclusions that should not vary monthly
+LAI <- LAI[!LAI$Bin_Type %in% c(exclusions, "CONIFEROUS", "CONIFEROUS_OPEN", "CONIFEROUS_DENSE", "GRASS", "WETLAND"), ]
+
+## Make Broadleaf the same for all broadleaf vegetation types. Density will be captured by interception factor
+LAI[LAI$Bin_Type %in% c("BROADLEAF_DENSE", "BROADLEAF_OPEN"), 2:13] <- LAI[LAI$Bin_Type == "BROADLEAF", 2:13]
 
 
 ###################################################################
@@ -106,7 +112,7 @@ LAI[LAI$Bin_Type %in% exclusions, grepl("lai", names(LAI))] <- 0
 ## MANUAL ADJUSTMENTS
 
 ## Set no change to Coniferous, Coniferous_Open, and Coniferous_Dense
-LAI[LAI$Bin_Type %in% c("CONIFEROUS", "CONIFEROUS_OPEN", "CONIFEROUS_DENSE"), grepl("lai", names(LAI))] <- 1
+# LAI[LAI$Bin_Type %in% c("CONIFEROUS", "CONIFEROUS_OPEN", "CONIFEROUS_DENSE"), grepl("lai", names(LAI))] <- 1
 
 
 write.csv(max, "/var/obwb-hydro-modelling/input-data/processed/spatial/lai/max-lai.csv", row.names = FALSE)
