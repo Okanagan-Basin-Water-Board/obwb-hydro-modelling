@@ -19,24 +19,24 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Nov-new-spatial"
+ws.interest <- "LB-testing"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Penticton"
+include.watersheds <- "Vaseux"
 
 ## Specify a run number to associated with outputs
-run.number <- "penticton-test-cal"
+run.number <- "vaseux-wsc-only-3"
 
 ## Add comments to README file.
-run.comments <- "Test run to see if rvp-template-update script works as intended"
+run.comments <- "Intermediate test of vaseux calibration with 0.7 NSE (Does not account for reservoir parameters"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2422, 2421, 2416, 1415, 255)
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -48,10 +48,13 @@ recreate.rvh <- FALSE
 include.water.demand <- FALSE
 
 # Should reservoir parameters be included in the calibration?
-calibrate.reservoirs <- TRUE
+calibrate.reservoirs <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
 manage.reservoirs <- FALSE
+
+## Should soil thicknesses be calibrated?
+calibrate.soil.thicknesses <- FALSE
 
 ## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
@@ -246,6 +249,10 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## Request user input on which WSC station the model should be calibrated to.
   source("/var/obwb-hydro-modelling/src/calibration-select.R")
   
+  calibration.stations <- c("08NM171")
+  
+  calibration.station.weights <- c(1)
+  
   ## set working directory to current model run directory
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 
@@ -285,8 +292,16 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   if(dir.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm"))){
     system2("mv", paste(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm"), file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"), sep =" "))
   }
+  
+  ## If the custom_timeseries folder exists, move it to the model folder
+  if(dir.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "custom_timeseries"))){
+    system2("mv", paste(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "custom_timeseries"), file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "model"), sep =" "))
+  }
+  
 
   print("Beginning Ostrich Calibration...")
+  
+  # save.image("/var/obwb-hydro-modelling/simulations/Manual-Calibrations/Manual-Calibrations-MAX_LAI/pre-calibration-image.RData")
 
   system2("/usr/bin/mpirun",args = paste("-n", cores, "OstrichMPI"))
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ostrich"))
@@ -350,7 +365,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   
   
   ## Shutdown the VM.
-  system2("sudo", args = "shutdown -h now")
+  # system2("sudo", args = "shutdown -h now")
   
 #####################################################################
 ##
