@@ -272,6 +272,8 @@ soil_type <- soil_type[!is.na(soil_type)]
 
 results <- data.frame(matrix(NA, ncol = 11, nrow = 0))
 
+results.range <- results
+
 for(i in 1:length(soil_type)){
   
   tmp <- output[output$soil_type == soil_type[i],]
@@ -295,7 +297,7 @@ for(i in 1:length(soil_type)){
   
   ## Average out thickness of each model horizon, and sand, silt, clay percentages.
   ## Convert thickness from cm to m
-  thickness <- ddply(tmp2, .(model.horizon), summarize, mean_thickness = mean(HZN_THICK) / 100)
+  thickness.mean <- ddply(tmp2, .(model.horizon), summarize, mean_thickness = mean(HZN_THICK) / 100)
   
   sand <- ddply(tmp2, .(model.horizon), summarize, mean_sand = mean(TSAND))
   
@@ -306,7 +308,7 @@ for(i in 1:length(soil_type)){
   ksat <- ddply(tmp2, .(model.horizon), summarize, mean_ksat = mean(KSAT))
   
   
-  group <- do.call(cbind, list(thickness, sand, silt, clay, ksat))
+  group <- do.call(cbind, list(thickness.mean, sand, silt, clay, ksat))
   
   group$soil_type <- soil_type[i]
   
@@ -314,6 +316,24 @@ for(i in 1:length(soil_type)){
   names(results) <- names(group)
   
   results <- rbind(results, group)
+  
+  
+  
+  ##############################################################################
+  ##
+  ## Determine minimum and maximum soil thicknesses and export to results.range
+  
+  thickness.min <- ddply(tmp2, .(model.horizon), summarize, min_thickness = min(HZN_THICK) / 100)
+  
+  thickness.max <- ddply(tmp2, .(model.horizon), summarize, max_thickness = max(HZN_THICK) / 100)
+  
+  group <- do.call(cbind, list(thickness.min, thickness.max, thickness.mean))  
+
+  group$soil_type <- soil_type[i]
+  
+  names(results.range) <- names(group)
+  
+  results.range <- rbind(results.range, group)
   
 }
 
@@ -416,4 +436,99 @@ for(i in 1:nrow(classes)){
 
 ## Write classes to csv to be read-in to rvp-filegenerator.R. The format is as required by Raven
 write.csv(classes, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-class-table.csv",
+          na = "", row.names = FALSE)
+
+
+
+
+############################################################################################################################################################
+##
+## Tidy and write out soil thickness ranges for thickness calibrations
+##
+############################################################################################################################################################
+
+results.range <- results.range[!is.na(results.range$soil_type),]
+
+results.range[is.na(results.range)] <- 0
+
+
+######################################################
+##
+## Overwrite custom soil types
+##
+
+
+## Remove the rows for "special cases" (i.e., Lake, Rock, Wetland, Glacier)
+special.cases <- c("LAKE", "ROCK")
+
+results.range <- results.range[!grepl(paste(special.cases, collapse = "|"), results.range$soil_type),]
+
+## Create individual vectors for special cases, as needed by RAVEN (i.e., lake = 0 horizons; rock = zero horizons)
+lake <- as.vector(c("LAKE", 0))
+
+rock <- as.vector(c("ROCK", 0))
+
+
+results.range$Parameter_Name <- paste(results.range$soil_type, "_", results.range$model.horizon, "_THICK", sep = "")
+
+results.range$soil_class_name <- paste(results.range$soil_type, "_", results.range$model.horizon, sep = "")
+
+
+###################################
+##
+## Generate the SoilProfiles Table
+##
+###################################
+
+## Isolate the required columns
+profiles.range <- results.range[,c("soil_type", "soil_class_name", "Parameter_Name")]
+
+## Indentify all unique soil types
+soil_type <- unique(profiles.range$soil_type)
+
+## Create empty recipient for soil profiles information
+soil_profiles_range <- matrix(NA, nrow = 0, ncol = 8)
+
+## Loop through each soil type and restructure data to required raven format. rbind it bottom of soil_profiles
+for(i in 1:length(soil_type)){
+  
+  tmp <- profiles.range[profiles.range$soil_type == soil_type[i],]
+  
+  tmp2 <- as.vector(t(tmp[2:3]))
+  
+  tmp3 <- c(soil_type[i], 3, tmp2)
+  
+  soil_profiles_range <- rbind(soil_profiles_range, tmp3)
+  
+}
+
+## Add special cases to the bottom of the table - NA's are places as filler where required.
+lake <- c(lake, rep(NA, ncol(soil_profiles_range) - length(lake)))
+
+rock <- c(rock, rep(NA, ncol(soil_profiles_range) - length(rock)))
+
+soil_profiles_ranges <- do.call("rbind", list(soil_profiles_range, lake, rock))
+
+
+## Write soil_profiles to csv to be read-in to rvp-filegenertor.R. The format is as required by Raven
+write.csv(soil_profiles_ranges, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table-calibration.csv",
+          na = "", row.names = FALSE)
+
+
+soil.thickness.range <- results.range[,c("Parameter_Name", "min_thickness", "max_thickness", "mean_thickness")]
+
+write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv",
+          na = "", row.names = FALSE)
+
+#####################################
+##
+## Overwrite min and max soil range thicknesses for calibration purposes.
+
+soil.thickness.range <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv")
+
+soil.thickness.range$min_thickness <- 0
+
+soil.thickness.range$max_thickness <- 1
+
+write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv",
           na = "", row.names = FALSE)
