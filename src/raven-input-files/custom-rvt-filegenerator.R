@@ -57,13 +57,61 @@ if(nrow(custom.timeseries) > 0){
       
       customRVTfile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries", paste(tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""))
       
+      
       ## ------------------------------------------------
       ##
-      ## Check to see if data exist within the model period of interest. If not, no custom *.rvt file will be writtem
+      ## Check to see if the data is a rating curve (i.e., Mill - Mission Diversion)
       ##
       ## ------------------------------------------------
       
-      if((as.Date(custom.data$Date[1]) <= start.date & as.Date(custom.data$Date[1]) < end.date) | (as.Date(custom.data$Date[1]) > start.date & as.Date(custom.data$Date[1]) < end.date)){
+      if(custom.data.types[i] == "DIVERSION_CURVE"){
+        
+        npoints <- nrow(custom.data)
+        
+        from.subbasin <- as.character(custom.data[1, "From_Subbasin"])
+        
+        to.subbasin <- as.character(custom.data[1, "To_Subbasin"])
+        
+        
+        cat(file = customRVTfile, sep = "", append = T,
+            "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+            ":FlowDiversionLookupTable ", from.subbasin, " ", to.subbasin, "\n",
+            as.character(npoints), "\n"
+        )
+        
+        write.table(custom.data[, c("Inflow_m3s", "Diversion_m3s")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+        
+        cat(file = customRVTfile, sep = "", append = T,
+            ":EndFlowDiversionLookupTable", "\n"
+        )
+        
+        
+        cat(file = main.RVT.file, append = T, sep = "",
+            "\n",
+            "# -- Rdirect to Diversion Curve(s)----", "\n",
+            ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+        )
+        
+        
+        if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+          
+          OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+        
+          cat(file = OstrichRVTFile, append = T, sep = "",
+              "\n",
+              "# -- Rdirect to Diversion Curve(s)----", "\n",
+              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+          )
+          
+        }
+        
+        ## ------------------------------------------------
+        ##
+        ## Check to see if data exist within the model period of interest. If not, no custom *.rvt file will be writtem
+        ##
+        ## ------------------------------------------------
+        
+      } else if((as.Date(custom.data$Date[1]) <= start.date & as.Date(custom.data$Date[1]) < end.date) | (as.Date(custom.data$Date[1]) > start.date & as.Date(custom.data$Date[1]) < end.date)){
         
         
         ## ------------------------------------------------
