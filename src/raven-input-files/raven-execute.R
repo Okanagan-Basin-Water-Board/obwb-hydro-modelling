@@ -24,13 +24,13 @@ ws.interest <- "LB-testing"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Vaseux"
+include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "vaseux-wsc-only-3"
+run.number <- "whiteman-test-22"
 
 ## Add comments to README file.
-run.comments <- "Intermediate test of vaseux calibration with 0.7 NSE (Does not account for reservoir parameters"
+run.comments <- "testing update reservoir-rvh file"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2422, 2421, 2416, 1415, 255)
