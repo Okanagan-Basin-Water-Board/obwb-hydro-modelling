@@ -440,12 +440,14 @@ write.csv(classes, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils
 
 
 
-
+save.image("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/post-process-image.RData")
 ############################################################################################################################################################
 ##
 ## Tidy and write out soil thickness ranges for thickness calibrations
 ##
 ############################################################################################################################################################
+
+load("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/post-process-image.RData")
 
 results.range <- results.range[!is.na(results.range$soil_type),]
 
@@ -468,7 +470,7 @@ lake <- as.vector(c("LAKE", 0))
 
 rock <- as.vector(c("ROCK", 0))
 
-
+## If desired to calibrate all soil thicknesses, add _THICK to all soil type names
 results.range$Parameter_Name <- paste(results.range$soil_type, "_", results.range$model.horizon, "_THICK", sep = "")
 
 results.range$soil_class_name <- paste(results.range$soil_type, "_", results.range$model.horizon, sep = "")
@@ -510,12 +512,28 @@ rock <- c(rock, rep(NA, ncol(soil_profiles_range) - length(rock)))
 soil_profiles_ranges <- do.call("rbind", list(soil_profiles_range, lake, rock))
 
 
-## Write soil_profiles to csv to be read-in to rvp-filegenertor.R. The format is as required by Raven
-write.csv(soil_profiles_ranges, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table-calibration.csv",
-          na = "", row.names = FALSE)
+########################
+##
+## If desired only to calibrate the thickness of the top layer, and fix B and C layers at 10m, run the following 6 lines of code. If not, write csv's now
+
+soil_profiles_ranges[,6] <- 10
+
+soil_profiles_ranges[,8] <- 10
 
 
 soil.thickness.range <- results.range[,c("Parameter_Name", "min_thickness", "max_thickness", "mean_thickness")]
+
+# soil.thickness.range <- soil.thickness.range
+
+soil.thickness.range <- soil.thickness.range[which(endsWith(soil.thickness.range$Parameter_Name, "A_THICK")), ]
+
+########################
+##
+## Write csvs
+
+## Write soil_profiles to csv to be read-in to rvp-filegenertor.R. The format is as required by Raven
+write.csv(soil_profiles_ranges, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table-calibration.csv",
+          na = "", row.names = FALSE)
 
 write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv",
           na = "", row.names = FALSE)
