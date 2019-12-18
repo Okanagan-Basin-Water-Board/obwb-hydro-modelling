@@ -8,7 +8,7 @@ Useful,PreserveBestModel,./save_best.sh
 Useful,OstrichWarmStart,no
 Useful,TelescopingStrategy,none
 Algorithm,PerturbationValue,0.2
-Algorithm,MaxIterations,12
+Algorithm,MaxIterations,1000
 Algorithm,UseInitialParamValues,,
 Seed,RandomSeed,123456
 Response,ResponseVariable,NS
