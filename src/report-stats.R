@@ -6,6 +6,12 @@
 ##
 #########################################################################################################################################
 
+## ----------------------------------------------------------------------------------------
+##
+## Determine number of HRUs/Subbasins/Reservoirs in each watershed
+##
+## ----------------------------------------------------------------------------------------
+
 require(RavenR)
 
 subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
@@ -38,3 +44,24 @@ for(i in 1:length(watersheds)){
   
 }
 
+
+
+## ----------------------------------------------------------------------------------------
+##
+## Retrieve all information for all WSC stations included
+##
+## ----------------------------------------------------------------------------------------
+
+require(tidyhydat)
+
+hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
+
+subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+
+stations <- subbasin.codes[subbasin.codes$Hydrometric_stn != "<Null>" , "Hydrometric_stn"]
+
+wsc_station_summaries <- hy_stations(stations, hydat_path = hydat_here)
+
+wsc_station_data <- hy_stn_data_range(stations, hydat_path = hydat_here)
+
+wsc_station_regulation <- hy_stn_regulation(stations, hydat_path = hydat_here)
