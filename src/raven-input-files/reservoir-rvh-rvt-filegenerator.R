@@ -21,6 +21,9 @@ subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-c
 ## Check if there are reservoirs present in any of the include.watersheds. If so, create a "reservoirs" directory.
 subbasins.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
 
+## Remove any subbasins that are included in the disable.subbasins string
+subbasins.present <- subbasins.present[!subbasins.present$Subbasin_ID %in% disable.subbasins, ]
+
 if(length(unique(subbasins.present$Reservoir_name)) > 1){dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))}
 
 
