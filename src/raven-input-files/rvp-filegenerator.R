@@ -757,24 +757,49 @@ if(run.ostrich == TRUE){
     soils.to.calibrate <- c()
     
     for(i in 1:length(include.watersheds)){
-      
-      soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 4] <- paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 3], "_THICK", sep = "")
-      
-      soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 6] <- paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 5], "_THICK", sep = "")
-      
-      soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 8] <- paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 7], "_THICK", sep = "")
     
-      soil.profiles[which(soil.profiles[,1] %like% "GRAVEL_PIT"), c(4,6,8)] <- 0
-      
-      soil.profiles[which(soil.profiles[,1] %like% "CUT_FILL"), c(4,6,8)] <- 0
-      
-      soil.profiles[which(soil.profiles[,1] %like% "DIKE"), c(4,6,8)] <- 0
-      
-      soils.to.calibrate <- c(soils.to.calibrate, c(paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 3], "_THICK", sep = ""),
-                              paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 5], "_THICK", sep = ""),
-                              paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 7], "_THICK", sep = "")))
-        
+    soil.profiles.calibrate <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table-calibration.csv")
+    
+    soil.classes.calibrate <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv")
+    
+    included.soils <- soil.profiles.calibrate[which(soil.profiles.calibrate[,1] %like% include.watersheds[i]), ]
+    
+    included.soils <- lapply(included.soils[, ], as.character)
+    
+    soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), ] <- included.soils
+    
+    soil.profiles[which(soil.profiles[,1] %like% "GRAVEL_PIT"), c(4,6,8)] <- 0
+    
+    soil.profiles[which(soil.profiles[,1] %like% "CUT_FILL"), c(4,6,8)] <- 0
+    
+    soil.profiles[which(soil.profiles[,1] %like% "DIKE"), c(4,6,8)] <- 0
+    
+    soils.to.calibrate <- c(soils.to.calibrate, as.character(soil.classes.calibrate[which(soil.classes.calibrate$Parameter_Name %like% include.watersheds[i]), "Parameter_Name"]))
     }
+  
+    ## IF all soil thicknesses are being calibrated, use the below code.
+    
+    # soils.to.calibrate <- c()
+    # 
+    # for(i in 1:length(include.watersheds)){
+    #   
+    #   soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 4] <- paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 3], "_THICK", sep = "")
+    #   
+    #   soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 6] <- paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 5], "_THICK", sep = "")
+    #   
+    #   soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 8] <- paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 7], "_THICK", sep = "")
+    # 
+    #   soil.profiles[which(soil.profiles[,1] %like% "GRAVEL_PIT"), c(4,6,8)] <- 0
+    #   
+    #   soil.profiles[which(soil.profiles[,1] %like% "CUT_FILL"), c(4,6,8)] <- 0
+    #   
+    #   soil.profiles[which(soil.profiles[,1] %like% "DIKE"), c(4,6,8)] <- 0
+    #   
+    #   soils.to.calibrate <- c(soils.to.calibrate, c(paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 3], "_THICK", sep = ""),
+    #                           paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 5], "_THICK", sep = ""),
+    #                           paste(soil.profiles[which(soil.profiles[,1] %like% include.watersheds[i]), 7], "_THICK", sep = "")))
+    #     
+    # }
     
     print("Soil Thicknesses are included in Calibration...")
     
