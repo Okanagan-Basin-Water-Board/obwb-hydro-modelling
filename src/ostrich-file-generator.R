@@ -360,39 +360,39 @@ token <- "','"
 
 
 
-# #####################################
-# ## Begin Tied Parameters (i.e., Field Capacity / Sat Wilt)
-# ####################################
-# 
-# 
-# tied.parameter.loc <- which(parameter.table[,1] %like% "FIELD_CAPACITY")
-# 
-# tied.parameters <- parameter.table[tied.parameter.loc, 1]
-# 
-# 
-# parameter.table[tied.parameter.loc, 1] <- "FIELD_CAPACITY_X_PARAM"
-# 
-# 
-# tied.parameter.table <- matrix(nrow = 1, ncol = 9)
-# 
-# 
-# tied.parameter.table[1,1] <- tied.parameters[1]
-# 
-# tied.parameter.table[1,2] <- 2
-# 
-# tied.parameter.table[1,3] <- "[DEFAULT]_SAT_WILT"
-# 
-# tied.parameter.table[1,4] <- "FIELD_CAPACITY_X_PARAM"
-# 
-# tied.parameter.table[1,5] <- "linear"
-# 
-# tied.parameter.table[1,6] <- 0.0
-# 
-# tied.parameter.table[1,7] <- 1.0
-# 
-# tied.parameter.table[1,8] <- 1.0
-# 
-# tied.parameter.table[1,9] <- 0.0
+#####################################
+## Begin Tied Parameters (i.e., Field Capacity / Sat Wilt)
+####################################
+
+
+tied.parameter.loc <- which(parameter.table[,1] %like% "FIELD_CAPACITY")
+
+tied.parameters <- parameter.table[tied.parameter.loc, 1]
+
+
+parameter.table[tied.parameter.loc, 1] <- "FIELD_CAPACITY_X_PARAM"
+
+
+tied.parameter.table <- matrix(nrow = 1, ncol = 9)
+
+
+tied.parameter.table[1,1] <- tied.parameters[1]
+
+tied.parameter.table[1,2] <- 2
+
+tied.parameter.table[1,3] <- "[DEFAULT]_SAT_WILT"
+
+tied.parameter.table[1,4] <- "FIELD_CAPACITY_X_PARAM"
+
+tied.parameter.table[1,5] <- "linear"
+
+tied.parameter.table[1,6] <- 0.0
+
+tied.parameter.table[1,7] <- 1.0
+
+tied.parameter.table[1,8] <- 1.0
+
+tied.parameter.table[1,9] <- 0.0
 
 
 ###################################################################
@@ -457,20 +457,20 @@ cat(file = OSTInFile, append = T, sep = "",
 write.table(parameter.table, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
 
 cat(file = OSTInFile, append = T, sep = "",
-    "EndParams", "\n"
-    # "\n",
-    # "#---------------------------------------------------------", "\n",
-    # "# ---- Define Tied Parameters -------------------------", "\n",
-    # "\n",
-    # "BeginTiedParams",
-    # "\n"
+    "EndParams", "\n",
+    "\n",
+    "#---------------------------------------------------------", "\n",
+    "# ---- Define Tied Parameters -------------------------", "\n",
+    "\n",
+    "BeginTiedParams",
+    "\n"
 )
 
-# write.table(tied.parameter.table, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+write.table(tied.parameter.table, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
 
 cat(file = OSTInFile, append = T, sep = "",
-    # "\n",
-    # "EndTiedParams",
+    "\n",
+    "EndTiedParams",
     "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Define Response Variables -------------------------", "\n",
