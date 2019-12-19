@@ -220,8 +220,65 @@ HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean
 HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN", "VEG_CLASS"] <- "NON_VEGETATED"
 
 
+##################################################################################################
+##
+## Replace SHADOW Land use and vegetation classes with most common land use and vegetaion class by subbasin
+##
+##################################################################################################
+
+## Identify the subbasins that have "SHADOW" land use types
+shadow.subbasin <- HRU.output.clean[which(HRU.output.clean[, "LAND_USE_CLASS"] == "SHADOW"), "BASIN_ID"]
+
+## Identify all unique subbasins with "SHADOW" land use types
+unique.shadow.subbasin <- unique(shadow.subbasin)
+
+## For each subbasin with "SHADOW" land use type, replace land use type, and vegetation type, with the most common for the given subbasin
+for(i in 1:length(unique.shadow.subbasin)){
+  
+  ##-----------------------------------------
+  ##
+  ## Replace Land Use Class
+  ##
+  ##-----------------------------------------
+  
+  ## Identify all HRUs that are within the gievn subbasin
+  sub <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == unique.shadow.subbasin[i], c("AREA", "LAND_USE_CLASS", "VEG_CLASS", "SOIL_PROFILE")]
+  
+  ## Convert to a datafram
+  sub.df <- as.data.frame(sub)
+  
+  ## Calculate the total area covered by each land use class
+  LUC.proportion <- ddply(sub.df, .(LAND_USE_CLASS), summarize, total = sum(as.numeric(as.character(AREA))))
+  
+  ## Identify the most common land use calss that is NOT "SHADOW"
+  common.LUC <- LUC.proportion[which(LUC.proportion$total == max(LUC.proportion[LUC.proportion$LAND_USE_CLASS != "SHADOW", "total"])), "LAND_USE_CLASS"]
+  
+  # original <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == unique.non.veg.subbasin[i], ]
+  
+  ## Replace all "SHADOW" Land use types with the most common other land use class
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.shadow.subbasin[i] & HRU.output.clean[, "LAND_USE_CLASS"] == "SHADOW"), "LAND_USE_CLASS"] <- as.character(common.LUC)
+  
+  
+  ##-----------------------------------------
+  ##
+  ## Replace Vegetation Class
+  ##
+  ##-----------------------------------------
+  
+  VC.proportion <- ddply(sub.df, .(VEG_CLASS), summarize, total = sum(as.numeric(as.character(AREA))))
+  
+  common.VC <- VC.proportion[which(VC.proportion$total == max(VC.proportion[VC.proportion$VEG_CLASS != "SHADOW", "total"])), "VEG_CLASS"]
+  
+  ## Replace all "SHADOW" vegetation class with the most common other vegetation class
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.shadow.subbasin[i] & HRU.output.clean[, "VEG_CLASS"] == "SHADOW"), "VEG_CLASS"] <- as.character(common.VC)
+  
+  
+}
+
+
 ## Write HRU Table to csv incase adjustments are needed
 save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raven-HRU-table.RData")
+# load("/var/obwb-hydro-modelling/input-data/processed/spatial/Raven-HRU-table.RData")
 
 # write.csv(HRU.output.clean, "/var/obwb-hydro-modelling/input-data/processed/spatial/HRU-table.csv")
 ##################################################################################################
@@ -392,7 +449,7 @@ non.veg.subbasin <- HRU.output.clean[which(HRU.output.clean[, "LAND_USE_CLASS"] 
 ## Identify all unique subbasins with "NON-VEGETATED" land use types
 unique.non.veg.subbasin <- unique(non.veg.subbasin)
 
-## For each subbasin with "NON-VEGETATED" land use type, replace land use type, vegetation type, and soil profiles with the most common for the given subbasin
+## For each subbasin with "URBAN" land use type, replace land use type, vegetation type, and soil profiles with the most common for the given subbasin
 for(i in 1:length(unique.non.veg.subbasin)){
   
   ##-----------------------------------------
