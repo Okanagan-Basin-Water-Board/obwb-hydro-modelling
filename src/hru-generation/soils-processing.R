@@ -511,6 +511,7 @@ rock <- c(rock, rep(NA, ncol(soil_profiles_range) - length(rock)))
 
 soil_profiles_ranges <- do.call("rbind", list(soil_profiles_range, lake, rock))
 
+soil.thickness.range <- results.range[,c("Parameter_Name", "min_thickness", "max_thickness", "mean_thickness")]
 
 ########################
 ##
@@ -519,9 +520,6 @@ soil_profiles_ranges <- do.call("rbind", list(soil_profiles_range, lake, rock))
 soil_profiles_ranges[,6] <- 10
 
 soil_profiles_ranges[,8] <- 10
-
-
-soil.thickness.range <- results.range[,c("Parameter_Name", "min_thickness", "max_thickness", "mean_thickness")]
 
 # soil.thickness.range <- soil.thickness.range
 
@@ -544,9 +542,26 @@ write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/
 
 soil.thickness.range <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv")
 
-soil.thickness.range$min_thickness <- 0
+min.thickness <- 0
 
-soil.thickness.range$max_thickness <- 1
+a.horizon.max.thickness <- 2
 
+b.horizon.max.thickness <- 10
+
+c.horizon.max.thickness <- 10
+
+
+soil.thickness.range$min_thickness <- min.thickness
+
+soil.thickness.range[which(endsWith(as.character(soil.thickness.range$Parameter_Name), "A_THICK")), "max_thickness"] <- a.horizon.max.thickness
+
+soil.thickness.range[which(endsWith(as.character(soil.thickness.range$Parameter_Name), "B_THICK")), "max_thickness"] <- b.horizon.max.thickness
+
+soil.thickness.range[which(endsWith(as.character(soil.thickness.range$Parameter_Name), "C_THICK")), "max_thickness"] <- c.horizon.max.thickness
+
+# soil.thickness.range$min_thickness <- 0
+# 
+# soil.thickness.range$max_thickness <- 1
+# 
 write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv",
           na = "", row.names = FALSE)
