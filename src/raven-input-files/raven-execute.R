@@ -27,16 +27,16 @@ ws.interest <- "LB-testing"
 include.watersheds <- "Whiteman"
 
 ## Specify a run number to associated with outputs
-run.number <- "whiteman-test-22"
+run.number <- "variable-soils-test"
 
 ## Add comments to README file.
-run.comments <- "testing update reservoir-rvh file"
+run.comments <- "Testing implementation of variable soil thicknesses"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2422, 2421, 2416, 1415, 255)
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -54,7 +54,7 @@ calibrate.reservoirs <- FALSE
 manage.reservoirs <- FALSE
 
 ## Should soil thicknesses be calibrated?
-calibrate.soil.thicknesses <- FALSE
+calibrate.soil.thicknesses <- TRUE
 
 ## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
