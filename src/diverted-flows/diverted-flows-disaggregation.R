@@ -6,6 +6,7 @@ library(ggplot2)
 library(RavenR)
 library(openxlsx)
 library(tidyhydat)
+library(reshape2)
 
 rm(list = ls())
 
@@ -107,8 +108,8 @@ for(i in 1:length(include.watersheds)){
     Q.df$Date <- ymd(row.names(Q.df)) 
     
     # get annual divertable volumes
-    Q.div <- rules.df[r, "Diversion_(m^3)"]
-    Q.div2 <- rules.df[r, "Diversion_2_(m^3)"]
+    Q.div <- as.numeric(rules.df[r, "Diversion_(m^3)"])
+    Q.div2 <- as.numeric(rules.df[r, "Diversion_2_(m^3)"])
     
     # filter hydrograph to only include days in either diversion period.
     # add column of diversion volume.
@@ -207,14 +208,14 @@ for(i in 1:length(include.watersheds)){
     
     # discharge at constant rates for July, August, Sept, Oct
     Q.df <- data.frame("Date" = ts,
-                       "Mean_Daily_Discharge_m3s" = NA)
+                       "Daily_diverted_flow_m3s" = NA)
     
     # set diversion volumes based on month value
     Q.df[month(Q.df$Date) == 7, 2] <- Q.div[["July"]]
     Q.df[month(Q.df$Date) == 8, 2] <- Q.div[["August"]]
     Q.df[month(Q.df$Date) == 9, 2] <- Q.div[["September"]]
     Q.df[month(Q.df$Date) == 10, 2] <- Q.div[["October"]]
-    Q.df[is.na(Q.df$Mean_Daily_Discharge_m3s), 2] <- 0
+    Q.df[is.na(Q.df$Daily_diverted_flow_m3s), 2] <- 0
     
     out.df <- Q.df
     
@@ -258,14 +259,117 @@ for(i in 1:length(include.watersheds)){
     # Creek diversion amounts. 
     stirling_df <- read.csv("./stirling_ck_mean_monthly_flows.csv",
                             stringsAsFactors = FALSE, header = TRUE)
+    colnames(stirling_df) <- c("Year", "2003", "2004", "2005", "2006")
     
     # read in 241 creek daily flows
     Q241_df <- hy_daily_flows(station_number = "08NM241",
                               hydat_path = "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3")
     
     
+    # compute the monthly streamflows averaged over the period of interest for
+    # Stirling Creek
+    stirling_POR <- stirling_df %>%
+      melt(id.var = "Year", 
+           measure.vars = as.character(2003:2006)) %>%
+      rename(Month = "Year", Year = "variable", Mean_monthly_Q_m3s = "value") %>%
+      group_by(Month) %>%
+      filter(Year != 2003) %>%
+      summarize(POR_mean_Q = mean(Mean_monthly_Q_m3s, na.rm = TRUE)) %>%
+      mutate(Month = month(Month)) %>%
+      arrange(Month)
     
+    # compute mean monthly flow for 241 creek
+    Q241_mean_monthly <- Q241_df %>%
+      select(Date, Value) %>%
+      rename(Q_m3s = "Value" ) %>%
+      mutate(Date = ymd(Date),
+             month = month(Date),
+             year = year(Date)) %>% 
+      group_by(year, month) %>%
+      summarize(Q_m3s = mean(Q_m3s, na.rm = TRUE))
     
+    # compute the mean monthly flows over the Stirling Creek flow period
+    # of record (2004:2006, with April missing from 2005 and 2006)
+    Q241_POR <- Q241_mean_monthly %>%
+      filter(year %in% 2004:2006) %>%
+      mutate(Q_m3s = ifelse(month == 4 & year %in% 2005:2006, NA, Q_m3s)) %>% # set 241 Q to NA for April in 05/06, as it doesn't exist for Stirling Creek.
+      ungroup() %>%
+      group_by(month) %>%
+      summarize(Q_m3s = mean(Q_m3s, na.rm = TRUE)) %>%
+      mutate(Q_m3s = ifelse(month %in% c(1:3, 11:12), NA, Q_m3s))
+    
+    # compute the ratio of 241 Ck Q to 241 POR mean monthly Q
+    Q241_monthly_ratio <- Q241_mean_monthly %>%
+      left_join(Q241_POR %>% rename(Q_241_por = "Q_m3s"),
+                by = "month") %>%
+      mutate(Q_ratio = Q_m3s / Q_241_por)
+    
+    # estimate Stirling Ck mean monthly flows by computing 241 Q ratio
+    # times Stirling Ck mean monthly POR Q
+    Q_stirling_filled <- Q241_monthly_ratio %>%
+      left_join(stirling_POR %>% rename(Qstirling_POR = "POR_mean_Q",
+                                        month = "Month"),
+                by = "month") %>%
+      mutate(Qbar_mean_monthly_stirling = Q_ratio * Qstirling_POR) %>%
+      filter(year %in% 1994:2017) 
+      
+    # compute 241 mean daily to mean monthly ratio
+    Q241_daily_to_monthly_ratio <- Q241_df %>%
+      mutate(Date = ymd(Date),
+             year = year(Date),
+             month = month(Date)) %>%
+      select(Date, year, month, Value) %>%
+      rename(Q_daily = "Value") %>%
+      left_join(Q241_mean_monthly, by = c("month", "year")) %>%
+      mutate(Q_ratio_dm = Q_daily / Q_m3s) %>%
+      filter(year %in% 1994:2017)
+    
+    # compute daily Stirling Creek streamflows 
+    Q_stirling_daily <- Q241_daily_to_monthly_ratio %>%
+      select(Date, year, month, Q_ratio_dm) %>%
+      left_join(Q_stirling_filled %>%
+                  select(year, month, Qbar_mean_monthly_stirling),
+                by = c("year", "month")) %>%
+    mutate(Q_mean_daily_m3s = Q_ratio_dm * Qbar_mean_monthly_stirling)
+      
+  # make output dataframe
+  # set days with no diverted flow = 0 flow
+  out.df <- Q_stirling_daily %>%
+    rename(Daily_diverted_flow_m3s = "Q_mean_daily_m3s") %>%
+    select(Date, Daily_diverted_flow_m3s) %>%
+    mutate(Daily_diverted_flow_m3s = ifelse(is.na(Daily_diverted_flow_m3s),
+                                          0, Daily_diverted_flow_m3s))
+  
+  
+  # generate output worksheet name
+  out.name <- paste(include.watersheds[i], "Diverted_Flow", sep = "_")
+  
+  # add output data to custom_timeseries 
+  writeData(cts.wb, sheet = out.name, x = out.df)
+  
+  ##### generate information to add to new row of summary worksheet
+  
+  # set 'Data_type' to DIVERSION_IN or DIVERSION_OUT depending on whether
+  # the watershed[i] is a source or destination of diverted flow
+  if(grepl("Source", colnames(rules.df)[c])){
+    data.type <- "DIVERSION_OUT"
+  } else if(grepl("Destination", colnames(rules.df)[c])){
+    data.type <- "DIVERSION_IN"
+  }
+  
+  # concatenate all info for the summary worksheet
+  sum.row <- c(include.watersheds[i], data.type, "Continuous", rules.df[r, c + 1],
+               out.name)
+  
+  # append row to summary worksheet dataframe and add to cts workbook
+  cts.nrow <- nrow(cts.sum)
+  cts.sum[cts.nrow + 1, ] <- sum.row
+  
+  writeData(wb = cts.wb, sheet = "Summary", x = cts.sum)
+  
+  # add output dataframe to custom_timeseries.csv as a new worksheet
+  saveWorkbook(wb = cts.wb, file = cts.fn, overwrite = TRUE)
+  
     
   } else if(include.watersheds[i] == "Trepanier" | include.watersheds[i] == "Shorts"){
     
@@ -300,7 +404,9 @@ for(i in 1:length(include.watersheds)){
       mutate(Q.prop = Q / sum(Q, na.rm = TRUE)) 
       
     # get annual divertable volume
-    Q.div <- rules.df[r, "Diversion_(m^3)"]
+    # need to set as.numeric because one of the Diversion col. entries is a string
+    Q.div <- as.numeric(rules.df[r, "Diversion_(m^3)"])
+    
     
     # compute daily diverted flows 
     # m^3 * daily Q proportion of total Q during diversion time period / s/day
@@ -348,19 +454,4 @@ for(i in 1:length(include.watersheds)){
     saveWorkbook(wb = cts.wb, file = cts.fn, overwrite = TRUE)
   }
 }
-
-# load custom_timeseries workbook
-cts.fn <- "/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/AJS_temp/custom_timeseries_AJS.xlsx"
-cts.wb <- loadWorkbook(cts.fn)
-
-# load Summary sheet and vector of worksheet names
-cts.sheets <- getSheetNames(cts.fn)
-cts.sum <- read.xlsx(cts.fn[grep("Summary", cts.sheets)]) 
-
-test1 <- read.xlsx(cts.wb, sheet = "Trepanier_Diverted_Flow")
-test2 <- read.xlsx(cts.wb, sheet = "Shorts_Diverted_Flow")
-
-plot(test1$Date, test1$Daily_diverted_flow_m3s, type = "l")
-lines(test2$Date, test2$Daily_diverted_flow_m3s, col = "blue")
-
 
