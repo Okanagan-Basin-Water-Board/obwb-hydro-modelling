@@ -352,47 +352,47 @@ token <- "','"
 ## Create constraints table
 ####################################
 
-# constraint.var.names <- paste(constraint.var$DEFINITION, calibration.stations, sep = "_")
+constraint.var.names <- paste(constraint.var$DEFINITION, calibration.stations, sep = "_")
 
-# col.constraint <- which(colnames(diag) == "DIAG_PCT_BIAS")
-
-
+col.constraint <- which(colnames(diag) == "DIAG_PCT_BIAS")
 
 
 
-#####################################
-## Begin Tied Parameters (i.e., Field Capacity / Sat Wilt)
-####################################
 
 
-tied.parameter.loc <- which(parameter.table[,1] %like% "FIELD_CAPACITY")
-
-tied.parameters <- parameter.table[tied.parameter.loc, 1]
-
-
-parameter.table[tied.parameter.loc, 1] <- "FIELD_CAPACITY_X_PARAM"
-
-
-tied.parameter.table <- matrix(nrow = 1, ncol = 9)
-
-
-tied.parameter.table[1,1] <- tied.parameters[1]
-
-tied.parameter.table[1,2] <- 2
-
-tied.parameter.table[1,3] <- "[DEFAULT]_SAT_WILT"
-
-tied.parameter.table[1,4] <- "FIELD_CAPACITY_X_PARAM"
-
-tied.parameter.table[1,5] <- "linear"
-
-tied.parameter.table[1,6] <- 0.0
-
-tied.parameter.table[1,7] <- 1.0
-
-tied.parameter.table[1,8] <- 1.0
-
-tied.parameter.table[1,9] <- 0.0
+# #####################################
+# ## Begin Tied Parameters (i.e., Field Capacity / Sat Wilt)
+# ####################################
+# 
+# 
+# tied.parameter.loc <- which(parameter.table[,1] %like% "FIELD_CAPACITY")
+# 
+# tied.parameters <- parameter.table[tied.parameter.loc, 1]
+# 
+# 
+# parameter.table[tied.parameter.loc, 1] <- "FIELD_CAPACITY_X_PARAM"
+# 
+# 
+# tied.parameter.table <- matrix(nrow = 1, ncol = 9)
+# 
+# 
+# tied.parameter.table[1,1] <- tied.parameters[1]
+# 
+# tied.parameter.table[1,2] <- 2
+# 
+# tied.parameter.table[1,3] <- "[DEFAULT]_SAT_WILT"
+# 
+# tied.parameter.table[1,4] <- "FIELD_CAPACITY_X_PARAM"
+# 
+# tied.parameter.table[1,5] <- "linear"
+# 
+# tied.parameter.table[1,6] <- 0.0
+# 
+# tied.parameter.table[1,7] <- 1.0
+# 
+# tied.parameter.table[1,8] <- 1.0
+# 
+# tied.parameter.table[1,9] <- 0.0
 
 
 ###################################################################
@@ -458,28 +458,28 @@ write.table(parameter.table, OSTInFile, append = T, col.names = F, row.names = F
 
 cat(file = OSTInFile, append = T, sep = "",
     "EndParams", "\n",
-    "\n",
-    "#---------------------------------------------------------", "\n",
-    "# ---- Define Tied Parameters -------------------------", "\n",
-    "\n",
-    "BeginTiedParams",
     "\n"
+    # "#---------------------------------------------------------", "\n",
+    # "# ---- Define Tied Parameters -------------------------", "\n",
+    # "\n",
+    # "BeginTiedParams",
+    # "\n"
 )
 
-write.table(tied.parameter.table, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+# write.table(tied.parameter.table, OSTInFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
 
 cat(file = OSTInFile, append = T, sep = "",
-    "\n",
-    "EndTiedParams",
-    "\n",
+    # "\n",
+    # "EndTiedParams",
+    # "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Define Response Variables -------------------------", "\n",
     "\n",
     "BeginResponseVars", "\n",
     "# Name, Filename, Keyword, Line, Col, Token", "\n",
     
-    paste(paste(response.var.names, response.var.file, ";", key, row, col.response, token, sep = " "), "\n"), "\n"
-    # paste(paste(constraint.var.names, response.var.file, ";", key, row, col.constraint, token, sep = " "), "\n"), "\n"
+    paste(paste(response.var.names, response.var.file, ";", key, row, col.response, token, sep = " "), "\n"), "\n",
+    paste(paste(constraint.var.names, response.var.file, ";", key, row, col.constraint, token, sep = " "), "\n"), "\n"
 )
 
 cat(file = OSTInFile, append = T, sep = "",
@@ -491,9 +491,9 @@ cat(file = OSTInFile, append = T, sep = "",
     "BeginTiedRespVars", "\n",
     "# Name, Number of parameters, Parameter Names, Type, Type_Data", "\n",
     
-    paste("NegNS", length(response.var.names), paste(response.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights) * -1, collapse = " ")), "\n"
+    paste("NegNS", length(response.var.names), paste(response.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights) * -1, collapse = " ")), "\n",
 
-    # paste("PBias",  length(constraint.var.names), paste(constraint.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights), collapse = " ")), "\n"
+    paste("PBias",  length(constraint.var.names), paste(constraint.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights), collapse = " ")), "\n"
 
 )
 
@@ -510,17 +510,17 @@ cat(file = OSTInFile, append = T, sep = "",
 
 cat(file = OSTInFile, append = T, sep = "",
     "EndGCOP", "\n",
-    "\n"
-    # "#---------------------------------------------------------", "\n",
-    # "# ---- Set Constraints -----------------------------------", "\n",
-    # "\n",
-    # "BeginConstraints", "\n",
-    # "# name type  penalty lwr upr resp.var", "\n",
-    # "PbiasConst general 0.01 -50.0  50.0  PBias", "\n"
+    "\n",
+    "#---------------------------------------------------------", "\n",
+    "# ---- Set Constraints -----------------------------------", "\n",
+    "\n",
+    "BeginConstraints", "\n",
+    "# name type  penalty lwr upr resp.var", "\n",
+    "PbiasConst general 0.01 -50.0  50.0  PBias", "\n"
 )
 
 cat(file = OSTInFile, append = T, sep = "",
-    # "EndConstraints", "\n",
+    "EndConstraints", "\n",
     "\n",
     "#---------------------------------------------------------", "\n",
     "# ---- Define Set Seed -----------------------------------", "\n",
