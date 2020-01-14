@@ -891,6 +891,17 @@ rewrite.output <- function(ws.interest, run.number){
       write(line, file = new.RVI.file, append = TRUE)
     } 
   }
+  
+  RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
+  
+  ## Add colon to all parameter calls - this is required by Raven
+  RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
+  
+  custom.output <- RVI.template[RVI.template$PARAMETER == ":CustomOutput", c("PARAMETER", "DEFINITION", "FROM", "TO")]
+  
+  
+  write.table(custom.output, file = new.RVI.file, sep = "\t", quote = F, row.names = F, col.names = F, append = T)
+
   close(con)
   
   file.remove(main.RVI.file)
