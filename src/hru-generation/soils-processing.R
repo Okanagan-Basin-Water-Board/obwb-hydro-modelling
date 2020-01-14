@@ -433,6 +433,9 @@ for(i in 1:nrow(classes)){
   
 }
 
+## Add 0 organics column
+classes$mean_organic <- 0
+
 
 ## Write classes to csv to be read-in to rvp-filegenerator.R. The format is as required by Raven
 write.csv(classes, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-class-table.csv",
@@ -517,9 +520,13 @@ soil.thickness.range <- results.range[,c("Parameter_Name", "min_thickness", "max
 ##
 ## If desired only to calibrate the thickness of the top layer, and fix B and C layers at 10m, run the following 6 lines of code. If not, write csv's now
 
-soil_profiles_ranges[,6] <- 10
+soil_profiles_ranges[,6] <- 100
 
-soil_profiles_ranges[,8] <- 10
+soil_profiles_ranges[,8] <- 100
+
+soil_profiles_ranges[soil_profiles_ranges[,1] == "LAKE", 3:8] <- ""
+
+soil_profiles_ranges[soil_profiles_ranges[,1] == "ROCK", 3:8] <- ""
 
 # soil.thickness.range <- soil.thickness.range
 
