@@ -541,11 +541,15 @@ HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == bm.subbasin.id), "SOIL_
 ##
 ## For all ROCK HRUs that have had a canopy introduced, revert them to NON-VEGETATED (simply to represent no canopy)
 ##
+## For all Open Water HRUs, ensure LAKE profile is below them - there are some that get converted to Water
+##
 ##################################################################################################
 
 HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN", "LAND_USE_CLASS"] <- "NON_VEGETATED"
 
 HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN", "VEG_CLASS"] <- "NON_VEGETATED"
+
+HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] != "LAKE" & HRU.output.clean[, "LAND_USE_CLASS"] == "WATER", "SOIL_PROFILE"] <- "LAKE"
 
 
 ##############################################################################################
