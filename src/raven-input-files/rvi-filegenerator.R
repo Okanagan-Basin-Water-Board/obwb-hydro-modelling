@@ -66,6 +66,13 @@ if(run.ostrich == TRUE){
   
 }
 
+## If AggregatedVariable is in the customOptions dataframe, remove it - this is handled in the custom-appendages.R script
+if(nrow(customOptions) >0){
+  
+  customOptions <- customOptions[!grepl(":AggregatedVariable", customOptions$PARAMETER), ]
+  
+}
+
 
 ####################################################################
 ##
