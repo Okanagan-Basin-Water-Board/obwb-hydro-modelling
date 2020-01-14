@@ -58,6 +58,8 @@ processes <- RVI.template[RVI.template$GROUP == "HydrologicalProcesses", c("PARA
 
 output <- RVI.template[RVI.template$GROUP == "OutputOptions", c("PARAMETER", "DEFINITION")]
 
+customOptions <- RVI.template[RVI.template$GROUP == "CustomOptions", c("PARAMETER", "DEFINITION", "FROM", "TO")]
+
 if(run.ostrich == TRUE){
   
   calibration.options <- RVI.template[RVI.template$GROUP == "CalibrationOptions", c("PARAMETER", "DEFINITION")]
@@ -195,6 +197,19 @@ cat(file = RVIoutFile, append = T, sep = "",
 )
 
 write.table(disabled.watersheds, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+
+if(nrow(customOptions) > 0){
+  
+  cat(file = RVIoutFile, append = T, sep = "",
+      "\n",
+      "#---------------------------------------------------------", "\n",
+      "# ---- Custom Options ------------------------------------", "\n",
+      "\n"
+      )
+  write.table(customOptions, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  
+  
+}
 
 cat(file = RVIoutFile, append = T, sep = "",
     "\n",
