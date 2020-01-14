@@ -512,6 +512,12 @@ customOptions <- RVI.template[RVI.template$GROUP == "CustomOptions", c("PARAMETE
 
 aggregated.variable <- customOptions[customOptions$PARAMETER == ":AggregatedVariable", ]
 
+## Check if there are reservoirs present in any of the include.watersheds. If so, create a "reservoirs" directory.
+subbasins.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
+
+## Remove any subbasins that are included in the disable.subbasins string
+subbasins.present <- subbasins.present[!subbasins.present$Subbasin_ID %in% disable.subbasins, ]
+
 
 if(nrow(aggregated.variable) >0){
   
@@ -567,6 +573,9 @@ cat(file = main.RVH.file, append = T, sep = "",
 ##
 ## This code block defines and populates a "CustomDisable" HRUGroup which contains all HRUs within disable.subbasin vector. This is defined in the *.rvi file and populated in the *.rvh file.
 ## 
+
+## Redfine the subbasins present item - this was previousl defined in the reservoir-rvh-rvt-filegenerator and removed reservoirs that were disabled. However, we need to disable the reservoir here.
+subbasins.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
 
 ## If select subbasins are specified to be disabled, disable a "CustomDisable HRUGroup.
 if(length(disable.subbasins) > 0){
