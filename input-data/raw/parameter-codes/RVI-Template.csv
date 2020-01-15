@@ -1,12 +1,13 @@
 GROUP,PARAMETER,DEFINITION,FROM,TO
-Time,StartDate,06/01/1992,,
-Time,EndDate,12/31/2010,,
+Time,StartDate,06/01/1993,,
+Time,EndDate,12/31/2017,,
 Time,TimeStep,1,,
 FileControl,RunName,,,
 Methods,Method,ORDERED_SERIES,,
 Routing,Routing,ROUTE_DIFFUSIVE_WAVE,,
 Routing,CatchmentRoute,ROUTE_TRI_CONVOLUTION,,
-Options,Evaporation,PET_PENMAN_MONTEITH,,
+#Options,Evaporation,PET_PENMAN_MONTEITH,,
+Options,Evaporation,PET_HARGREAVES_1985,,
 Options,OW_Evaporation,PET_HARGREAVES_1985,,
 Options,SWRadiationMethod,SW_RAD_DEFAULT,,
 Options,SWCloudCorrect,SW_CLOUD_CORR_NONE,,
@@ -15,10 +16,11 @@ Options,LWRadiationMethod,LW_RAD_DEFAULT,,
 Options,RainSnowFraction,RAINSNOW_HBV,,
 Options,PotentialMeltMethod,POTMELT_HBV,,
 Options,CloudCoverMethod,CLOUDCOV_NONE,,
-Options,PrecipIceptFract,PRECIP_ICEPT_LAI,,
+Options,PrecipIceptFract,PRECIP_ICEPT_USER,,
 Options,MonthlyInterpolationMethod,MONTHINT_LINEAR_21,,
 Options,SoilModel,SOIL_MULTILAYER 3,,
 Options,ReservoirDemandAllocation,DEMANDBY_MAX_CAPACITY,,
+#Options,LakeStorage,SOIL[2],,
 HydrologicalProcesses,SnowRefreeze,FREEZE_DEGREE_DAY,SNOW_LIQ,SNOW
 HydrologicalProcesses,Precipitation,PRECIP_RAVEN,ATMOS_PRECIP,MULTIPLE
 HydrologicalProcesses,CanopyEvaporation,CANEVP_ALL,CANOPY,ATMOSPHERE
@@ -32,18 +34,20 @@ HydrologicalProcesses,-->Conditional,HRU_TYPE,IS_NOT,ROCK
 HydrologicalProcesses,-->Conditional,HRU_GROUP,IS_NOT,Zero_Soils
 HydrologicalProcesses,SoilEvaporation,SOILEVAP_HBV,TOP_SOIL,ATMOSPHERE
 HydrologicalProcesses,CapillaryRise,RISE_HBV,INT_SOIL,TOP_SOIL
-HydrologicalProcesses,LakeEvaporation,LAKE_EVAP_BASIC,DEEP_SOIL,ATMOSPHERE
+#HydrologicalProcesses,LakeEvaporation,LAKE_EVAP_BASIC,DEEP_SOIL,ATMOSPHERE
 HydrologicalProcesses,Percolation,PERC_CONSTANT,INT_SOIL,DEEP_SOIL
 HydrologicalProcesses,Baseflow,BASE_POWER_LAW,INT_SOIL,SURFACE_WATER
 HydrologicalProcesses,Baseflow,BASE_LINEAR,DEEP_SOIL,SURFACE_WATER
+#CustomOptions,AggregatedVariable,INT_SOIL,AllHRUs,
+#CustomOptions,AggregatedVariable,DEEP_SOIL,AllHRUs,
 OutputOptions,EvaluationMetrics,NASH_SUTCLIFFE,,
 OutputOptions,EvaluationMetrics,RMSE,,
 OutputOptions,EvaluationMetrics,PCT_BIAS,,
 OutputOptions,EvaluationMetrics,R2,,
 #OutputOptions,WriteForcingFunctions,,
-OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_HRU_GROUP,,
+#OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_HRU_GROUP,,
 #OutputOptions,CustomOutput,MONTHLY AVERAGE SNOW_LIQ BY_BASIN,,
-OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_BASIN,,
+#OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_BASIN,,
 #OutputOptions,CustomOutput,MONTHLY AVERAGE SOIL[1] BY_BASIN,,
 CalibrationOptions,SuppressOutput
 CalibrationOptions,SilentMode
