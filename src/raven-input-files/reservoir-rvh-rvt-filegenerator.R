@@ -276,7 +276,7 @@ for(j in 1:length(include.watersheds)){
         LakeArea <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000)
         
         ## Estimate MaxCapacity from LakeArea and MaxDepth
-        MaxCapacity <- LakeArea * parameters$VALUE[parameters$PARAMETER == "MaxDepth"]
+        MaxCapacity <- LakeArea * as.numeric(parameters$VALUE[parameters$PARAMETER == "MaxDepth"])
   
         ##-----------------------------------------------------------------------------
         ##
