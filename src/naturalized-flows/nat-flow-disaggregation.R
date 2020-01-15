@@ -20,7 +20,9 @@ library(magrittr)
 library(ggplot2)
 
 # script-specific watershed looping variable
-disagg.watersheds <- include.watersheds[include.watersheds != "Vernon"]
+#disagg.watersheds <- include.watersheds[include.watersheds != "Vernon"] # no longer necessary as Vernon Ck has been disaggregated
+disagg.watersheds <- include.watersheds
+
 
 # WSC gauges for daily:weekly ratio computation
 ratio.gauges <- c("Whiteman" = "08NM174", "Camp" = "08NM134",
@@ -134,12 +136,16 @@ ratio.df <- data.frame()
 
 # creating vector of the watersheds to be disaggregated for the current
 # model run(s). Saves a bit of time by not pulling WSC data from HYDAT for
-# gauges not needed for current run.
-
+# gauges not needed for current run. Drop NA induced by Vernon Creek, which
+# is not disaggregated using WSC gauge data.
 current.ratio.gauges <- nfs$WSC_ID[nfs$WATERSHED %in% disagg.watersheds]
+current.ratio.gauges <- as.vector(na.omit(current.ratio.gauges))
 current.ratio.gauges <- unique(unlist(strsplit(paste(current.ratio.gauges, collapse = ", "), ", ")))
 
-
+# if current ratio gauge is empty, add a station to prevent script from failing
+ifelse(length(current.ratio.gauges) == 0,
+       current.ratio.gauges <- "08NM142",
+       current.ratio.gauges)
 
 for(i in 1:length(current.ratio.gauges)){
   # if Whiteman, Trepanier or Coldstream Ck, pull that gauge and Camp Creek 
@@ -223,131 +229,187 @@ ratio.df %<>% mutate(week.year = paste(Week, Year, sep = "-"))
 #### start disaggregation for-loop here
 for (i in 1:length(disagg.watersheds)){
   
-  # set name of .xlsx worksheet to load from file
-  required.tab <- paste(disagg.watersheds[i], "Nat Q_EFN-POI")
+  if(disagg.watersheds[i] == "Vernon"){
+    # set name of .xlsx worksheet to load from file. 
+    # Nat Q_EFN-POI is for Vernon Creek at the Mouth
+    # Outlet Nat Q_EFN-POI is for Vernon Creek at the outlet of Kal Lake
+    required.tab <- paste(disagg.watersheds[i], "Nat Q_EFN-POI")
+    #required.tab <- paste(disagg.watersheds[i], "Outlet Nat Q_EFN-POI")
   
-  # read in worksheet with EFN data for current watershed
-  nat.stream.flow <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
-                                         required.files[grep(disagg.watersheds[i], required.files)]),
-                               sheet = required.tab)
-  
-  ## Identify the column which contains "UNADJUSTED" - this is within the "UNADJUSTED FOR LONG-TERM CONDITIONS" 
-  # statement. This flag is used to identify the correct dataset to use for comparison to 1996-2010 dataset
-  stream.poi.col.start <- which(apply(nat.stream.flow, 2, function(x) any(grepl("UNADJUSTED", x))))
-  
-  ## Select only the rows that contain data for Week 1 - Week 52
-  nat.stream.flow <- nat.stream.flow[nat.stream.flow[,stream.poi.col.start] %in% Weeks,]
-  
-  ## Select the column with the weeks in, plus all of the columns for the 15 years of record
-  nat.stream.flow <- nat.stream.flow[,(stream.poi.col.start + 1):(stream.poi.col.start + length(Years))]
-  
-  ## Ensure that all values are numeric
-  nat.stream.flow[] <- lapply(nat.stream.flow, function(x) as.numeric(as.character(x)))
-  
-  ## Convert the matrix of values into a timeseries of values using the gather function. This stacks each column on top of each other
-  nat.stream.flow.long <- gather(nat.stream.flow) 
-  
-  ## Add a sequece of the years
-  nat.stream.flow.long$Year <- rep(Years, each = 52)
-  
-  ## Add a sequence of the months
-  nat.stream.flow.long$Week <- rep(1:52, length(Years))
-  
-  ###################################################################################################################################################
-  ##
-  ## Merge daily and weekly datasets into one dataframe
-  ##
-  ###################################################################################################################################################
-  
-  # dataframe to hold disaggregation rules
-  rules.df <- data.frame("wsc.gauge" = NA, "wsc.prop" = NA, "week.year" = NA,
-                         "start" = NA, "end" = NA)
-  
-  # look up WSC gauges to use for disaggregation of EFN flows 
-  nfs_row <- which(nfs$WATERSHED == disagg.watersheds[i])
-  wsc.gauge <- unlist(strsplit(nfs$WSC_for_EFN[nfs_row], ", "))
-  wsc.id <- ratio.gauges[names(ratio.gauges) %in% wsc.gauge]
-  
-  # reorder wsc.id so match the same order of wsc.gauge, otherwise data
-  # gets misattributed (wrong WSC ID) in the following steps
-  wsc.id <- wsc.id[match(wsc.gauge, names(wsc.id))]
-  
-  # look up proportion of WSC flows to apply to disaggregation 
-  wsc.prop <- nfs$WSC_proportion[nfs_row]
-  
-  # week-years for the relevant WSC gauges
-  wsc.years <- strsplit(nfs$WSC_weeks_years[nfs_row], ", ")
-  wsc.years <- lapply(wsc.years, strsplit, " to ")
-  
-  # extract 1st and 2nd elements from list to make vectors of beginning
-  # and ending week-year combinations
-  wsc.start <- unlist(lapply(wsc.years[[1]], "[", 1))
-  wsc.end <- unlist(lapply(wsc.years[[1]], "[", 2))
-  
-  # building dataframe of disaggregation rules
-  rules.df <- data.frame("wsc.gauge" = wsc.gauge, 
-                         "wsc.id" = wsc.id,
-                         "wsc.prop" = wsc.prop,
-                         "start" = wsc.start,
-                         "end" = wsc.end, stringsAsFactors = FALSE)
-  
-  # grabbing start and end dates for each disaggregation WSC gauge so that
-  # the ratio.df can be filtered by WSC gauge and its relevent time period
-  start <- rules.df %>% left_join(Times, by = c("start" = "week.year")) %>%
-    group_by(start) %>%
-    filter(date %in% min(date)) 
-  end <- rules.df %>% left_join(Times, by = c("end" = "week.year")) %>%
-    group_by(start) %>%
-    filter(date %in% max(date))
-  rules.df$start <- ymd(start$date)
-  rules.df$end <- ymd(end$date)
-  
-  # filter flow ratio dataset to only the WSC gauges to be used for
-  # disaggregation and for the relevant time period for each gauge
-  disagg.df <- ratio.df %>%
-    filter(STATION_NUMBER %in% wsc.id) %>%
-    left_join(rules.df, by = c("STATION_NUMBER" = "wsc.id")) %>%
-    group_by(STATION_NUMBER) %>%
-    filter(Date >= start & Date <= end)
-  
-  # Penticton's rules are a bit more complex. Average Two Forty and 
-  # Two Forty One Creek, and then average that with Vaseux
-  if(disagg.watersheds[i] == "Penticton"){
+    # read in worksheet with EFN data for current watershed
+    nat.stream.flow <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
+                                           required.files[grep(disagg.watersheds[i], required.files)]),
+                                 sheet = required.tab,
+                                 startRow = 2)  
     
-    # Penticton Creek has slightly more complex rules for disagg.
-    # Average the daily disaggregation ratios for 240 and 241 creeks, and
-    # average those means with the Vaseux creek daily disagg. ratios. Then
-    # disaggregate the weekly naturalized Q 
+    # change column name to something more user-friendly
+    colnames(nat.stream.flow)[ncol(nat.stream.flow)] <- "Weekly_discharge"
+    
+    nat.stream.flow <- nat.stream.flow %>%
+      mutate(week.year = paste0(as.numeric(Week.ID),
+                               "-",
+                               Year)) %>%
+      select(Year, week.year, Weekly_discharge)
+    
+    disagg.df <- nat.stream.flow %>% left_join(Times, by = c("Year", "week.year"))
+    
+    # find the rows that correspond to the start of a week
+    sow <- match(unique((disagg.df$week.year)), disagg.df$week.year)
+    
+    # create vector of weekly flows for interpolation. only start of week has
+    # a value, rest of days in week are NA, to make linear interpolation
+    # easier
+    weekly_flow <- disagg.df$Weekly_discharge
+    gap <- (1:length(weekly_flow))[-sow]
+    weekly_flow[gap] <- NA
+    
+    # add 'gappy' Weekly flow series column
+    disagg.df$Daily_discharge <- weekly_flow
+    
+    # do linear approximation. x is the 'gappy' weekly flow series and 
+    # xout tells `approx` is an index of elements in weekly_flow for which
+    # to produce linearly approximated estimates
+    gap_fill <- approx(weekly_flow, xout = gap)$y
+    
+    # add linearly approximated flows to daily discharge column
+    disagg.df$Daily_discharge[gap] <- gap_fill
+      
+    # format for output
     out.df <- disagg.df %>%
-      mutate(rule = case_when(STATION_NUMBER == "08NM171" ~ 2,
-                              STATION_NUMBER == "08NM240" ~ 1,
-                              STATION_NUMBER == "08NM241" ~ 1)) %>%
-      left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
-      rename("Weekly_Nat_Q" = value) %>%
-      group_by(rule, Date) %>%
-      summarize(Daily_Nat_Q = unique(Weekly_Nat_Q) * mean(ratio),
-                Week = unique(Week), Year = unique(Year)) %>%
-      ungroup %>% group_by(Date) %>%
-      summarize(Daily_Nat_Q = mean(Daily_Nat_Q),
-                Week = unique(Week), Year = unique(Year)) %>%
-      ungroup() %>%
-      mutate(EFN_watershed = disagg.watersheds[i])
-
+      rename(Date = "date",
+             Daily_Nat_Q = "Daily_discharge") %>%
+      mutate(EFN_Watershed = "Vernon") %>%
+      select(Date, Daily_Nat_Q, Week, Year, EFN_Watershed)
+      
+      
   } else {
-   
-    # join EFN streamflow data to WSC data, disaggregate weekly naturalized Q per
-    # WSC gauge, then sum the disaggregated daily proportions.
-    out.df <- disagg.df %>%
-      left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
-      rename("Weekly_Nat_Q" = value) %>%
-      mutate(Daily_Nat_Q = Weekly_Nat_Q * ratio * wsc.prop) %>%
-      group_by(Date) %>%
-      summarize(Daily_Nat_Q = sum(Daily_Nat_Q),
-                Week = unique(Week),
-                Year = unique(Year)) %>%
-      ungroup() %>%
-      mutate(EFN_WATERSHED = disagg.watersheds[i])
-  }
+  
+    # set name of .xlsx worksheet to load from file
+    required.tab <- paste(disagg.watersheds[i], "Nat Q_EFN-POI")
+    
+    # read in worksheet with EFN data for current watershed
+    nat.stream.flow <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
+                                           required.files[grep(disagg.watersheds[i], required.files)]),
+                                 sheet = required.tab)
+    
+    ## Identify the column which contains "UNADJUSTED" - this is within the "UNADJUSTED FOR LONG-TERM CONDITIONS" 
+    # statement. This flag is used to identify the correct dataset to use for comparison to 1996-2010 dataset
+    stream.poi.col.start <- which(apply(nat.stream.flow, 2, function(x) any(grepl("UNADJUSTED", x))))
+    
+    ## Select only the rows that contain data for Week 1 - Week 52
+    nat.stream.flow <- nat.stream.flow[nat.stream.flow[,stream.poi.col.start] %in% Weeks,]
+    
+    ## Select the column with the weeks in, plus all of the columns for the 15 years of record
+    nat.stream.flow <- nat.stream.flow[,(stream.poi.col.start + 1):(stream.poi.col.start + length(Years))]
+    
+    ## Ensure that all values are numeric
+    nat.stream.flow[] <- lapply(nat.stream.flow, function(x) as.numeric(as.character(x)))
+    
+    ## Convert the matrix of values into a timeseries of values using the gather function. This stacks each column on top of each other
+    nat.stream.flow.long <- gather(nat.stream.flow) 
+    
+    ## Add a sequece of the years
+    nat.stream.flow.long$Year <- rep(Years, each = 52)
+    
+    ## Add a sequence of the months
+    nat.stream.flow.long$Week <- rep(1:52, length(Years))
+    
+    ###################################################################################################################################################
+    ##
+    ## Merge daily and weekly datasets into one dataframe
+    ##
+    ###################################################################################################################################################
+    
+    # dataframe to hold disaggregation rules
+    rules.df <- data.frame("wsc.gauge" = NA, "wsc.prop" = NA, "week.year" = NA,
+                           "start" = NA, "end" = NA)
+    
+    # look up WSC gauges to use for disaggregation of EFN flows 
+    nfs_row <- which(nfs$WATERSHED == disagg.watersheds[i])
+    wsc.gauge <- unlist(strsplit(nfs$WSC_for_EFN[nfs_row], ", "))
+    wsc.id <- ratio.gauges[names(ratio.gauges) %in% wsc.gauge]
+    
+    # reorder wsc.id so match the same order of wsc.gauge, otherwise data
+    # gets misattributed (wrong WSC ID) in the following steps
+    wsc.id <- wsc.id[match(wsc.gauge, names(wsc.id))]
+    
+    # look up proportion of WSC flows to apply to disaggregation 
+    wsc.prop <- nfs$WSC_proportion[nfs_row]
+    
+    # week-years for the relevant WSC gauges
+    wsc.years <- strsplit(nfs$WSC_weeks_years[nfs_row], ", ")
+    wsc.years <- lapply(wsc.years, strsplit, " to ")
+    
+    # extract 1st and 2nd elements from list to make vectors of beginning
+    # and ending week-year combinations
+    wsc.start <- unlist(lapply(wsc.years[[1]], "[", 1))
+    wsc.end <- unlist(lapply(wsc.years[[1]], "[", 2))
+    
+    # building dataframe of disaggregation rules
+    rules.df <- data.frame("wsc.gauge" = wsc.gauge, 
+                           "wsc.id" = wsc.id,
+                           "wsc.prop" = wsc.prop,
+                           "start" = wsc.start,
+                           "end" = wsc.end, stringsAsFactors = FALSE)
+    
+    # grabbing start and end dates for each disaggregation WSC gauge so that
+    # the ratio.df can be filtered by WSC gauge and its relevent time period
+    start <- rules.df %>% left_join(Times, by = c("start" = "week.year")) %>%
+      group_by(start) %>%
+      filter(date %in% min(date)) 
+    end <- rules.df %>% left_join(Times, by = c("end" = "week.year")) %>%
+      group_by(start) %>%
+      filter(date %in% max(date))
+    rules.df$start <- ymd(start$date)
+    rules.df$end <- ymd(end$date)
+    
+    # filter flow ratio dataset to only the WSC gauges to be used for
+    # disaggregation and for the relevant time period for each gauge
+    disagg.df <- ratio.df %>%
+      filter(STATION_NUMBER %in% wsc.id) %>%
+      left_join(rules.df, by = c("STATION_NUMBER" = "wsc.id")) %>%
+      group_by(STATION_NUMBER) %>%
+      filter(Date >= start & Date <= end)
+    
+    # Penticton's rules are a bit more complex. Average Two Forty and 
+    # Two Forty One Creek, and then average that with Vaseux
+    if(disagg.watersheds[i] == "Penticton"){
+      
+      # Penticton Creek has slightly more complex rules for disagg.
+      # Average the daily disaggregation ratios for 240 and 241 creeks, and
+      # average those means with the Vaseux creek daily disagg. ratios. Then
+      # disaggregate the weekly naturalized Q 
+      out.df <- disagg.df %>%
+        mutate(rule = case_when(STATION_NUMBER == "08NM171" ~ 2,
+                                STATION_NUMBER == "08NM240" ~ 1,
+                                STATION_NUMBER == "08NM241" ~ 1)) %>%
+        left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
+        rename("Weekly_Nat_Q" = value) %>%
+        group_by(rule, Date) %>%
+        summarize(Daily_Nat_Q = unique(Weekly_Nat_Q) * mean(ratio),
+                  Week = unique(Week), Year = unique(Year)) %>%
+        ungroup %>% group_by(Date) %>%
+        summarize(Daily_Nat_Q = mean(Daily_Nat_Q),
+                  Week = unique(Week), Year = unique(Year)) %>%
+        ungroup() %>%
+        mutate(EFN_watershed = disagg.watersheds[i])
+  
+    } else {
+     
+      # join EFN streamflow data to WSC data, disaggregate weekly naturalized Q per
+      # WSC gauge, then sum the disaggregated daily proportions.
+      out.df <- disagg.df %>%
+        left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
+        rename("Weekly_Nat_Q" = value) %>%
+        mutate(Daily_Nat_Q = Weekly_Nat_Q * ratio * wsc.prop) %>%
+        group_by(Date) %>%
+        summarize(Daily_Nat_Q = sum(Daily_Nat_Q),
+                  Week = unique(Week),
+                  Year = unique(Year)) %>%
+        ungroup() %>%
+        mutate(EFN_WATERSHED = disagg.watersheds[i])
+    }
+  } # end if-else for Vernon Ck naturalized flow and OK Tennant EFN datasets
   
   ###################################################################################################################################################
   ##
