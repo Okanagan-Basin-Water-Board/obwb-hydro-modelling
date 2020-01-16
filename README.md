@@ -1,17 +1,20 @@
-# Raven Okanagan Hydrology Model
+# Okanagan Hydrologic Model Environment
 
-This repository contains the framework (code and scripts) for configuring, building, and running the Raven hydrological model (http://raven.uwaterloo.ca/) for Okanagan-specific configurations.  This framework includes both Raven code itself, and additional code and scripts to develop model input, peform model calibrations (using Ostrich, http://www.eng.buffalo.edu/~lsmatott/Ostrich/OstrichMain.html).
+This repository contains codes, scripts and tools necessary for developing hydrologic models within the Okanagan Hydrologic Model Environment (OHME).  This environment is intended for application with the [Raven Hydrological Model Framework](http://raven.uwaterloo.ca/) for Okanagan-specific hydrologic applications.  It also includes access to Raven code itself, tools to develop model input, Raven model calibration capabilities using [Ostrich](http://www.eng.buffalo.edu/~lsmatott/Ostrich/OstrichMain.html), and output visualization methods.  Finally, it also includes resources to assist with OHME application on [Google Cloud Platform](https://cloud.google.com/) resources.
 
 ### Prerequisites
 
-To use this framework you will need familiarity with the following tools:
+To use OHME effectively you will need familiarity with the following tools, which must be enabled:
+
 - GIT (version control software)
 
 - R (scientific computing language)
-- C++ compiling software and the make utility (for Linux users)
-- netCDF data format
 
-For more substantial applications (such as the default application supplied here) you would also benefit from access to larger computing facilities (e.g. local cluster or cloud-based systems) and knowledge of the Linux operating system.
+- netCDF data management libraries
+
+- C++ compiling software and the make utility (if building Raven from latest Raven source code)
+
+For more substantial applications of OHME (such as the default application supplied here, which is designed to carry out full hydrologic calibrations over 19 individual Okanagan watersheds) you would also benefit from access to larger computing facilities (e.g. local cluster or cloud-based systems) and knowledge of the Linux operating system.  However, OHME can equally be configured to operate on smaller systems, including personal computers.  
 
 ### Installing
 
