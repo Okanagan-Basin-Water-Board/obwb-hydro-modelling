@@ -5,10 +5,10 @@ This repository contains the framework (code and scripts) for configuring, build
 ### Prerequisites
 
 To use this framework you will need familiarity with the following tools:
--> GIT (version control software)
--> R (scientific computing language)
--> C++ compiling software and the make utility (for Linux users)
--> netCDF data format
+* GIT (version control software)
+* R (scientific computing language)
+* C++ compiling software and the make utility (for Linux users)
+* netCDF data format
 
 For more substantial applications (such as the default application supplied here) you would also benefit from access to larger computing facilities (e.g. local cluster or cloud-based systems) and knowledge of the Linux operating system.
 
