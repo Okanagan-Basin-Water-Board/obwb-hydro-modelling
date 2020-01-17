@@ -23,6 +23,8 @@ library(ggplot2)
 #disagg.watersheds <- include.watersheds[include.watersheds != "Vernon"] # no longer necessary as Vernon Ck has been disaggregated
 disagg.watersheds <- include.watersheds
 
+# disagg.watersheds <- "Vernon"
+
 
 # WSC gauges for daily:weekly ratio computation
 ratio.gauges <- c("Whiteman" = "08NM174", "Camp" = "08NM134",
@@ -234,24 +236,33 @@ for (i in 1:length(disagg.watersheds)){
     # Nat Q_EFN-POI is for Vernon Creek at the Mouth
     # Outlet Nat Q_EFN-POI is for Vernon Creek at the outlet of Kal Lake
     required.tab <- paste(disagg.watersheds[i], "Nat Q_EFN-POI")
-    #required.tab <- paste(disagg.watersheds[i], "Outlet Nat Q_EFN-POI")
+    required.tab2 <- paste(disagg.watersheds[i], "Outlet Nat Q_EFN-POI")
   
     # read in worksheet with EFN data for current watershed
-    nat.stream.flow <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
-                                           required.files[grep(disagg.watersheds[i], required.files)]),
-                                 sheet = required.tab,
-                                 startRow = 2)  
+    # Vernon has at the Mouth and Kal Lake Outlet flows to handle
+    nat.stream.flow.mouth <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
+                                       required.files[grep(disagg.watersheds[i], required.files)]),
+                                       sheet = required.tab,
+                                       startRow = 2)  
+    nat.stream.flow.outlet <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
+                                        required.files[grep(disagg.watersheds[i], required.files)]),
+                                        sheet = required.tab2,
+                                        startRow = 2)  
+    
+    #----------------------
+    # process Vernon Creek mouth
+    #----------------------
     
     # change column name to something more user-friendly
-    colnames(nat.stream.flow)[ncol(nat.stream.flow)] <- "Weekly_discharge"
+    colnames(nat.stream.flow.mouth)[ncol(nat.stream.flow.mouth)] <- "Weekly_discharge"
     
-    nat.stream.flow <- nat.stream.flow %>%
+    nat.stream.flow.mouth <- nat.stream.flow.mouth %>%
       mutate(week.year = paste0(as.numeric(Week.ID),
                                "-",
                                Year)) %>%
       select(Year, week.year, Weekly_discharge)
     
-    disagg.df <- nat.stream.flow %>% left_join(Times, by = c("Year", "week.year"))
+    disagg.df <- nat.stream.flow.mouth %>% left_join(Times, by = c("Year", "week.year"))
     
     # find the rows that correspond to the start of a week
     sow <- match(unique((disagg.df$week.year)), disagg.df$week.year)
@@ -279,9 +290,51 @@ for (i in 1:length(disagg.watersheds)){
       rename(Date = "date",
              Daily_Nat_Q = "Daily_discharge") %>%
       mutate(EFN_Watershed = "Vernon") %>%
+      select(Date, Daily_Nat_Q, Week, Year, EFN_Watershed) 
+
+    #----------------------
+    # process Kal Lake outlet
+    #----------------------
+      
+    # change column name to something more user-friendly
+    colnames(nat.stream.flow.outlet)[ncol(nat.stream.flow.outlet)] <- "Weekly_discharge"
+    
+    nat.stream.flow.outlet <- nat.stream.flow.outlet %>%
+      mutate(week.year = paste0(as.numeric(Week.ID),
+                                "-",
+                                Year)) %>%
+      select(Year, week.year, Weekly_discharge)
+    
+    disagg.df <- nat.stream.flow.outlet %>% left_join(Times, by = c("Year", "week.year"))
+    
+    # find the rows that correspond to the start of a week
+    sow <- match(unique((disagg.df$week.year)), disagg.df$week.year)
+    
+    # create vector of weekly flows for interpolation. only start of week has
+    # a value, rest of days in week are NA, to make linear interpolation
+    # easier
+    weekly_flow <- disagg.df$Weekly_discharge
+    gap <- (1:length(weekly_flow))[-sow]
+    weekly_flow[gap] <- NA
+    
+    # add 'gappy' Weekly flow series column
+    disagg.df$Daily_discharge <- weekly_flow
+    
+    # do linear approximation. x is the 'gappy' weekly flow series and 
+    # xout tells `approx` is an index of elements in weekly_flow for which
+    # to produce linearly approximated estimates
+    gap_fill <- approx(weekly_flow, xout = gap)$y
+    
+    # add linearly approximated flows to daily discharge column
+    disagg.df$Daily_discharge[gap] <- gap_fill
+    
+    # format for output
+    out.df.kal <- disagg.df %>%
+      rename(Date = "date",
+             Daily_Nat_Q = "Daily_discharge") %>%
+      mutate(EFN_Watershed = "Vernon") %>%
       select(Date, Daily_Nat_Q, Week, Year, EFN_Watershed)
-      
-      
+
   } else {
   
     # set name of .xlsx worksheet to load from file
@@ -393,7 +446,7 @@ for (i in 1:length(disagg.watersheds)){
                   Week = unique(Week), Year = unique(Year)) %>%
         ungroup() %>%
         mutate(EFN_watershed = disagg.watersheds[i])
-  
+
     } else {
      
       # join EFN streamflow data to WSC data, disaggregate weekly naturalized Q per
@@ -408,9 +461,10 @@ for (i in 1:length(disagg.watersheds)){
                   Year = unique(Year)) %>%
         ungroup() %>%
         mutate(EFN_WATERSHED = disagg.watersheds[i])
+
     }
   } # end if-else for Vernon Ck naturalized flow and OK Tennant EFN datasets
-  
+
   ###################################################################################################################################################
   ##
   ## Write daily naturalized streamflows to *.rvt file(s)
@@ -438,6 +492,37 @@ for (i in 1:length(disagg.watersheds)){
   cat(file = DailyNatQRVTFile, sep = "", append = T,
       ":EndObservationData", "\n"
   )
+  
+  
+  ### IF VERNON IS WITHIN THE WATERSHED OF INTEREST STRING, WRITE A SECOND *.RVT FILE
+  ### for KAL LAKE OUTLET
+  if(disagg.watersheds[i] == "Vernon"){
+    
+    DailyNatQRVTFile.Kal <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows", paste(disagg.watersheds[i], "_Kal_Nat_Q", ".rvt", sep = ""))
+    
+    main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
+    
+    kal.subbasin <- "3017"
+    
+    
+    ## Make na values = -1.2345
+    out.df.kal[is.na(out.df.kal$Daily_Nat_Q), "Daily_Nat_Q"] <- -1.2345
+    
+    cat(file = DailyNatQRVTFile.Kal, sep = "", append = T,
+        "# Custom rvt file for daily disaggregated naturalized streamflow datasets for ", as.character(disagg.watersheds[i]), " Creek watershed at the outlet of Kal Lake", "\n",
+        ":ObservationData HYDROGRAPH " , as.character(kal.subbasin), " m3/s", "\n",
+        sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(out.df$Date[1])),nrow(out.df)), "\n"
+    )
+    
+    write.table(out.df.kal$Daily_Nat_Q, DailyNatQRVTFile.Kal, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+    
+    cat(file = DailyNatQRVTFile.Kal, sep = "", append = T,
+        ":EndObservationData", "\n"
+    )
+    
+    
+    
+  }
   
   #####################################################
   ##
@@ -468,6 +553,25 @@ for (i in 1:length(disagg.watersheds)){
       ":EndObservationWeights", "\n"
   )
   
+  
+  if(disagg.watersheds[i] == "Vernon"){
+    
+    cat(file = DailyNatQRVTFile.Kal, sep = "", append = T,
+        "\n",
+        "# Write ObservationWeights", "\n",
+        ":ObservationWeights HYDROGRAPH ", as.character(kal.subbasin), "\n",
+        sprintf('%s 00:00:00 1.0 %i', as.character(lubridate::date(out.df$Date[1])),nrow(out.df)), "\n"
+    )
+    
+    write.table(out.df$weights, DailyNatQRVTFile.Kal, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+    
+    cat(file = DailyNatQRVTFile.Kal, sep = "", append = T,
+        ":EndObservationWeights", "\n"
+    )
+    
+    
+  }
+  
 
   ## ----------------------------------------------------------------------
   ##
@@ -493,6 +597,19 @@ for (i in 1:length(disagg.watersheds)){
     )
     
   } # End else
+  
+  if(disagg.watersheds[i] == "Vernon"){
+    
+    cat(file = main.RVT.file, append = T, sep = "",
+        "\n",
+        "\n",
+        "#-------------------------------------------------------", "\n",
+        "#-------- Redirect to Daily Naturalized Flows at Kal Lake Outlet ----------", "\n",
+        "\n",
+        ":RedirectToFile  ", paste("daily_naturalized_flows/", disagg.watersheds[i], "_Kal_Nat_Q", ".rvt", sep = ""), "\n"
+    )
+    
+  }
   
   
   ## ----------------------------------------------------------------------
@@ -523,6 +640,22 @@ for (i in 1:length(disagg.watersheds)){
       )
       
     } # End else
+    
+    if(disagg.watersheds[i] == "Vernon"){
+      
+      cat(file = OstrichRVTFile, append = T, sep = "",
+          "\n",
+          "\n",
+          "#-------------------------------------------------------", "\n",
+          "#-------- Redirect to Custom Timeseries for Kal Lake Outflow ----------------", "\n",
+          "\n",
+          ":RedirectToFile  ", paste("daily_naturalized_flows/", disagg.watersheds[i], "_Kal_Nat_Q", ".rvt", sep = ""), "\n"
+      )
+      
+      
+    }
+    
+    
     
   } # End if Ostrich is TRUE and RVT Template exists
   
