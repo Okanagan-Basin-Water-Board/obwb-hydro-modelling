@@ -55,7 +55,7 @@ if(length(reservoirs) <1){print("No initial conditions specified...")
     tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = reservoirs[i])
     
     ## Check if there is a stage-storage curve
-    if("Current_Storage_dam3" %in% names(tmp)){
+    if("Future_Storage_dam3" %in% names(tmp)){
       
        ##-----------------------------------------------------------------------------
       ##
