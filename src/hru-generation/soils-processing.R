@@ -553,9 +553,9 @@ min.thickness <- 0
 
 a.horizon.max.thickness <- 2
 
-b.horizon.max.thickness <- 10
+b.horizon.max.thickness <- 100
 
-c.horizon.max.thickness <- 10
+c.horizon.max.thickness <- 100
 
 
 soil.thickness.range$min_thickness <- min.thickness
