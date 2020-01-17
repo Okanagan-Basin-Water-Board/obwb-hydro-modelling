@@ -340,8 +340,30 @@ for(i in 1:length(calibration.stations)){
   
 }
 
+
+## Identify the column of each response variable
+response.var.column.names <- c()
+
+response.var.column.numbers <- c()
+
+for(i in 1:length(response.var.names)){
+  
+  current.response.var <- ifelse(response.var$DEFINITION[i] == "NS", "DIAG_NASH_SUTCLIFFE", ifelse(response.var$DEFINITION[i] == "LNS", "DIAG_LOG_NASH", stop("Current response variable cannot be used. Please include NS or LNS only")))
+  
+  response.var.column.names <- c(response.var.column.names, current.response.var)
+  
+  current.response.var.column.number <- which(colnames(diag) == current.response.var)
+  
+  response.var.column.numbers <- c(response.var.column.numbers, current.response.var.column.number)
+  
+}
+
+
+
 # row <- which(grepl(paste(calibration.stations, collapse = "|"), diag$filename))
-col.response <- which(colnames(diag) == "DIAG_NASH_SUTCLIFFE")
+# col.response_1 <- which(colnames(diag) == "DIAG_NASH_SUTCLIFFE")
+# 
+# col.response
 
 key <- "OST_NULL"
 
@@ -478,7 +500,7 @@ cat(file = OSTInFile, append = T, sep = "",
     "BeginResponseVars", "\n",
     "# Name, Filename, Keyword, Line, Col, Token", "\n",
     
-    paste(paste(response.var.names, response.var.file, ";", key, row, col.response, token, sep = " "), "\n"), "\n",
+    paste(paste(response.var.names, response.var.file, ";", key, row, response.var.column.numbers, token, sep = " "), "\n"), "\n",
     paste(paste(constraint.var.names, response.var.file, ";", key, row, col.constraint, token, sep = " "), "\n"), "\n"
 )
 
