@@ -178,7 +178,7 @@ OBJECTID,GEOMETRY,GNIS_NAME,AREA_HA,GEOMETRY_Length,GEOMETRY_Area,Subbasin_ID,Su
 291,Polygon,Naswhito Creek,0,14147.00215,5472575.434,2202,Naswhito Creek2202,2201,A,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 286,Polygon,Naswhito Creek,0,8026.087531,1639924.459,2201,Naswhito Creek2201,-1,Y,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 21,Polygon,Naramata Creek,0,28775.8105,32559963.03,2103,Naramata Creek2103,2102,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
-323,Polygon,Naramata Creek,0,21309.75095,7970855.268,2102,Naramata Creek2102,2101,A,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
+323,Polygon,Naramata Creek,0,21309.75095,7970855.268,2102,Naramata Creek2102,2101,A,<Null>,<Null>,<Null>,<Null>,Highline,_AUTO,_AUTO,1
 178,Polygon,Naramata Creek,0,6901.215635,1274203.252,2101,Naramata Creek2101,-1,Y,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 278,Polygon,Mill Creek,0,22814.17986,23701185.78,1939,Mill Creek1939,1938,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
 343,Polygon,Mill Creek,0,6842.951595,1616953.328,1938,Mill Creek1938,1908,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
