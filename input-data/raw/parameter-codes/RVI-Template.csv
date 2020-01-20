@@ -1,6 +1,6 @@
 GROUP,PARAMETER,DEFINITION,FROM,TO
 Time,StartDate,06/01/1993,,
-Time,EndDate,12/31/2002,,
+Time,EndDate,12/31/2010,,
 Time,TimeStep,1,,
 FileControl,RunName,,,
 Methods,Method,ORDERED_SERIES,,
