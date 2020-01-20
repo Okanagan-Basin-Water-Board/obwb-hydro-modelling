@@ -19,24 +19,24 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "LB-testing"
+ws.interest <- "Operation-test"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Whiteman"
+include.watersheds <- "Naramata"
 
 ## Specify a run number to associated with outputs
-run.number <- "variable-soils-test"
+run.number <- "Naramata-Test-2"
 
 ## Add comments to README file.
-run.comments <- "Testing implementation of variable soil thicknesses"
+run.comments <- "Test of updated V13a RVP Template for Naramata Creek"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
-disable.subbasins <- c(2407, 2408, 2422, 2421, 2416, 1415, 255)
+disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -54,7 +54,7 @@ calibrate.reservoirs <- FALSE
 manage.reservoirs <- FALSE
 
 ## Should soil thicknesses be calibrated?
-calibrate.soil.thicknesses <- TRUE
+calibrate.soil.thicknesses <- FALSE
 
 ## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
@@ -248,10 +248,10 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   
   ## Request user input on which WSC station the model should be calibrated to.
   source("/var/obwb-hydro-modelling/src/calibration-select.R")
-  
-  calibration.stations <- c("08NM171")
-  
-  calibration.station.weights <- c(1)
+  # 
+  calibration.stations <- c("Whiteman_Nat_Q", "Whiteman_Nat_Q")
+  # 
+  calibration.station.weights <- c(0.5, 0.5)
   
   ## set working directory to current model run directory
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
