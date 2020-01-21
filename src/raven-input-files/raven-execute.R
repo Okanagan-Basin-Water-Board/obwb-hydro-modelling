@@ -24,16 +24,17 @@ ws.interest <- "Operation-test"
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Naramata"
+include.watersheds <- "Powers"
 
 ## Specify a run number to associated with outputs
-run.number <- "Naramata-Test-2"
+run.number <- "powers-div-create"
 
 ## Add comments to README file.
-run.comments <- "Test of updated V13a RVP Template for Naramata Creek"
+run.comments <- "Testing operation of Powers Creek Diversion Estimates"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
-disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
+# disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
+disable.subbasins <- c()
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -55,6 +56,9 @@ manage.reservoirs <- FALSE
 
 ## Should soil thicknesses be calibrated?
 calibrate.soil.thicknesses <- FALSE
+
+## Should diversion volumes for the given watershed(s) be calculated?
+calculate.diversions <- TRUE
 
 ## Define the period of calibration / diagnostics
 calibration.start <- "1996-01-01"
@@ -336,20 +340,14 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
 
   dev.off()
 
-  ## Send email to notify of completion
-
-  # send.mail(from = "birdl@ae.ca",
-  #           to =  "birdl@ae.ca",
-  #           subject = "Calibration Complete",
-  #           body = paste("Please find attached the latest calibration for the", include.watersheds, "Creek watershed(s)."),
-  #           authenticate = TRUE,
-  #           smtp = list(host.name = "smtp.office365.com",
-  #                       port = 587,
-  #                       user.name = "birdl@ae.ca",
-  #                       passwd = "Summer2019",
-  #                       tls = TRUE),
-  #           attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
-
+ 
+  ## If calculate.diversions = TRUE, calculate the diversion timeseries for the given watershed(s)
+  if(calculate.diversions == TRUE){
+    
+    source("/var/obwb-hydro-modelling/src/diverted-flows-disaggregation-LB.R")
+    
+  }
+  
   
   send.mail(from = "birdl@ae.ca",
             to =  "birdl@ae.ca",
@@ -359,7 +357,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
             smtp = list(host.name = "smtp.office365.com",
                         port = 587,
                         user.name = "birdl@ae.ca",
-                        passwd = "Fall2019",
+                        passwd = "Winter202",
                         tls = TRUE),
             attach.files = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
   
@@ -384,7 +382,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
   
   # system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "raven_rev.exe"), args = paste(ws.interest, run.number, sep = '-'))
-  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'), wait = F)
+  system2(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Raven.exe"), args = paste(ws.interest, run.number, sep = '-'))
   
   
   print("Ostrich was not used for model calibration during this run...")
@@ -404,6 +402,13 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   source("/var/obwb-hydro-modelling/src/naturalized-flows/naturalized-flow-processing.R")
   
   dev.off()
+  
+  ## If calculate.diversions = TRUE, calculate the diversion timeseries for the given watershed(s)
+  if(calculate.diversions == TRUE){
+    
+    source("/var/obwb-hydro-modelling/src/diverted-flows-disaggregation-LB.R")
+    
+  }
   
   }
 
