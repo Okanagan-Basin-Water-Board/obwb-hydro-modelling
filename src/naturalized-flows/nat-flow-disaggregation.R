@@ -193,7 +193,7 @@ for(i in 1:length(current.ratio.gauges)){
     mutate(Weekly_Q = mean(Value)) %>%
     ungroup() %>%
     mutate(ratio = Value / Weekly_Q) %>%
-    rename("Q" = Value) 
+    dplyr::rename("Q" = Value) 
   
   } else {
     # pull WSC daily discharge for current gauge from time period of interest
@@ -217,7 +217,7 @@ for(i in 1:length(current.ratio.gauges)){
       mutate(ratio = case_when(Value == 0 ~ 0,
                                Weekly_Q == 0 ~ 0,
                                Value != 0 & Weekly_Q != 0 ~ Value / Weekly_Q)) %>%
-      rename("Q" = Value) 
+      dplyr::rename("Q" = Value) 
   }
   
   # compiling single dataframe of WSC gauge streamflow and daily:weekly Q ratios
@@ -287,7 +287,7 @@ for (i in 1:length(disagg.watersheds)){
       
     # format for output
     out.df <- disagg.df %>%
-      rename(Date = "date",
+      dplyr::rename(Date = "date",
              Daily_Nat_Q = "Daily_discharge") %>%
       mutate(EFN_Watershed = "Vernon") %>%
       select(Date, Daily_Nat_Q, Week, Year, EFN_Watershed) 
@@ -330,7 +330,7 @@ for (i in 1:length(disagg.watersheds)){
     
     # format for output
     out.df.kal <- disagg.df %>%
-      rename(Date = "date",
+      dplyr::rename(Date = "date",
              Daily_Nat_Q = "Daily_discharge") %>%
       mutate(EFN_Watershed = "Vernon") %>%
       select(Date, Daily_Nat_Q, Week, Year, EFN_Watershed)
@@ -437,12 +437,12 @@ for (i in 1:length(disagg.watersheds)){
                                 STATION_NUMBER == "08NM240" ~ 1,
                                 STATION_NUMBER == "08NM241" ~ 1)) %>%
         left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
-        rename("Weekly_Nat_Q" = value) %>%
+        dplyr::rename("Weekly_Nat_Q" = value) %>%
         group_by(rule, Date) %>%
-        summarize(Daily_Nat_Q = unique(Weekly_Nat_Q) * mean(ratio),
+        dplyr::summarize(Daily_Nat_Q = unique(Weekly_Nat_Q) * mean(ratio),
                   Week = unique(Week), Year = unique(Year)) %>%
         ungroup %>% group_by(Date) %>%
-        summarize(Daily_Nat_Q = mean(Daily_Nat_Q),
+        dplyr::summarize(Daily_Nat_Q = mean(Daily_Nat_Q),
                   Week = unique(Week), Year = unique(Year)) %>%
         ungroup() %>%
         mutate(EFN_watershed = disagg.watersheds[i])
@@ -453,10 +453,10 @@ for (i in 1:length(disagg.watersheds)){
       # WSC gauge, then sum the disaggregated daily proportions.
       out.df <- disagg.df %>%
         left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
-        rename("Weekly_Nat_Q" = value) %>%
+        dplyr::rename("Weekly_Nat_Q" = value) %>%
         mutate(Daily_Nat_Q = Weekly_Nat_Q * ratio * wsc.prop) %>%
         group_by(Date) %>%
-        summarize(Daily_Nat_Q = sum(Daily_Nat_Q),
+        dplyr::summarize(Daily_Nat_Q = sum(Daily_Nat_Q),
                   Week = unique(Week),
                   Year = unique(Year)) %>%
         ungroup() %>%
