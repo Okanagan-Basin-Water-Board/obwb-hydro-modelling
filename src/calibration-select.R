@@ -1,12 +1,26 @@
 require(stringr)
 
+
+ost.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/OST-Template.csv")
+
+available.response.vars <- as.character(ost.template[ost.template$VARIABLE == "Response", "DEFINITION"])
+
+
 ## For now, only include naturalized streamflow datasets as targets for calibration (and not for validation) - this does not respect the calibration/validation weights.
 if(validate.model == FALSE){
 
   ## Append naturalized flow datasets to WSC stations included as possible calibration targets (with the exception of Vernon Creek since no dataset is available here).
-  stations.included <- c(stations.included, paste(include.watersheds[include.watersheds != "Vernon"], "_Nat_Q", sep = ""))
-
+  stations.included <- c(stations.included, paste(include.watersheds, "_Nat_Q", sep = ""))
+  
+  ## If Vernon is included, write an extra target as the outlet of Kal Lake.
+  if("Vernon" %in% include.watersheds){
+    stations.included <- c(stations.included, "Vernon_Kal_Nat_Q")
+    
   }
+  
+}
+
+
 
 if(length(stations.included) > 1){
 
@@ -30,21 +44,23 @@ if(length(stations.included) > 1){
 
     calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
 
+    
+    ## Determine which Response Variable to include
+    user_receive <- readline(prompt = cat("The following Response Variables are available to be optimized through calibration:", available.response.vars, "\n",
+                                          "Please enter the corresponding weighting value for each Response Variable (separated by commas)..."))
+    
+    response.variable.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
 
+    # response.variables <- matrix(c(available.response.vars, response.variable.weights), nrow = length(available.response.vars))
+    
+    # response.variables <- as.matrix(response.variables[response.variables[,2] != 0, ], byrow = FALSE)
+    
 
-    if(sum(as.numeric(calibration.station.weights)) == 1){
-      cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n")
+    if(sum(as.numeric(calibration.station.weights)) == 1 & sum(as.numeric(response.variable.weights)) == 1){
+      cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n",
+          "Response Variables will be included as follows:", available.response.vars, response.variable.weights, "\n")
     } else {
-      user_receive <- readline(prompt = cat("Station weights must sum to 1. Please re-enter weight for the following WSC stations (separated by commas):", calibration.stations))
-
-
-      calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
-
-      if(sum(as.numeric(calibration.station.weights)) != 1){
-        cat("Station weights still do not sum to 1. Please re-start the execution process.")
-
-      }
-
+      stop("Station weights and Response Variable weights must sum to 1. Please restart the calibration process.")
     }
     
     
@@ -69,21 +85,24 @@ if(length(stations.included) > 1){
       
       calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
       
-      if(sum(as.numeric(calibration.station.weights)) == 1){
-        cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n")
+      
+      
+      ## Determine which Response Variable to include
+     cat("The following Response Variables are available to be optimized through calibration:", available.response.vars, "\n",
+          "Please enter the corresponding weighting value for each Response Variable (separated by commas)...")
+      
+      response.variable.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
+      
+      # response.variables <- matrix(c(available.response.vars, response.variable.weights), nrow = length(available.response.vars))
+      
+      # response.variables <- response.variables[response.variables[,2] != 0, ]
+      
+      
+      if(sum(as.numeric(calibration.station.weights)) == 1 & sum(as.numeric(response.variable.weights)) == 1){
+        cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n",
+            "Response Variables will be included as follows:", available.response.vars, response.variable.weights, "\n")
       } else {
-        
-        cat("Station weights must sum to 1. Please re-enter weight for the following WSC stations (separated by commas):", calibration.stations)
-        
-        user_receive <- readLines(con = "stdin", 1)
-        
-        calibration.station.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
-        
-        if(sum(as.numeric(calibration.station.weights)) != 1){
-          cat("Station weights still do not sum to 1. Please re-start the execution process.")
-          
-        }
-        
+        stop("Station weights and Response Variable weights must sum to 1. Please restart the calibration process.")
       }
     
     } 
@@ -95,7 +114,7 @@ if(length(stations.included) > 1){
   calibration.stations <- stations.included
 
   calibration.station.weights <- 1
-
+  
 
 }
 
