@@ -12,7 +12,7 @@ essential.var <- OST.template[OST.template$VARIABLE == "Essential", c("TYPE", "D
 
 useful.var <- OST.template[OST.template$VARIABLE == "Useful", c("TYPE", "DEFINITION")]
 
-response.var <- OST.template[OST.template$VARIABLE == "Response", c("TYPE", "DEFINITION")]
+# response.var <- OST.template[OST.template$VARIABLE == "Response", c("TYPE", "DEFINITION")]
 
 constraint.var <- OST.template[OST.template$VARIABLE == "Constraint", c("TYPE", "DEFINITION")]
 
@@ -306,30 +306,36 @@ if(calibrate.soil.thicknesses == TRUE){
 ## Create response variables table
 ####################################
 
-## Initiate user-input to select the station to calibrate to
-
-# 
+## Read-in the diagnostic file from the current model run
 diag <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
-# 
-# 
-# available.stations <- unlist(lapply(strsplit(as.character(diag$filename), "_"), `[[`, 2))
-# available.stations <- unlist(lapply(strsplit(available.stations, ".rvt"), `[[`, 1))
-# 
-# question <- c("Which station with available observation records would you like to calibrate to?:", available.stations)
-# cat(question)
-# calibrate.to <- readLines(file("stdin"), n=1)
-
-# row <- which(diag$filename %like% calibration.stations)
 
 
-
-# response.var.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
+## Determine the file path for the response variables
 response.var.file <- file.path("./model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = ""))
 
-response.var.names <- paste(response.var$DEFINITION, calibration.stations, sep = "_")
+## Generate requires response variable names
+response.var.names <- paste(rep(available.response.vars, each = length(calibration.stations)), calibration.stations, sep = "_")
 
-# row <- 1
+## Generate a string of response variable flags based on the names
+response.var.string <- sapply(strsplit(response.var.names, split='_', fixed=TRUE), function(x) (x[1]))
 
+## Generate appropriately weights response variables weights
+response.var.weights <- rep(as.numeric(response.variable.weights), each = length(calibration.stations)) * as.numeric(calibration.station.weights)
+
+## Identify the location of those variables which are weighted 0 (for removal)
+zero.weights <- which(response.var.weights == 0)
+
+## If response variables have 0 weights, remove them.
+if(length(zero.weights) > 0){
+  response.var.names <- response.var.names[-c(zero.weights)]
+  
+  response.var.weights <- response.var.weights[-c(zero.weights)]
+  
+  response.var.string <- response.var.string[-c(zero.weights)]
+}
+
+
+## Identify the row for each calibration station
 row <- c()
 
 for(i in 1:length(calibration.stations)){
@@ -348,7 +354,7 @@ response.var.column.numbers <- c()
 
 for(i in 1:length(response.var.names)){
   
-  current.response.var <- ifelse(response.var$DEFINITION[i] == "NS", "DIAG_NASH_SUTCLIFFE", ifelse(response.var$DEFINITION[i] == "LNS", "DIAG_LOG_NASH", stop("Current response variable cannot be used. Please include NS or LNS only")))
+  current.response.var <- ifelse(response.var.string[i] == "NS", "DIAG_NASH_SUTCLIFFE", ifelse(response.var.string[i] == "LNS", "DIAG_LOG_NASH", stop("Current response variable cannot be used. Please include NS or LNS only")))
   
   response.var.column.names <- c(response.var.column.names, current.response.var)
   
@@ -513,7 +519,7 @@ cat(file = OSTInFile, append = T, sep = "",
     "BeginTiedRespVars", "\n",
     "# Name, Number of parameters, Parameter Names, Type, Type_Data", "\n",
     
-    paste("NegNS", length(response.var.names), paste(response.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights) * -1, collapse = " ")), "\n",
+    paste("NegNS", length(response.var.names), paste(response.var.names, collapse = " "), "wsum", paste(as.numeric(response.var.weights) * -1, collapse = " ")), "\n",
 
     paste("PBias",  length(constraint.var.names), paste(constraint.var.names, collapse = " "), "wsum", paste(as.numeric(calibration.station.weights), collapse = " ")), "\n"
 
