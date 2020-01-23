@@ -235,8 +235,8 @@ if(nrow(custom.timeseries) > 0){
           ## Check to see if Observation_Type is Continuous
           if(tmp[j,"Observation_Type"] != "Continuous"){stop(print(paste(custom.data.types[i], "data require continuous data records. Irregular data series cannot be read in.")))}
           
-          ## Make na values = 0
-          custom.data[is.na(custom.data$Mean_Daily_Discharge_m3s), "Mean_Daily_Discharge_m3s"] <- -1.2345
+          ## Make na values = 0 - the timeseries MUST be complete to successfully be used to override a subbasin - no missing values can exist.
+          custom.data[is.na(custom.data$Mean_Daily_Discharge_m3s), "Mean_Daily_Discharge_m3s"] <- 0
           
           cat(file = customRVTfile, sep = "", append = T,
               "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
