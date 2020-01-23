@@ -56,11 +56,13 @@ if(length(stations.included) > 1){
     # response.variables <- as.matrix(response.variables[response.variables[,2] != 0, ], byrow = FALSE)
     
 
-    if(sum(as.numeric(calibration.station.weights)) == 1 & sum(as.numeric(response.variable.weights)) == 1){
+    if(sum(as.numeric(calibration.station.weights)) == 1 & sum(as.numeric(response.variable.weights)) == 1
+       & length(calibration.stations) == length(calibration.station.weights)
+       & length(available.response.vars) == length(response.variable.weights)){
       cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n",
           "Response Variables will be included as follows:", available.response.vars, response.variable.weights, "\n")
     } else {
-      stop("Station weights and Response Variable weights must sum to 1. Please restart the calibration process.")
+      stop("Either Station Weights and/or Response Variable weights do not sum to 1, or the length of the weights provided is incorrect. Please restart the calibration process.")
     }
     
     
@@ -98,11 +100,13 @@ if(length(stations.included) > 1){
       # response.variables <- response.variables[response.variables[,2] != 0, ]
       
       
-      if(sum(as.numeric(calibration.station.weights)) == 1 & sum(as.numeric(response.variable.weights)) == 1){
+      if(sum(as.numeric(calibration.station.weights)) == 1 & sum(as.numeric(response.variable.weights)) == 1
+         & length(calibration.stations) == length(calibration.station.weights)
+         & length(available.response.vars) == length(response.variable.weights)){
         cat("WSC stations will be included as follows:", calibration.stations, calibration.station.weights, "\n",
             "Response Variables will be included as follows:", available.response.vars, response.variable.weights, "\n")
       } else {
-        stop("Station weights and Response Variable weights must sum to 1. Please restart the calibration process.")
+        stop("Either Station Weights and/or Response Variable weights do not sum to 1, or the length of the weights provided is incorrect. Please restart the calibration process.")
       }
     
     } 
