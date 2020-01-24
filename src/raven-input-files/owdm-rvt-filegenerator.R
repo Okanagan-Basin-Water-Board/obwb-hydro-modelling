@@ -36,7 +36,7 @@ RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
 
 time <- RVI.template[RVI.template$GROUP == "Time", c("PARAMETER", "DEFINITION")]
 
-time$DEFINITION <- paste(as.Date(time$DEFINITION, format = "%m/%d/%Y"), "00:00:00", sep = ' ')
+time$DEFINITION <- paste(base::as.Date(time$DEFINITION, format = "%m/%d/%Y"), "00:00:00", sep = ' ')
 
 ##-------------------------------------------------------------------
 ##
@@ -60,7 +60,7 @@ owdm.sub <- merge(owdm.sub, subbasins[,c("SubBasin_name", "Subbasin_ID")], by.x 
 owdm.sub$date <- paste(owdm.sub$year, owdm.sub$day, sep = "-")
 
 ## format year-day string to a tiso date
-owdm.sub$tiso <- as.Date(owdm.sub$date, format = "%Y-%j")
+owdm.sub$tiso <- base::as.Date(owdm.sub$date, format = "%Y-%j")
 
 ##-------------------------------------------------------------------
 ##
@@ -68,9 +68,9 @@ owdm.sub$tiso <- as.Date(owdm.sub$date, format = "%Y-%j")
 ##
 ##-------------------------------------------------------------------
 
-model.period.start <- as.Date(time$DEFINITION[time$PARAMETER == ":StartDate"])
+model.period.start <- base::as.Date(time$DEFINITION[time$PARAMETER == ":StartDate"])
 
-model.period.end <- as.Date(time$DEFINITION[time$PARAMETER == ":EndDate"])
+model.period.end <- base::as.Date(time$DEFINITION[time$PARAMETER == ":EndDate"])
 
 # model.period <- data.frame(Date = seq(as.Date(model.period.start), as.Date(model.period.end), by = "day"))
 
@@ -111,7 +111,7 @@ if(nrow(owdm.sub) > 0){
         day.0.demand <- tmp[tmp$year == year.0[j] & tmp$day == 0, "extraction.total"]
         
         ## Distribute the day 0 extraction total across 28 days between September 3 and September 30
-        tmp[which(tmp$tiso >= as.Date(paste(year.0[j], "09-03", sep = "-")) & tmp$tiso <= as.Date(paste(year.0[j], "09-30", sep = "-"))), "extraction.total"] <- tmp[which(tmp$tiso >= as.Date(paste(year.0[j], "09-03", sep = "-")) & tmp$tiso <= as.Date(paste(year.0[j], "09-30", sep = "-"))), "extraction.total"] + (day.0.demand / 28)
+        tmp[which(tmp$tiso >= base::as.Date(paste(year.0[j], "09-03", sep = "-")) & tmp$tiso <= base::as.Date(paste(year.0[j], "09-30", sep = "-"))), "extraction.total"] <- tmp[which(tmp$tiso >= base::as.Date(paste(year.0[j], "09-03", sep = "-")) & tmp$tiso <= base::as.Date(paste(year.0[j], "09-30", sep = "-"))), "extraction.total"] + (day.0.demand / 28)
       }
     }
     
@@ -259,7 +259,7 @@ if(nrow(owdm.sub) > 0){
     ##
     #####################################################################
     
-    if(run.ostrich == TRUE){
+    if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
       
       
       OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
