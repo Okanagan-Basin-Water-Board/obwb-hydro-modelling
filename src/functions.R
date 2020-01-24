@@ -72,7 +72,7 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
   stations <- unique(dd$STATION_NUMBER)
   
   ## create a timeseries of correct dates - this will be used to merge dates/data from HYDAT to.
-  dates <- data.frame(Date = seq(as.Date(start.date), as.Date(end.date), by = "day"))
+  dates <- data.frame(Date = seq(base::as.Date(start.date), base::as.Date(end.date), by = "day"))
 
   for(j in 1:length(stations)){
     
@@ -95,7 +95,7 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
     
     # dd.temp <- dd.sub[(dd.sub$STATION_NUMBER == stations[j] & dd.sub$Parameter == "Flow"),]
     # date.temp <- as.Date(dd.temp$Date,format="%Y/%m/%d")
-    ts.temp <- xts(order.by=as.Date(dd.sub$Date,format="%Y-%m-%d"),x=dd.sub$Value)
+    ts.temp <- xts(order.by=base::as.Date(dd.sub$Date,format="%Y-%m-%d"),x=dd.sub$Value)
     if (!(is.null(prd))) {
       ts.temp <- ts.temp[prd]
     }
