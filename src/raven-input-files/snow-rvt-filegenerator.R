@@ -86,11 +86,11 @@ for(j in 1:length(include.watersheds)){
       
       if(validate.model == FALSE){
         
-        snow.course$weights <- ifelse(snow.course$tiso < as.Date(calibration.start) | snow.course$tiso > as.Date(calibration.end), 0, 1)
+        snow.course$weights <- ifelse(snow.course$tiso < base::as.Date(calibration.start) | snow.course$tiso > base::as.Date(calibration.end), 0, 1)
         
       } else {
         
-        snow.course$weights <- ifelse(snow.course$tiso < as.Date(validation.start) | snow.course$tiso > as.Date(validation.end), 0, 1)
+        snow.course$weights <- ifelse(snow.course$tiso < base::as.Date(validation.start) | snow.course$tiso > base::as.Date(validation.end), 0, 1)
         
       }
       
@@ -237,11 +237,11 @@ for(j in 1:length(include.watersheds)){
         
         if(validate.model == FALSE){
           
-          snow.pillow$weights <- ifelse(as.Date(snow.pillow$DATE) < as.Date(calibration.start) | as.Date(snow.pillow$DATE) > as.Date(calibration.end), 0, 1)
+          snow.pillow$weights <- ifelse(base::as.Date(snow.pillow$DATE) < base::as.Date(calibration.start) | base::as.Date(snow.pillow$DATE) > base::as.Date(calibration.end), 0, 1)
           
         } else {
           
-          snow.pillow$weights <- ifelse(as.Date(snow.pillow$DATE) < as.Date(validation.start) | as.Date(snow.pillow$DATE) > as.Date(validation.end), 0, 1)
+          snow.pillow$weights <- ifelse(base::as.Date(snow.pillow$DATE) < basE::as.Date(validation.start) | base::as.Date(snow.pillow$DATE) > base::as.Date(validation.end), 0, 1)
           
         }
         
