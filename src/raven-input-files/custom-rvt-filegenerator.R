@@ -111,7 +111,7 @@ if(nrow(custom.timeseries) > 0){
         ##
         ## ------------------------------------------------
         
-      } else if((as.Date(custom.data$Date[1]) <= start.date & as.Date(custom.data$Date[1]) < end.date) | (as.Date(custom.data$Date[1]) > start.date & as.Date(custom.data$Date[1]) < end.date)){
+      } else if((base::as.Date(custom.data$Date[1]) <= start.date & base::as.Date(custom.data$Date[1]) < end.date) | (base::as.Date(custom.data$Date[1]) > start.date & base::as.Date(custom.data$Date[1]) < end.date)){
         
         
         ## ------------------------------------------------
@@ -126,9 +126,9 @@ if(nrow(custom.timeseries) > 0){
           ## Check for missing records and generate continuous timeseries for the model period
           ##------------------------------------------------
           
-          custom.data$Date <- as.Date(custom.data$Date)
+          custom.data$Date <- base::as.Date(custom.data$Date)
   
-          dates <- data.frame(Date = seq(as.Date(start.date), as.Date(end.date), by = "day"))
+          dates <- data.frame(Date = seq(base::as.Date(start.date), base::as.Date(end.date), by = "day"))
           
           custom.data <- merge(dates, custom.data, by.all = "Date", all.x = T)
           
@@ -258,11 +258,11 @@ if(nrow(custom.timeseries) > 0){
           
           if(validate.model == FALSE){
             
-            custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+            custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
             
           } else {
             
-            custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+            custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
             
           }
           
@@ -337,11 +337,11 @@ if(nrow(custom.timeseries) > 0){
           
           if(validate.model == FALSE){
             
-            custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+            custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
             
           } else {
             
-            custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+            custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
             
           }
           
@@ -385,11 +385,11 @@ if(nrow(custom.timeseries) > 0){
             
             if(validate.model == FALSE){
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
               
             } else {
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
               
             }
             
@@ -441,11 +441,11 @@ if(nrow(custom.timeseries) > 0){
             
             if(validate.model == FALSE){
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
               
             } else {
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
               
             }
             
@@ -491,11 +491,11 @@ if(nrow(custom.timeseries) > 0){
             
             if(validate.model == FALSE){
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
               
             } else {
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
               
             }
             
@@ -544,11 +544,11 @@ if(nrow(custom.timeseries) > 0){
             
             if(validate.model == FALSE){
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
               
             } else {
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
               
             }
             
@@ -593,11 +593,11 @@ if(nrow(custom.timeseries) > 0){
             
             if(validate.model == FALSE){
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(calibration.start) | custom.data$Date > as.Date(calibration.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
               
             } else {
               
-              custom.data$weights <- ifelse(custom.data$Date < as.Date(validation.start) | custom.data$Date > as.Date(validation.end), 0, 1)
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
               
             }
             
