@@ -6,6 +6,8 @@
 ##
 ############################################################################################################################
 
+require(dplyr)
+
 OST.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/OST-Template.csv")
 
 essential.var <- OST.template[OST.template$VARIABLE == "Essential", c("TYPE", "DEFINITION")]
@@ -42,7 +44,7 @@ for(i in 1:length(OST.template.files)){
   
   Raven.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = gsub('.{4}$', '', strsplit(OST.template.files[i], "/")[[1]][2]), recursive = TRUE)
   
-  raven.files <- setdiff(Raven.template.files, OST.template.files)
+  raven.files <- dplyr::setdiff(Raven.template.files, OST.template.files)
   
   file.pairs[i,1] <- OST.template.files[i]
   
