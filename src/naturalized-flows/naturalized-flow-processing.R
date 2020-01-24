@@ -6,6 +6,7 @@
 ##
 ###################################################################################################################################################
 
+
 # require(xlsx)
 require(openxlsx)
 require(lubridate)
@@ -40,13 +41,13 @@ required.files <- filenames[gsub( " .*$", "", filenames) %in% include.watersheds
 Years <- seq(1996, 2010, 1)
 
 ## Generate Months sequence between 1996-01-01 - 2010-12-31 (Dates of available naturalized streamflows)
-Months <- seq(as.Date("1996-01-01"), as.Date("2010-12-31"), by = "month")
+Months <- seq(base::as.Date("1996-01-01"), base::as.Date("2010-12-31"), by = "month")
 
 ## Generate a sequence of weeks which matches the naturalized streamflow datasets (i.e., 1-52)
 Weeks <- paste("Week", seq(1, 52, 1))
 
 ## Generate Days sequence between 1996-01-01 - 2010-12-31 (Dates of available naturalized streamflows)
-Days <- seq(as.Date("1996-01-01"), as.Date("2010-12-31"), by = "day")
+Days <- seq(base::as.Date("1996-01-01"), base::as.Date("2010-12-31"), by = "day")
 
 ## Develop a vector of 365 days to represent a "Regular Year", broken into weeks which match the OWDM model setup (i.e., 8-day last week)
 RegularYear <- c(rep(1:51, each = 7), rep(52, each = 8))
@@ -127,10 +128,10 @@ for(i in 1:length(required.files)){
   }
   
   ## Convert the dates to Date characters
-  raven.output$date <- as.Date(raven.output$date)
+  raven.output$date <- base::as.Date(raven.output$date)
   
   ## Remove any dates which fall outside of the 1996-2010 window for which naturalized streamflows are available
-  raven.output <- raven.output[raven.output$date >= as.Date("1996-01-01") & raven.output$date <= as.Date("2010-12-31"),]
+  raven.output <- raven.output[raven.output$date >= base::as.Date("1996-01-01") & raven.output$date <= base::as.Date("2010-12-31"),]
   
   
   ## Isolate the subbasin ID which corresponds with the Apex of the Alluvial Fan
@@ -204,7 +205,7 @@ for(i in 1:length(required.files)){
   ##
   ##---------------------------------------------------------------------------------------------------------------
   
-  Raven.apex.weekly <- ddply(Times, .(Year, Week), summarize, Weekly.mean = mean(Raven.apex))
+  Raven.apex.weekly <- ddply(Times, .(Year, Week), plyr::summarize, Weekly.mean = mean(Raven.apex))
   
   # Raven.mouth.weekly <- ddply(Times, .(Year, Week), summarize, Weekly.mean = mean(Raven.mouth))
   
