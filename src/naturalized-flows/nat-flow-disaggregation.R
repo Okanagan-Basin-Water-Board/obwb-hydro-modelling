@@ -69,13 +69,13 @@ required.files <- filenames[sapply(disagg.watersheds, grep, filenames)]
 Years <- seq(1996, 2010, 1)
 
 ## Generate Months sequence between 1996-01-01 - 2010-12-31 (Dates of available naturalized streamflows)
-Months <- seq(as.Date("1996-01-01"), as.Date("2010-12-31"), by = "month")
+Months <- seq(base::as.Date("1996-01-01"), base::as.Date("2010-12-31"), by = "month")
 
 ## Generate a sequence of weeks which matches the naturalized streamflow datasets (i.e., 1-52)
 Weeks <- paste("Week", seq(1, 52, 1))
 
 ## Generate Days sequence between 1996-01-01 - 2010-12-31 (Dates of available naturalized streamflows)
-Days <- seq(as.Date("1996-01-01"), as.Date("2010-12-31"), by = "day")
+Days <- seq(base::as.Date("1996-01-01"), base::as.Date("2010-12-31"), by = "day")
 
 ## Develop a vector of 365 days to represent a "Regular Year", broken into weeks which match the OWDM model setup (i.e., 8-day last week)
 RegularYear <- c(rep(1:51, each = 7), rep(52, each = 8))
@@ -169,9 +169,9 @@ for(i in 1:length(current.ratio.gauges)){
   # join Times to WSC data to extend gauge timeseries to full length
   # of timeseries. Due to nature of full_join, some rows of STATION_NUMBER
   # will now be NA. Adjust accordingly.
-  wsc.daily <- wsc.daily %>% mutate(Date = ymd(Date)) %>%
+  wsc.daily <- wsc.daily %>% dplyr::mutate(Date = ymd(Date)) %>%
     full_join(Times, by = c("Date" = "date")) %>%
-    mutate(STATION_NUMBER = current.ratio.gauges[i])
+    dplyr::mutate(STATION_NUMBER = current.ratio.gauges[i])
   
   # Dates with missing Whiteman, Trepanier, or Coldstream data
   no.data <- wsc.daily$Date[is.na(wsc.daily$Value)]
@@ -190,9 +190,9 @@ for(i in 1:length(current.ratio.gauges)){
   # once again done row by row
   temp.df <- wsc.daily %>%
     group_by(Year, Week) %>%
-    mutate(Weekly_Q = mean(Value)) %>%
+    dplyr::mutate(Weekly_Q = mean(Value)) %>%
     ungroup() %>%
-    mutate(ratio = Value / Weekly_Q) %>%
+    dplyr::mutate(ratio = Value / Weekly_Q) %>%
     dplyr::rename("Q" = Value) 
   
   } else {
@@ -207,14 +207,14 @@ for(i in 1:length(current.ratio.gauges)){
     # 1st mutate computes mean Q by each Year-Week group
     # ungroup removes grouping from the dataframe, all pipe calculations are
     # once again done row by row
-    temp.df <- wsc.daily %>% mutate(Date = ymd(Date)) %>%
+    temp.df <- wsc.daily %>% dplyr::mutate(Date = ymd(Date)) %>%
       full_join(Times, by = c("Date" = "date")) %>%
-      mutate(STATION_NUMBER = current.ratio.gauges[i]) %>%
+      dplyr::mutate(STATION_NUMBER = current.ratio.gauges[i]) %>%
       group_by(Year, Week) %>%
-      mutate(Weekly_Q = mean(Value)) %>%
+      dplyr::mutate(Weekly_Q = mean(Value)) %>%
       ungroup() %>%
-      mutate(ratio = Value / Weekly_Q) %>%
-      mutate(ratio = case_when(Value == 0 ~ 0,
+      dplyr::mutate(ratio = Value / Weekly_Q) %>%
+      dplyr::mutate(ratio = case_when(Value == 0 ~ 0,
                                Weekly_Q == 0 ~ 0,
                                Value != 0 & Weekly_Q != 0 ~ Value / Weekly_Q)) %>%
       dplyr::rename("Q" = Value) 
@@ -226,7 +226,7 @@ for(i in 1:length(current.ratio.gauges)){
 } # end daily:Weekly ratio for-loop 
 
 # make week-year column for disaggregation look-up 
-ratio.df %<>% mutate(week.year = paste(Week, Year, sep = "-"))
+ratio.df %<>% dplyr::mutate(week.year = paste(Week, Year, sep = "-"))
 
 #### start disaggregation for-loop here
 for (i in 1:length(disagg.watersheds)){
@@ -257,7 +257,7 @@ for (i in 1:length(disagg.watersheds)){
     colnames(nat.stream.flow.mouth)[ncol(nat.stream.flow.mouth)] <- "Weekly_discharge"
     
     nat.stream.flow.mouth <- nat.stream.flow.mouth %>%
-      mutate(week.year = paste0(as.numeric(Week.ID),
+      dplyr::mutate(week.year = paste0(as.numeric(Week.ID),
                                "-",
                                Year)) %>%
       select(Year, week.year, Weekly_discharge)
@@ -289,7 +289,7 @@ for (i in 1:length(disagg.watersheds)){
     out.df <- disagg.df %>%
       dplyr::rename(Date = "date",
              Daily_Nat_Q = "Daily_discharge") %>%
-      mutate(EFN_Watershed = "Vernon") %>%
+      dplyr::mutate(EFN_Watershed = "Vernon") %>%
       select(Date, Daily_Nat_Q, Week, Year, EFN_Watershed) 
 
     #----------------------
@@ -300,7 +300,7 @@ for (i in 1:length(disagg.watersheds)){
     colnames(nat.stream.flow.outlet)[ncol(nat.stream.flow.outlet)] <- "Weekly_discharge"
     
     nat.stream.flow.outlet <- nat.stream.flow.outlet %>%
-      mutate(week.year = paste0(as.numeric(Week.ID),
+      dplyr::mutate(week.year = paste0(as.numeric(Week.ID),
                                 "-",
                                 Year)) %>%
       select(Year, week.year, Weekly_discharge)
@@ -332,7 +332,7 @@ for (i in 1:length(disagg.watersheds)){
     out.df.kal <- disagg.df %>%
       dplyr::rename(Date = "date",
              Daily_Nat_Q = "Daily_discharge") %>%
-      mutate(EFN_Watershed = "Vernon") %>%
+      dplyr::mutate(EFN_Watershed = "Vernon") %>%
       select(Date, Daily_Nat_Q, Week, Year, EFN_Watershed)
 
   } else {
@@ -409,20 +409,20 @@ for (i in 1:length(disagg.watersheds)){
     # the ratio.df can be filtered by WSC gauge and its relevent time period
     start <- rules.df %>% left_join(Times, by = c("start" = "week.year")) %>%
       group_by(start) %>%
-      filter(date %in% min(date)) 
+      dplyr::filter(date %in% min(date)) 
     end <- rules.df %>% left_join(Times, by = c("end" = "week.year")) %>%
       group_by(start) %>%
-      filter(date %in% max(date))
+      dplyr::filter(date %in% max(date))
     rules.df$start <- ymd(start$date)
     rules.df$end <- ymd(end$date)
     
     # filter flow ratio dataset to only the WSC gauges to be used for
     # disaggregation and for the relevant time period for each gauge
     disagg.df <- ratio.df %>%
-      filter(STATION_NUMBER %in% wsc.id) %>%
+      dplyr::filter(STATION_NUMBER %in% wsc.id) %>%
       left_join(rules.df, by = c("STATION_NUMBER" = "wsc.id")) %>%
       group_by(STATION_NUMBER) %>%
-      filter(Date >= start & Date <= end)
+      dplyr::filter(Date >= start & Date <= end)
     
     # Penticton's rules are a bit more complex. Average Two Forty and 
     # Two Forty One Creek, and then average that with Vaseux
@@ -433,7 +433,7 @@ for (i in 1:length(disagg.watersheds)){
       # average those means with the Vaseux creek daily disagg. ratios. Then
       # disaggregate the weekly naturalized Q 
       out.df <- disagg.df %>%
-        mutate(rule = case_when(STATION_NUMBER == "08NM171" ~ 2,
+        dplyr::mutate(rule = case_when(STATION_NUMBER == "08NM171" ~ 2,
                                 STATION_NUMBER == "08NM240" ~ 1,
                                 STATION_NUMBER == "08NM241" ~ 1)) %>%
         left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
@@ -445,7 +445,7 @@ for (i in 1:length(disagg.watersheds)){
         dplyr::summarize(Daily_Nat_Q = mean(Daily_Nat_Q),
                   Week = unique(Week), Year = unique(Year)) %>%
         ungroup() %>%
-        mutate(EFN_watershed = disagg.watersheds[i])
+        dplyr::mutate(EFN_watershed = disagg.watersheds[i])
 
     } else {
      
@@ -454,13 +454,13 @@ for (i in 1:length(disagg.watersheds)){
       out.df <- disagg.df %>%
         left_join(nat.stream.flow.long, by = c("Year", "Week")) %>%
         dplyr::rename("Weekly_Nat_Q" = value) %>%
-        mutate(Daily_Nat_Q = Weekly_Nat_Q * ratio * wsc.prop) %>%
+        dplyr::mutate(Daily_Nat_Q = Weekly_Nat_Q * ratio * wsc.prop) %>%
         group_by(Date) %>%
         dplyr::summarize(Daily_Nat_Q = sum(Daily_Nat_Q),
                   Week = unique(Week),
                   Year = unique(Year)) %>%
         ungroup() %>%
-        mutate(EFN_WATERSHED = disagg.watersheds[i])
+        dplyr::mutate(EFN_WATERSHED = disagg.watersheds[i])
 
     }
   } # end if-else for Vernon Ck naturalized flow and OK Tennant EFN datasets
@@ -532,11 +532,11 @@ for (i in 1:length(disagg.watersheds)){
   
   if(validate.model == FALSE){
     
-    out.df$weights <- ifelse(out.df$Date < as.Date(calibration.start) | out.df$Date > as.Date(calibration.end), 0, 1)
+    out.df$weights <- ifelse(out.df$Date < base::as.Date(calibration.start) | out.df$Date > base::as.Date(calibration.end), 0, 1)
     
   } else {
     
-    out.df$weights <- ifelse(out.df$Date < as.Date(validation.start) | out.df$Date > as.Date(validation.end), 0, 1)
+    out.df$weights <- ifelse(out.df$Date < base::as.Date(validation.start) | out.df$Date > base::as.Date(validation.end), 0, 1)
     
   }
   
