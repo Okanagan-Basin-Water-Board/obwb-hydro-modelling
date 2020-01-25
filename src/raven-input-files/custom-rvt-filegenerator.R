@@ -9,10 +9,15 @@
 ## - DIVERSION_OUT = Water removed from a given subbasin(Continuous timeseries required - water is removed from reservoir [:ReservoirExtraction] or subbasin [:BasinInflowHydrograph2], respectievly)
 ## - RESERVOIR_STAGE = Reservoir Stage(Continuous [:ObservationData] or Irreglar [:IrregularObservations] supported)
 ## - RESERVOIR_OUT = Reservior Outflows (Continuous [:ObservationData] or Irreglar [:IrregularObservations] supported)
+## - DIVERSION_CURVE = Rating curve to define diversions from one subbasin to another based on a hydraulic equation.
+## - OVERRIDE_RESERVOIR = Reservoir outflows to override modelled values for a given reservoir (Continuous timeseries required and overrides the model outflows for a specified reservoir)
+## - DIVERSION_PCT = Diverts a constant percentage of flow from one subbasin to another between (optional) julian days. This percentage is applied to flows in addition to the minimum flow.
 ##
 ## Oct-29-2019 LAB
 ##
 ############################################################################################################################
+
+require(readxl)
 
 ## --------------------------------------------------
 ##
@@ -57,14 +62,59 @@ if(nrow(custom.timeseries) > 0){
       
       customRVTfile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries", paste(tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""))
       
+      ## ------------------------------------------------
+      ##
+      ## Check to see if the data is a DIVERSION_PCT
+      ##
+      ## ------------------------------------------------
+      
+      if(custom.data.types[i] == "DIVERSION_PCT"){
+        
+        from.subbasin <- as.character(custom.data[1, "From_Subbasin"])
+        
+        to.subbasin <- as.character(custom.data[1, "To_Subbasin"])
+        
+        diversion.pct <- as.character(custom.data[1, "Diversion_Pct"])
+        
+        Qmin <- as.character(custom.data[1, "Qmin"])
+        
+        julian.start <- as.character(custom.data[1, "Julian_Start"])
+        
+        julian.end <- as.character(custom.data[1, "Julian_End"])
+        
+        
+        ## Write custom RVT file to house the diversion command
+        cat(file = customRVTfile, sep = "", append = T,
+            "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+            paste(":FlowDiversion ", from.subbasin, to.subbasin, diversion.pct, Qmin, julian.start, julian.end, sep = " "),  "\n"
+        )
+        
+        ## Write redirect the above file
+        cat(file = main.RVT.file, append = T, sep = "",
+            "\n",
+            "# -- Redirect to Diversion Percentage(s)----", "\n",
+            ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+        )
+        
+          if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+            
+            OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+            
+            cat(file = OstrichRVTFile, append = T, sep = "",
+                "\n",
+                "# -- Redirect to Diversion Percentage(s)----", "\n",
+                ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+            )
+          
+        }
       
       ## ------------------------------------------------
       ##
-      ## Check to see if the data is a rating curve (i.e., Mill - Mission Diversion)
+      ## Check to see if the data is a DIVERSION_CURVE (i.e., Mill - Mission Diversion)
       ##
       ## ------------------------------------------------
       
-      if(custom.data.types[i] == "DIVERSION_CURVE"){
+    } else if(custom.data.types[i] == "DIVERSION_CURVE"){
         
         npoints <- nrow(custom.data)
         
@@ -88,7 +138,7 @@ if(nrow(custom.timeseries) > 0){
         
         cat(file = main.RVT.file, append = T, sep = "",
             "\n",
-            "# -- Rdirect to Diversion Curve(s)----", "\n",
+            "# -- Redirect to Diversion Curve(s)----", "\n",
             ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
         )
         
@@ -302,6 +352,33 @@ if(nrow(custom.timeseries) > 0){
           } # End if Ostrich is true.
           
         } # End if for Override Streamflow
+        
+        
+        ## ------------------------------------------------
+        ## If the custom data is an OVERRIDE_RESERVOIR, generate custom rvt, and add :OverrideReservoirFlow tags to rvt file (and ostrich template is necessary)
+        ##------------------------------------------------
+        
+        if(custom.data.types[i] == "OVERRIDE_RESERVOIR"){
+          
+          ## Check to see if Observation_Type is Continuous
+          if(tmp[j,"Observation_Type"] != "Continuous"){stop(print(paste(custom.data.types[i], "data require continuous data records. Irregular data series cannot be read in.")))}
+          
+          ## Make na values = 0 - the timeseries MUST be complete to successfully be used to override a subbasin - no missing values can exist.
+          custom.data[is.na(custom.data$Mean_Daily_Discharge_m3s), "Mean_Daily_Discharge_m3s"] <- 0
+          
+          cat(file = customRVTfile, sep = "", append = T,
+              "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+              ":OverrideReservoirFlow " ,as.character(tmp[j, "Subbasin"]), "\n",
+              sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(custom.data$Date[1])),nrow(custom.data)), "\n"
+          )
+          
+          write.table(custom.data$Mean_Daily_Discharge_m3s, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+          
+          cat(file = customRVTfile, sep = "", append = T,
+              ":EndOverrideReservoirFlow", "\n"
+          )
+          
+        } # End if for Override Reservoirs
         
         ## ------------------------------------------------
         ## If the custom data is a HYDROGRAPH, add ObservationData
