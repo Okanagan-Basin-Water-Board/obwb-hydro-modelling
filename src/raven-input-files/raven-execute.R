@@ -19,25 +19,25 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Residual-Tests"
+ws.interest <- "Debugging"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Mission"
+include.watersheds <- "Shuttleworth"
 
 ## Specify a run number to associated with outputs
-run.number <- "mission-cal-test"
+run.number <- "clark-meadow-test"
 
 ## Add comments to README file.
-run.comments <- "Testing Residual Calibration for Mission Creek"
+run.comments <- "Testing Inclusion of Clark Meadows Reservoir"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
-# disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
-disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
+disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
+# disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -46,13 +46,13 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- TRUE
+include.water.demand <- FALSE
 
 # Should reservoir parameters be included in the calibration?
 calibrate.reservoirs <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
-manage.reservoirs <- TRUE
+manage.reservoirs <- FALSE
 
 ## Should soil thicknesses be calibrated?
 calibrate.soil.thicknesses <- FALSE
