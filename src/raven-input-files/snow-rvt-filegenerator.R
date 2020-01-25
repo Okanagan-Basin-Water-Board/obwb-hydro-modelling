@@ -241,7 +241,7 @@ for(j in 1:length(include.watersheds)){
           
         } else {
           
-          snow.pillow$weights <- ifelse(base::as.Date(snow.pillow$DATE) < basE::as.Date(validation.start) | base::as.Date(snow.pillow$DATE) > base::as.Date(validation.end), 0, 1)
+          snow.pillow$weights <- ifelse(base::as.Date(snow.pillow$DATE) < base::as.Date(validation.start) | base::as.Date(snow.pillow$DATE) > base::as.Date(validation.end), 0, 1)
           
         }
         
