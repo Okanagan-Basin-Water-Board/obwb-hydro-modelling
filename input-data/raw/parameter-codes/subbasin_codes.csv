@@ -111,7 +111,7 @@ OBJECTID,GEOMETRY,GNIS_NAME,AREA_HA,GEOMETRY_Length,GEOMETRY_Area,Subbasin_ID,Su
 145,Polygon,Trepanier Creek,0,24221.43967,19639705.46,2703,Trepanier Creek2703,2701,A,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 143,Polygon,Trepanier Creek,0,23492.83956,15942544.69,2702,Trepanier Creek2702,2703,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
 142,Polygon,Trepanier Creek,0,2877.277447,450786.2666,2701,Trepanier Creek2701,-1,Y,<Null>,08NM155,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
-328,Polygon,Shuttleworth Creek,0,1642.546583,91142.37584,2610,Shuttleworth Creek2610,2608,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
+328,Polygon,Shuttleworth Creek,0,1642.546583,91142.37584,2610,Shuttleworth Creek2610,2608,<Null>,Clark Meadows,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 195,Polygon,Shuttleworth Creek,0,14785.67702,6361187.684,2609,Shuttleworth Creek2609,2610,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
 329,Polygon,Shuttleworth Creek,0,11758.67954,5756084.646,2608,Shuttleworth Creek2608,2602,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
 314,Polygon,Shuttleworth Creek,0,10603.1088,3057671.398,2607,Shuttleworth Creek2607,2606,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
