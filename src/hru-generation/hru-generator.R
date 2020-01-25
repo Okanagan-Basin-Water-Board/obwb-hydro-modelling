@@ -136,12 +136,12 @@ coords.aquifers <- coordinates(aquifers.ok)
 
 coords.subbasin <- coordinates(subbasin.ok)
 
-if(all.equal(coords, coords.slope) != TRUE |
-   all.equal(coords, coords.aspect) != TRUE |
-   all.equal(coords, coords.landcover) != TRUE |
-   all.equal(coords, coords.soils) != TRUE |
-   all.equal(coords, coords.aquifers) != TRUE |
-   all.equal(coords, coords.subbasin) != TRUE){
+if(base::all.equal(coords, coords.slope) != TRUE |
+   base::all.equal(coords, coords.aspect) != TRUE |
+   base::all.equal(coords, coords.landcover) != TRUE |
+   base::all.equal(coords, coords.soils) != TRUE |
+   base::all.equal(coords, coords.aquifers) != TRUE |
+   base::all.equal(coords, coords.subbasin) != TRUE){
   stop("Coordinates do not match. Ensure all input datasets are reprojected and snapped to the same grid. Use DEM_fix2.tif as the base grid.")
 } else{
   print("Coordinates match...continue mapping HRUs")
