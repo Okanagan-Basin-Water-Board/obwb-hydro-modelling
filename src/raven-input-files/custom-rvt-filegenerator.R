@@ -41,6 +41,9 @@ custom.data.types <- unique(custom.timeseries$Data_Type)
 custom.timeseries$IS_RES <- ifelse(custom.timeseries$Subbasin %in% subbasin.codes[subbasin.codes$Reservoir_name != "<Null>", "Subbasin_ID"], "Y", "N")
 
 
+## Create empty vector to store timeseries that cannot be included in calibration
+not.available.for.calibration <- c()
+
 
 ## If there is at least one custom timeseries to be included, Read it in and generate a custom rvt.
 if(nrow(custom.timeseries) > 0){
@@ -60,7 +63,7 @@ if(nrow(custom.timeseries) > 0){
       
       main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
       
-      customRVTfile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries", paste(tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""))
+      customRVTfile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries", paste(tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""))
       
       ## ------------------------------------------------
       ##
@@ -93,7 +96,7 @@ if(nrow(custom.timeseries) > 0){
         cat(file = main.RVT.file, append = T, sep = "",
             "\n",
             "# -- Redirect to Diversion Percentage(s)----", "\n",
-            ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+            ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
         )
         
           if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
@@ -103,7 +106,7 @@ if(nrow(custom.timeseries) > 0){
             cat(file = OstrichRVTFile, append = T, sep = "",
                 "\n",
                 "# -- Redirect to Diversion Percentage(s)----", "\n",
-                ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+                ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
             )
           
         }
@@ -139,7 +142,7 @@ if(nrow(custom.timeseries) > 0){
         cat(file = main.RVT.file, append = T, sep = "",
             "\n",
             "# -- Redirect to Diversion Curve(s)----", "\n",
-            ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+            ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
         )
         
         
@@ -150,7 +153,7 @@ if(nrow(custom.timeseries) > 0){
           cat(file = OstrichRVTFile, append = T, sep = "",
               "\n",
               "# -- Rdirect to Diversion Curve(s)----", "\n",
-              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
           )
           
         }
@@ -708,13 +711,13 @@ if(nrow(custom.timeseries) > 0){
               "#-------------------------------------------------------", "\n",
               "#-------- Redirect to Custom Timeseries ----------------", "\n",
               "\n",
-              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
               )
           
         } else {
           
           cat(file = main.RVT.file, append = T, sep = "",
-              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
               )
           
         } # End else
@@ -737,20 +740,24 @@ if(nrow(custom.timeseries) > 0){
                 "#-------------------------------------------------------", "\n",
                 "#-------- Redirect to Custom Timeseries ----------------", "\n",
                 "\n",
-                ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+                ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
             )
             
           } else {
             
             cat(file = OstrichRVTFile, append = T, sep = "",
-                ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Subbasin"], ".rvt", sep = ""), "\n"
+                ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
             )
             
           } # End else
     
         } # End if Ostrich is TRUE and RVT Template exists
      
-      } # End for loop for rows in tmp
+      } else {print(paste("Custom Timeseries Dataset:", as.character(tmp[j,"Sheet_Name"]), "is not available within the current model period.", sep = " "))
+        
+        not.available.for.calibration <- c(not.available.for.calibration, as.character(tmp[j,"Sheet_Name"]))
+        
+        } # End for loop for rows in tmp
       
     } # End for loops for all custom data types
     
@@ -764,3 +771,23 @@ if(nrow(custom.timeseries) <1){
 
 }
 
+
+## Identify those custom timeseries that are available for calibration. At this time, Rservoir stage, Reservoir outflow, and Hydrographs can be used as calibration targets.
+## Those datasets that are not within the current model period are excluded.
+available.for.calibration <- custom.timeseries[custom.timeseries$Data_Type == "RESERVOIR_STAGE" |
+                                               custom.timeseries$Data_Type == "RESERVOIR_OUT" | 
+                                               custom.timeseries$Data_Type == "HYDROGRAPH", ]
+
+available.for.calibration <- available.for.calibration[!c(available.for.calibration$Sheet_Name %in% not.available.for.calibration), ]
+
+## If there are custom datasets available for calibration, form the custom.calibration.targets object
+if(nrow(available.for.calibration) > 0){
+
+  custom.calibration.targets <- c()
+  
+  for(i in 1:nrow(available.for.calibration)){
+    
+    custom.calibration.targets <- c(custom.calibration.targets, paste(tmp[i, "Data_Type"], "_", tmp[i, "Sheet_Name"], sep = ""))
+    
+  }
+}
