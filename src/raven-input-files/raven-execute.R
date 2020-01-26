@@ -18,26 +18,26 @@ cores <- detectCores() - 1
 ## Start timer
 ptm <- proc.time()
 
-## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled
-ws.interest <- "Debugging"
+## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
+ws.interest <- "Residual-Tests"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Shuttleworth"
+include.watersheds <- "Penticton"
 
 ## Specify a run number to associated with outputs
-run.number <- "clark-meadow-test"
+run.number <- "penticton-div-cal-sel"
 
 ## Add comments to README file.
-run.comments <- "Testing Inclusion of Clark Meadows Reservoir"
+run.comments <- "Testing that the calibration selection process behaves as expected following updates."
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
 # disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -46,7 +46,7 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- FALSE
+include.water.demand <- TRUE
 
 # Should reservoir parameters be included in the calibration?
 calibrate.reservoirs <- FALSE
