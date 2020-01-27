@@ -45,7 +45,7 @@ crs(soils.poly.base) <- bc.albers
 watersheds <- model.watersheds$GNIS_NAME
 
 ## Intersect soils polygons with watersheds
-soils.poly.base <- intersect(soils.poly.base, model.watersheds)
+soils.poly.base <- raster::intersect(soils.poly.base, model.watersheds)
 
 ## Create unique tag
 soils.poly.base$tag <- paste(soils.poly.base$SOILSYM_1, gsub(" ", "-", soils.poly.base$GNIS_NAME), sep = "-")
@@ -297,15 +297,15 @@ for(i in 1:length(soil_type)){
   
   ## Average out thickness of each model horizon, and sand, silt, clay percentages.
   ## Convert thickness from cm to m
-  thickness.mean <- ddply(tmp2, .(model.horizon), summarize, mean_thickness = mean(HZN_THICK) / 100)
+  thickness.mean <- ddply(tmp2, .(model.horizon), plyr::summarize, mean_thickness = mean(HZN_THICK) / 100)
   
-  sand <- ddply(tmp2, .(model.horizon), summarize, mean_sand = mean(TSAND))
+  sand <- ddply(tmp2, .(model.horizon), plyr::summarize, mean_sand = mean(TSAND))
   
-  silt <- ddply(tmp2, .(model.horizon), summarize, mean_silt = mean(TSILT))
+  silt <- ddply(tmp2, .(model.horizon), plyr::summarize, mean_silt = mean(TSILT))
   
-  clay <- ddply(tmp2, .(model.horizon), summarize, mean_clay = mean(TCLAY))
+  clay <- ddply(tmp2, .(model.horizon), plyr::summarize, mean_clay = mean(TCLAY))
   
-  ksat <- ddply(tmp2, .(model.horizon), summarize, mean_ksat = mean(KSAT))
+  ksat <- ddply(tmp2, .(model.horizon), plyr::summarize, mean_ksat = mean(KSAT))
   
   
   group <- do.call(cbind, list(thickness.mean, sand, silt, clay, ksat))
@@ -323,9 +323,9 @@ for(i in 1:length(soil_type)){
   ##
   ## Determine minimum and maximum soil thicknesses and export to results.range
   
-  thickness.min <- ddply(tmp2, .(model.horizon), summarize, min_thickness = min(HZN_THICK) / 100)
+  thickness.min <- ddply(tmp2, .(model.horizon), plyr::summarize, min_thickness = min(HZN_THICK) / 100)
   
-  thickness.max <- ddply(tmp2, .(model.horizon), summarize, max_thickness = max(HZN_THICK) / 100)
+  thickness.max <- ddply(tmp2, .(model.horizon), plyr::summarize, max_thickness = max(HZN_THICK) / 100)
   
   group <- do.call(cbind, list(thickness.min, thickness.max, thickness.mean))  
 
@@ -572,3 +572,9 @@ soil.thickness.range[which(endsWith(as.character(soil.thickness.range$Parameter_
 # 
 write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv",
           na = "", row.names = FALSE)
+
+
+
+
+## Calculate the total thickness of each soil type (i.e., sum of max across all horizons)
+total.thickness <- plyr::ddply(results.range, .(soil_type), summarize, total = sum(max_thickness))
