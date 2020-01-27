@@ -1,5 +1,5 @@
 OBJECTID,GEOMETRY,GNIS_NAME,AREA_HA,GEOMETRY_Length,GEOMETRY_Area,Subbasin_ID,SubBasin_name,Downstream_ID,Reports_to_Fan,Reservoir_name,Hydrometric_stn,Snow_Pillow,Snow_Course,Diversion,Upstream_Reservoir,Pct_Demand_Met,Gauged
-383,Polygon,Shorts Creek,0,11875.96494,5957048.377,3112,Shorts Creek3112,3107,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,0
+383,Polygon,Shorts Creek,0,11875.96494,5957048.377,3112,Shorts Creek3112,3107,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 394,Polygon,Shorts Creek,0,21108.12232,13011992.71,3111,Shorts Creek3111,3101,A,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
 31,Polygon,Shorts Creek,0,30343.68188,36243569.32,3110,Shorts Creek3110,3105,<Null>,<Null>,<Null>,<Null>,2F15,<Null>,_AUTO,_AUTO,1
 327,Polygon,Shorts Creek,0,18549.8189,12197219.92,3109,Shorts Creek3109,3105,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,_AUTO,_AUTO,1
