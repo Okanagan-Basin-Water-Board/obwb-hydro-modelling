@@ -8,6 +8,8 @@
 
 source("/var/obwb-hydro-modelling/src/functions.R")
 
+Climate.Version.Tag <- "V1.0.1"
+
 # Download the lastest HYDAT database from WSC and save in specified location
 # download_hydat(dl_hydat_here = "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/")
 
@@ -157,11 +159,11 @@ if(length(station.no) > 0) {
 ## read in RVH file to compute the number of HRUs
 HRUs <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
 
-precip.forcing.filename <- "pr.HRU.timeseries.V1.nc"
+precip.forcing.filename <- paste("pr.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")
 
-tasmax.forcing.filename <- "tasmax.HRU.timeseries.V1.nc"
+tasmax.forcing.filename <- paste("tasmax.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")
 
-tasmin.forcing.filename <- "tasmin.HRU.timeseries.V1.nc"
+tasmin.forcing.filename <- paste("tasmin.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")
 
 
 ## Get dimensions of netcdf file - only uses tasmin since all are the same dimensions
