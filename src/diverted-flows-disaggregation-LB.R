@@ -217,9 +217,10 @@ for(i in 1:length(include.watersheds)){
     Q.div <- as.numeric(unlist(strsplit(Q.div, ", ")))
     names(Q.div) <- c("July", "August", "September", "October")
     
-    # make full timeseries
-    ts <- seq.Date(from = ymd("1994-01-01"), #FIND ME - fix so dates are pulled from rules.df
-                   to = ymd("2017-12-31"), by = "day")
+    # make time series from start date to end date
+    ts <- seq.Date(from = rules.df$Start[r], to = rules.df$End[r], by = "day",
+                   tz = "UTC")
+    
     # discharge at constant rates for July, August, Sept, Oct
     Q.df <- data.frame("Date" = ts,
                        "Mean_Daily_Diversion_m3s" = NA)
@@ -321,6 +322,8 @@ for(i in 1:length(include.watersheds)){
                 by = "month") %>%
       dplyr::mutate(Q_ratio = Q_m3s / Q_241_por)
 
+    
+    format.Date(seq.Date(start.date, end.date, by = "year"), "%Y")
     # estimate Stirling Ck mean monthly flows by computing 241 Q ratio
     # times Stirling Ck mean monthly POR Q
     Q_stirling_filled <- Q241_monthly_ratio %>%
@@ -328,8 +331,13 @@ for(i in 1:length(include.watersheds)){
                                         month = "Month"),
                 by = "month") %>%
       dplyr::mutate(Qbar_mean_monthly_stirling = Q_ratio * Qstirling_POR) %>%
-      dplyr::filter(year %in% lubridate::year(seq.Date(base::as.Date(start.date), base::as.Date(end.date), by = "day"))) # FIND ME - fix so dates are pulled from rules.df
+      dplyr::filter(year %in% format.Date(seq.Date(rules.df$Start[r], rules.df$End[r], by = "year"), "%Y")) 
 
+    
+    Q241_df %>% dplyr::mutate(year = lubridate::year(Date))
+    
+    
+    format.Date(rules.df$Start[r], "%Y")
     # compute 241 mean daily to mean monthly ratio
     Q241_daily_to_monthly_ratio <- Q241_df %>%
       dplyr::mutate(Date = ymd(Date),
@@ -339,7 +347,7 @@ for(i in 1:length(include.watersheds)){
       dplyr::rename(Q_daily = "Value") %>%
       left_join(Q241_mean_monthly, by = c("month", "year")) %>%
       dplyr::mutate(Q_ratio_dm = Q_daily / Q_m3s) %>%
-      dplyr::filter(year %in% lubridate::year(seq.Date(base::as.Date(start.date), base::as.Date(end.date), by = "day"))) # FIND ME - fix so dates are pulled from rules.df
+      dplyr::filter(year %in% format.Date(seq.Date(rules.df$Start[r], rules.df$End[r], by = "year"), "%Y"))
 
     # compute daily Stirling Creek streamflows
     Q_stirling_daily <- Q241_daily_to_monthly_ratio %>%
