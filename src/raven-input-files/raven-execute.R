@@ -19,25 +19,25 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "Residual-Tests"
+ws.interest <- "Debugging"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Penticton"
+include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "penticton-div-cal-sel"
+run.number <- "mission-mb-test"
 
 ## Add comments to README file.
-run.comments <- "Testing that the calibration selection process behaves as expected following updates."
+run.comments <- "Custom Mass Balance File Written"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
 # disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -46,7 +46,7 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- TRUE
+include.water.demand <- FALSE
 
 # Should reservoir parameters be included in the calibration?
 calibrate.reservoirs <- FALSE
@@ -69,6 +69,9 @@ calibration.end <- "2010-12-31"
 validation.start <- "2011-01-01"
 
 validation.end <- "2017-12-31"
+
+## Specify the version of climate data to use - ensure that this matches the current Master_XXX.rvh file
+Climate.Version.Tag <- "V1.0.1"
 
 
 if(manage.reservoirs == TRUE & include.water.demand == FALSE){stop("In order to manage reservoirs to satisfy downstream demand, water demand must be included in the model run. Set include.water.demand == TRUE")}
@@ -114,9 +117,9 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
     else {"- Water demand data were included in this model run"}, "\n",
 
       "- Run completed using climate data last modified as follows:", "\n",
-      paste("   - Precipitation: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.V1.nc")$mtime), "\n",
-      paste("   - Maximum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.V1.nc")$mtime), "\n",
-      paste("   - Minimum Daily Temperature: ", file.info("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.V1.nc")$mtime), "\n",
+      paste("   - Precipitation: ", file.info(paste("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries", Climate.Version.Tag, "nc", sep = "."))$mtime), "\n",
+      paste("   - Maximum Daily Temperature: ", file.info(paste("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries", Climate.Version.Tag, "nc", sep = "."))$mtime), "\n",
+      paste("   - Minimum Daily Temperature: ", file.info(paste("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries", Climate.Version.Tag, "nc"))$mtime), "\n",
 
       paste("- Model Diagnostics were calculated for the period", calibration.start, "to", calibration.end), "\n",
     "\n", 
@@ -144,9 +147,9 @@ sink(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, past
 ##  - Ostrich executable (if required)
 #####################################################################
 
-file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries.V1.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries.V1.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
-file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries.V1.nc"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate", paste("pr.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate", paste("tasmax.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+file.symlink(from = file.path("/var/obwb-hydro-modelling/input-data/processed/climate", paste("tasmin.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 
 # file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src.175/src/raven_rev.exe"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
 file.symlink(from = file.path("/var/obwb-hydro-modelling/src/raven_src/src/Raven.exe"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
