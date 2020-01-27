@@ -1,0 +1,6 @@
+Diversion,Source_Watershed,Source_subbasin_ID,Destination_Watershed,Destination_subbasin_ID,Diversion_(m^3),Year_start,Month_start,Day_start,Year_end,Month_end,Day_end,Diversion_2_(m^3),Month_start_2,Day_start_2,Month_end_2,Day_end_2,Notes
+Dunwaters,Shorts Creek,3112,Lambly Creek,,666079,2009,5,25,2017,6,30,,,,,,
+MacDonald,Trepanier Creek,2707,Peachland Creek,,616740,1950,4,1,2009,6,15,,,,,,
+Stirling,West Kettle River,,Mission Creek,255,,1950,4,1,2017,10,31,,,,,,
+Alocin,Alocin Creek,,Powers Creek,2416,370044,1950,4,15,2017,6,30,215859,10,1,6,15,Diversion 2 is for 10-01 to 06-15
+Highline,Robinson Creek and Chute Creek,,Naramata Creek,2102,"0.07, 0.08, 0.05, 0.02",1996,7,1,2006,10,31,,,,,,
