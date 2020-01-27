@@ -2,6 +2,8 @@
 
 echo "Ensure that soil_type.tif has been generated from Dan"
 
+echo "Ensure that the correct Version Tag has been incuded in the rvt-filegenertor.R, calculate_hru_weights.R, and raven-execute.R scripts."
+
 sleep 10
 
 echo ------------ Generating HRUs --------------------------------
