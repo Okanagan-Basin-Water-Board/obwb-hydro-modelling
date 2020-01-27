@@ -19,7 +19,7 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "Debugging"
+ws.interest <- "Diversion-working"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -27,10 +27,10 @@ ws.interest <- "Debugging"
 include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "mission-mb-test"
+run.number <- "mission-div-test-w-demand"
 
 ## Add comments to README file.
-run.comments <- "Custom Mass Balance File Written"
+run.comments <- "Testing diversion calculation for Mission Creek"
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
@@ -46,7 +46,7 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- FALSE
+include.water.demand <- TRUE
 
 # Should reservoir parameters be included in the calibration?
 calibrate.reservoirs <- FALSE
@@ -186,7 +186,7 @@ if(run.ostrich == T){
 #####################################################################
 
 #RVP ADJUSTMENT SCRIPT HERE
-if(include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoirs == FALSE & calibrate.soil.thicknesses == FALSE){
+if(run.ostrich == TRUE & include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoirs == FALSE & calibrate.soil.thicknesses == FALSE){
   
   source("/var/obwb-hydro-modelling/src/rvp-template-residual-adjustor.R")
   
@@ -355,7 +355,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## If calculate.diversions = TRUE, calculate the diversion timeseries for the given watershed(s)
   if(calculate.diversions == TRUE){
     
-    source("/var/obwb-hydro-modelling/src/diverted-flows-disaggregation-LB.R")
+    source("/var/obwb-hydro-modelling/src/diverted-flows-calculation.R")
     
   }
   
@@ -417,7 +417,7 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## If calculate.diversions = TRUE, calculate the diversion timeseries for the given watershed(s)
   if(calculate.diversions == TRUE){
     
-    source("/var/obwb-hydro-modelling/src/diverted-flows-disaggregation-LB.R")
+    source("/var/obwb-hydro-modelling/src/diverted-flows-calculation.R")
     
   }
   
