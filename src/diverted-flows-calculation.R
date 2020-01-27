@@ -323,7 +323,7 @@ for(i in 1:length(include.watersheds)){
       dplyr::mutate(Q_ratio = Q_m3s / Q_241_por)
 
     
-    format.Date(seq.Date(start.date, end.date, by = "year"), "%Y")
+    # format.Date(seq.Date(start.date, end.date, by = "year"), "%Y")
     # estimate Stirling Ck mean monthly flows by computing 241 Q ratio
     # times Stirling Ck mean monthly POR Q
     Q_stirling_filled <- Q241_monthly_ratio %>%
@@ -337,7 +337,7 @@ for(i in 1:length(include.watersheds)){
     Q241_df %>% dplyr::mutate(year = lubridate::year(Date))
     
     
-    format.Date(rules.df$Start[r], "%Y")
+    # format.Date(rules.df$Start[r], "%Y")
     # compute 241 mean daily to mean monthly ratio
     Q241_daily_to_monthly_ratio <- Q241_df %>%
       dplyr::mutate(Date = ymd(Date),
