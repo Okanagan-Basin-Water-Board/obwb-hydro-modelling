@@ -7,6 +7,9 @@
 ##
 ###################################################################################################################
 
+## Specify the Version Number for the Climate Data to be Generated.
+Version.Tag <- "V1.0.1"
+
 suppressMessages(library(proj4))
 suppressMessages(library(ncdf4))
 suppressMessages(library(ncdf4.helpers))
@@ -57,20 +60,20 @@ if (Remake.Data){
   
  # rm(f)
   
-  save.image(file.path(output.dir, "spatial.grid.data.RData"))
+  save.image(file.path(output.dir, paste("spatial.grid.data", Version.Tag, "RData", sep = ".")))
 
   } else {
   
     print("...loading spatial data...")
   
-    load(file.path(output.dir, "spatial.grid.data.RData"))
+    load(file.path(output.dir, paste("spatial.grid.data", Version.Tag, "RData", sep = ".")))
   }
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args)==1) {
   Var <- args[1]
 } else{
-  stop("Missing tasmin/tasmax/pr argument, dummy.")
+  stop("Missing tasmin/tasmax/pr argument.")
 }
 
 
@@ -180,7 +183,7 @@ if(Var == "pr"){
 }
 
 
-ncout <- nc_create(file.path(output.dir, paste(Var, ".HRU.timeseries.V1.nc", sep="")), list(HRU_def), force_v4=T)
+ncout <- nc_create(file.path(output.dir, paste(Var, "HRU.timeseries", Version.Tag, "nc", sep=".")), list(HRU_def), force_v4=T)
 
 ncvar_put(ncout,HRU_def,CLIMts)
 
