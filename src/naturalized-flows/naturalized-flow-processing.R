@@ -458,16 +458,19 @@ require(gridExtra)
 ## IF naturalized AND residual datasets exist
 if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "STREAM_RES"] == "Y"){
   
+  ## Round the results so that the number of days/weeks account for tiny flows.
+  Times$Raven.apex <- round(Times$Raven.apex, 3)
+  Raven.apex.weekly$Weekly.mean <- round(Raven.apex.weekly$Weekly.mean, 3)
   
   ## Create Summary of Naturalized Streamflow 
   
   summary.model.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
                                       Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
-                                                round(min(Times$Raven.apex), 3),
+                                                round(min(Times$Raven.apex, na.rm = T), 3),
                                                 round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
                                                 round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
-                                                round(min(Raven.apex.weekly$Weekly.mean), 3),
-                                                round(mean(Times$Raven.apex), 3))
+                                                round(min(Raven.apex.weekly$Weekly.mean, na.rm = T), 3),
+                                                round(mean(Times$Raven.apex, na.rm = T), 3))
     
   )
   
@@ -476,8 +479,8 @@ if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "S
                                                     NA,
                                                     NA,
                                                     round(nrow(nat.stream.flow.long[nat.stream.flow.long$value <= 0,]), 0),
-                                                    round(min(nat.stream.flow.long$value), 3),
-                                                    round(mean(nat.stream.flow.long$value), 3))
+                                                    round(min(nat.stream.flow.long$value, na.rm = T), 3),
+                                                    round(mean(nat.stream.flow.long$value, na.rm = T), 3))
   )
   
   grid::grid.newpage()
@@ -492,11 +495,11 @@ if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "S
   
   summary.model.residual <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
                                       Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
-                                                round(min(Times$Raven.apex), 3),
+                                                round(min(Times$Raven.apex, na.rm = T), 3),
                                                 round(NSE(Raven.apex.weekly$Weekly.mean, res.stream.poi), 3),
                                                 round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
-                                                round(min(Raven.apex.weekly$Weekly.mean), 3),
-                                                round(mean(Times$Raven.apex), 3))
+                                                round(min(Raven.apex.weekly$Weekly.mean, na.rm = T), 3),
+                                                round(mean(Times$Raven.apex, na.rm = T), 3))
                                       
   )
   
@@ -505,8 +508,8 @@ if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "S
                                                     NA,
                                                     NA,
                                                     round(length(res.stream.poi[res.stream.poi <= 0]), 0),
-                                                    round(min(res.stream.poi), 3),
-                                                    round(mean(res.stream.poi), 3))
+                                                    round(min(res.stream.poi, na.rm = T), 3),
+                                                    round(mean(res.stream.poi, na.rm = T), 3))
   )
   
   
@@ -520,25 +523,30 @@ if(nat.flows.summary[which(nat.flows.summary$WATERSHED == current.watershed), "S
   
 } else {
   
-  ## Create Summary of Naturalized Streamflow 
+
+  ## Round the results so that the number of days/weeks account for tiny flows.
+  Times$Raven.apex <- round(Times$Raven.apex, 3)
+  Raven.apex.weekly$Weekly.mean <- round(Raven.apex.weekly$Weekly.mean, 3)
   
+  ## Create Summary of Naturalized Streamflow 
   summary.model.natural <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
                                       Value = c(round(nrow(Times[Times$Raven.apex <= 0,]), 1),
-                                                round(min(Times$Raven.apex), 3),
+                                                round(min(Times$Raven.apex, na.rm = T), 3),
                                                 round(NSE(Raven.apex.weekly$Weekly.mean, nat.stream.flow.long$value), 3),
                                                 round(nrow(Raven.apex.weekly[Raven.apex.weekly$Weekly.mean <= 0,]), 0),
-                                                round(min(Raven.apex.weekly$Weekly.mean), 3),
-                                                round(mean(Times$Raven.apex), 3))
+                                                round(min(Raven.apex.weekly$Weekly.mean, na.rm = T), 3),
+                                                round(mean(Times$Raven.apex, na.rm = T), 3))
                                       
   )
   
+  ## No need to round this since it is rounded in Excel.
   summary.naturalized.flows <- data.frame(Summary = c("Days with zero flow", "Minimum daily flow", "Weekly NSE", "Weeks with zero flow", "Minimum weekly mean flow", "LTmad"),
                                           Value = c(NA,
                                                     NA,
                                                     NA,
                                                     round(nrow(nat.stream.flow.long[nat.stream.flow.long$value <= 0,]), 0),
-                                                    round(min(nat.stream.flow.long$value), 3),
-                                                    round(mean(nat.stream.flow.long$value), 3))
+                                                    round(min(nat.stream.flow.long$value, na.rm = T), 3),
+                                                    round(mean(nat.stream.flow.long$value, na.rm = T), 3))
   )
   
   grid::grid.newpage()
