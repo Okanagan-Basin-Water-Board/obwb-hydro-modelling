@@ -291,6 +291,14 @@ if(nrow(custom.timeseries) > 0){
           ## Make na values = 0 - the timeseries MUST be complete to successfully be used to override a subbasin - no missing values can exist.
           custom.data[is.na(custom.data$Mean_Daily_Discharge_m3s), "Mean_Daily_Discharge_m3s"] <- 0
           
+          ## TEMPORARY - temporary bug fix to account for timestep bug in Raven. Once this is fixed, this extra day section can be removed
+          extra.day <- custom.data[1,]
+          
+          extra.day$Date <- lubridate::date(extra.day$Date)-1
+          
+          custom.data <- rbind(extra.day, custom.data)
+          
+          
           cat(file = customRVTfile, sep = "", append = T,
               "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
               ":ObservationData HYDROGRAPH " ,as.character(tmp[j, "Subbasin"]), " m3/s", "\n",
@@ -333,9 +341,21 @@ if(nrow(custom.timeseries) > 0){
           )
           
           
+          ## RAVEN Requires that the :OverrideStreamflow command occurs AFTER the :ObservationData is read in. Therfore, the :RedirectToFile command must be written here for OVERRIDE_STREAMFLOW ONLY
+          cat(file = main.RVT.file, append = T, sep = "",
+              "\n",
+              "\n",
+              "#-------------------------------------------------------", "\n",
+              "#-------- Redirect to Custom Timeseries ----------------", "\n",
+              "\n",
+              ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
+          )
+          
           
           # Add :OverrideStreamflow command to main rvt file
           cat(file = main.RVT.file, append = T, sep = "",
+              "\n",
+              "\n",
               "#----------------------------------------------------------", "\n",
               "# Override Streamflows in the following Subbasins", "\n",
               "#", "\n",
@@ -344,9 +364,20 @@ if(nrow(custom.timeseries) > 0){
           
           if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
             
-            OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+              OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
             
-            cat(file = OstrichRVTFile, append = T, sep = "",
+              ## RAVEN Requires that the :OverrideStreamflow command occurs AFTER the :ObservationData is read in. Therfore, the :RedirectToFile command must be written here for OVERRIDE_STREAMFLOW ONLY
+              cat(file = OstrichRVTFile, append = T, sep = "",
+                  "\n",
+                  "\n",
+                  "#-------------------------------------------------------", "\n",
+                  "#-------- Redirect to Custom Timeseries ----------------", "\n",
+                  "\n",
+                  ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
+              )
+            
+            
+             cat(file = OstrichRVTFile, append = T, sep = "",
                 "#----------------------------------------------------------", "\n",
                 "# Override Streamflows in the following Subbasins", "\n",
                 "#", "\n",
@@ -701,9 +732,11 @@ if(nrow(custom.timeseries) > 0){
         ##
         ## Write Redirect command to the end of the main RVT file.
         ##
+        ## NOTE: Redirect commands should only be written for all custom types that are NOT OVERRIDE_STREAMFLOW. Redirects for OVERRIDE_STREMFLOW are handles earlier on. 
+        ##
         ## ----------------------------------------------------------------------
         
-        if(i == 1 & j == 1){
+        if(i == 1 & j == 1 & custom.data.types[i] != "OVERRIDE_STREAMFLOW"){
           
           cat(file = main.RVT.file, append = T, sep = "",
               "\n",
@@ -714,7 +747,7 @@ if(nrow(custom.timeseries) > 0){
               ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
               )
           
-        } else {
+        } else if(custom.data.types[i] != "OVERRIDE_STREAMFLOW"){
           
           cat(file = main.RVT.file, append = T, sep = "",
               ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
@@ -732,7 +765,7 @@ if(nrow(custom.timeseries) > 0){
           
           OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
           
-          if(i == 1 & j == 1){
+          if(i == 1 & j == 1 & custom.data.types[i] != "OVERRIDE_STREAMFLOW"){
             
             cat(file = OstrichRVTFile, append = T, sep = "",
                 "\n",
@@ -743,7 +776,7 @@ if(nrow(custom.timeseries) > 0){
                 ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
             )
             
-          } else {
+          } else if(custom.data.types[i] != "OVERRIDE_STREAMFLOW"){
             
             cat(file = OstrichRVTFile, append = T, sep = "",
                 ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
