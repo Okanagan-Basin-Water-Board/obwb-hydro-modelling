@@ -72,6 +72,9 @@ model.period.start <- base::as.Date(time$DEFINITION[time$PARAMETER == ":StartDat
 
 model.period.end <- base::as.Date(time$DEFINITION[time$PARAMETER == ":EndDate"])
 
+## Determine the date that diversions should begin (following model startup). Calibration start date is used, regardless of whether or not validation is being run (this just removes the warmup period.)
+demand.start.date <- calibration.start
+
 # model.period <- data.frame(Date = seq(as.Date(model.period.start), as.Date(model.period.end), by = "day"))
 
 #####################################################################
@@ -93,7 +96,7 @@ if(nrow(owdm.sub) > 0){
     
     ## isolate extractionf or one subbasin
     tmp <- owdm.sub[owdm.sub$Subbasin_ID == subs[i],]
-    
+
     ##-------------------------------------------------------------------
     ##
     ## Split out day 0 values across all days within week 36-39. This approach is consistent with that used for the naturalized streamflow dataset development.
@@ -130,6 +133,9 @@ if(nrow(owdm.sub) > 0){
     ## convert extraction total to m3/s from m3/day
     tmp$extraction.total <- tmp$extraction.total / (60*60*24)
     
+    ## Because it is a diversion, it should not be included in the model warm-up period. Subset the data to begin following model warmup
+    tmp <- tmp[tmp$tiso >= demand.start.date, ]
+    
     ##-------------------------------------------------------------------
     ##
     ## If the model run begins prior to water demand data being available, insert filler NA (-1.2345) data points
@@ -140,7 +146,7 @@ if(nrow(owdm.sub) > 0){
     warmup.demand.period <- tmp$tiso[1] - model.period.start
 
     # If the model is to be run prior to water demand being included, create "empty"/Zero demand for the warmup period
-    if(warmup.demand.period > 0){
+    if(!is.na(warmup.demand.period)){
       
       ## Create daily date sequence that spans the model start date to the date before owdm data is available
       date.fills <- seq(model.period.start, length.out = warmup.demand.period, by = 1)
