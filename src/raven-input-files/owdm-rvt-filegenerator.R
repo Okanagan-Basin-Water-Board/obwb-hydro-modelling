@@ -211,18 +211,30 @@ if(nrow(owdm.sub) > 0){
       
       if(manage.reservoirs == TRUE){
         
-        cat(file = fc, append = T, sep = "",
-            "\n",
-            "#---------------------------------------------", "\n",
-            paste("# Specify water demand management for subbasin", subs[i]), "\n",
-            paste(":ReservoirDownstreamDemand ", subs[i], as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"]), as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"]), sep = " "), "\n"
-        )
+        ## Only write the reservoir demand tag if the flag is not <Null>
+        if(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"] != "<Null>" & subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"] != "<Null>"){
         
-      }
+          cat(file = fc, append = T, sep = "",
+              "\n",
+              "#---------------------------------------------", "\n",
+              paste("# Specify water demand management for subbasin", subs[i]), "\n",
+              paste(":ReservoirDownstreamDemand ", subs[i], as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"]), as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"]), sep = " "), "\n"
+          )
+          
+        } else {
+          
+          cat(file = fc, append = T, sep = "",
+              "\n",
+              "#---------------------------------------------", "\n",
+              paste("# Subbasin", subs[i], "is NOT supported by upland storage."), "\n"
+          )
+        
+        } # End if reservoir is managed.
+      
+      } # End if manage.reservoir
       
       ## IF subs[i] IS a reservoir, then use :ReservoirExtraction command instead of :IrrigationDemand
-      
-    } else { 
+    } else {
       
       fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
       
@@ -235,7 +247,7 @@ if(nrow(owdm.sub) > 0){
       
       writeLines(':EndReservoirExtraction',fc)
       
-    }
+    } # End Else
     
     close(fc)
     
