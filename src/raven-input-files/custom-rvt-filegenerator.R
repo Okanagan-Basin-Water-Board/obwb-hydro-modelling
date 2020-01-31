@@ -12,6 +12,9 @@
 ## - DIVERSION_CURVE = Rating curve to define diversions from one subbasin to another based on a hydraulic equation.
 ## - OVERRIDE_RESERVOIR = Reservoir outflows to override modelled values for a given reservoir (Continuous timeseries required and overrides the model outflows for a specified reservoir)
 ## - DIVERSION_PCT = Diverts a constant percentage of flow from one subbasin to another between (optional) julian days. This percentage is applied to flows in addition to the minimum flow.
+## - IRRIGATION_DEMAND = Water is removed from a given subbasin in a similar manor to DIVERSION_OUT; however, IRRIGATION_DEMAND allows reservoirs to contribute to satisfy this demand.
+##                       In addition, minimum flows are resepcted (this is not the case with DIVERSION_OUT). NOTE: Custom IRRIGATION_DEMAND can only be included for subbasins, and not reservoirs.
+##                       If extraction from reservoirs is needed, use DIVERSION_OUT since low flow respect and reservoir management utility are not relevant.
 ##
 ## Oct-29-2019 LAB
 ##
@@ -278,6 +281,92 @@ if(nrow(custom.timeseries) > 0){
           } # End if for Diversions OUT OF Subbasins
           
         } # End if for Diversions
+        
+        ## ------------------------------------------------
+        ## If the custom data is irrigation demand, write a custom rvt file. TEMPORARY - check to see if there is ALSO a IrrigationDemand file generated for OWDM data
+        ##------------------------------------------------
+        
+        if(custom.data.types[i] == "IRRIGATION_DEMAND"){
+          
+          if(custom.data.types[i] == "IRRIGATION_DEMAND" & tmp[j,"IS_RES"] == "Y"){stop("Custom IRRIGATION_DEMAND timeseries cannot be provided for Reservoirs. Use DIVERSION_OUT instead.")}
+        
+          ## Check to see if a corresponding OWDM IrrigationDemand file exists. If so, read it in and amalgamate the timeseries with this custom timeseries
+          
+          subbasin <- tmp[j, "Subbasin"]
+          
+          if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "owdm", paste(subbasin, "owdm.rvt", sep = "_")))){
+            
+            owdm.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "owdm", paste(subbasin, "owdm.rvt", sep = "_"))
+            
+            owdm.merge.data <- read.table(owdm.file, skip = 2)
+            
+            owdm.merge.data <- as.numeric(as.character(owdm.merge.data[owdm.merge.data$V1 != ":EndIrrigationDemand", ]))
+            
+            owdm.date.info <- read.table(owdm.file, skip = 1, nrows = 1)
+            
+            owdm.start.date <- lubridate::date(owdm.date.info[,1])
+            
+            owdm.ndays <- owdm.date.info[,4]
+            
+            owdm.dates <- seq(owdm.start.date, length.out = owdm.ndays, by = "day")
+            
+            owdm.merge.data <- data.frame(Date = owdm.dates,
+                                          owdm.demand = owdm.merge.data)
+            
+            total.custom.demand <- merge(custom.data, owdm.merge.data, by = "Date", all = T)
+            
+            total.custom.demand[is.na(total.custom.demand$Mean_Daily_Diversion_m3s), "Mean_Daily_Diversion_m3s"] <- 0
+            
+            total.custom.demand[is.na(total.custom.demand$owdm.demand), "owdm.demand"] <- 0
+            
+            total.custom.demand$total.demand <- total.custom.demand$Mean_Daily_Diversion_m3s + total.custom.demand$owdm.demand
+            
+            
+            
+            
+            ## Write the custom RVT file.
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+                ":IrrigationDemand ", as.character(tmp[j, "Subbasin"]), "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(total.custom.demand$Date[1])),nrow(total.custom.demand)), "\n"
+            )
+            
+            write.table(total.custom.demand$total.demand, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                ":EndIrrigationDemand", "\n"
+            )
+            
+            
+            
+            ## Comment out the corresponding Redirect command in the main RVT file
+            
+            rvt <- readLines(main.RVT.file, -1)
+            
+            rvt[grep(paste(":RedirectToFile owdm/", subbasin, "_owdm.rvt", sep = ""), rvt)] <- paste("## owdm/", subbasin, "_owdm.rvt Demand is amalgamated with Custom Timeseries", paste(tmp[,"Data_Type"], tmp[,"Sheet_Name"], sep = ""), "to provide one single IrrigationDemand timeseries")
+            
+            writeLines(rvt, main.RVT.file)
+            
+            
+          } else {
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
+                ":IrrigationDemand ", as.character(tmp[j, "Subbasin"]), "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(custom.data$Date[1])),nrow(custom.data)), "\n"
+            )
+            
+            write.table(custom.data$Mean_Daily_Diversion_m3s, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                ":EndIrrigationDemand", "\n"
+            )
+            
+            
+          } # End if not an owdm file too
+          
+        } # End if for Irrigation Demand
         
         ## ------------------------------------------------
         ## If the custom data is an OVERRIDE_STREAMFLOW, generate custom rvt, and add :OverrideStreamflow tags to rvt file (and ostrich template is necessary)
