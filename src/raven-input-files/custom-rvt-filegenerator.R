@@ -44,6 +44,10 @@ custom.data.types <- unique(custom.timeseries$Data_Type)
 custom.timeseries$IS_RES <- ifelse(custom.timeseries$Subbasin %in% subbasin.codes[subbasin.codes$Reservoir_name != "<Null>", "Subbasin_ID"], "Y", "N")
 
 
+## Determine the date that diversions should begin (following model startup). Calibration start date is used, regardless of whether or not validation is being run (this just removes the warmup period.)
+demand.start.date <- calibration.start
+
+
 ## Create empty vector to store timeseries that cannot be included in calibration
 not.available.for.calibration <- c()
 
@@ -208,6 +212,9 @@ if(nrow(custom.timeseries) > 0){
           ## Check to see if Observation_Type is Continuous
           if(tmp[j,"Observation_Type"] != "Continuous"){stop(print(paste(custom.data.types[i], "data require continuous data records. Irregular data series cannot be read in.")))}
             
+          ## Because it is a diversion, it should not be included in the model warm-up period. Subset the data to begin following model warmup
+          custom.data <- custom.data[custom.data$Date >= demand.start.date, ]
+          
           ## Make na values = 0
           custom.data[is.na(custom.data$Mean_Daily_Diversion_m3s), "Mean_Daily_Diversion_m3s"] <- 0
          
@@ -290,6 +297,9 @@ if(nrow(custom.timeseries) > 0){
           
           if(custom.data.types[i] == "IRRIGATION_DEMAND" & tmp[j,"IS_RES"] == "Y"){stop("Custom IRRIGATION_DEMAND timeseries cannot be provided for Reservoirs. Use DIVERSION_OUT instead.")}
         
+          ## Because it is a diversion, it should not be included in the model warm-up period. Subset the data to begin following model warmup
+          custom.data <- custom.data[custom.data$Date >= demand.start.date, ]
+          
           ## Check to see if a corresponding OWDM IrrigationDemand file exists. If so, read it in and amalgamate the timeseries with this custom timeseries
           
           subbasin <- tmp[j, "Subbasin"]
