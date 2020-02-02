@@ -54,6 +54,8 @@ routing <- RVI.template[RVI.template$GROUP == "Routing", c("PARAMETER", "DEFINIT
 
 options <- RVI.template[RVI.template$GROUP == "Options", c("PARAMETER", "DEFINITION")]
 
+alias <- RVI.template[RVI.template$GROUP == "Alias", c("PARAMETER", "DEFINITION", "FROM")]
+
 processes <- RVI.template[RVI.template$GROUP == "HydrologicalProcesses", c("PARAMETER", "DEFINITION", "FROM", "TO")]
 
 output <- RVI.template[RVI.template$GROUP == "OutputOptions", c("PARAMETER", "DEFINITION")]
@@ -161,14 +163,11 @@ cat(file = RVIoutFile, append = T, sep = "",
 cat(file = RVIoutFile, append = T, sep = "",
       "\n",
       "#---------------------------------------------------------", "\n",
-      "# ---- Soil Layer Alias Definitions ----------------------", "\n",
-      "\n",
-    ":Alias TOP_SOIL SOIL[0]", "\n",
-    ":Alias INT_SOIL SOIL[1]", "\n",
-    ":Alias DEEP_SOIL SOIL[2]", "\n"
+      "# ---- Alias Definitions ---------------------------------", "\n",
+      "\n"
 )
   
-  # write.table(soil.alias.table, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+  write.table(alias, RVIoutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
 
 
 cat(file = RVIoutFile, append = T, sep = "",
