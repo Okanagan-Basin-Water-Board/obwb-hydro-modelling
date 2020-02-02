@@ -247,7 +247,7 @@ if(nrow(custom.timeseries) > 0){
             write.table(custom.data$Mean_Daily_Diversion_m3s, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
             
             cat(file = customRVTfile, sep = "", append = T,
-                ":EndBasinInflowHydrograph", "\n"
+                ":EndBasinInflowHydrograph2", "\n"
             )
             
             
@@ -282,7 +282,7 @@ if(nrow(custom.timeseries) > 0){
             write.table(custom.data$Mean_Daily_Diversion_m3s * -1, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
             
             cat(file = customRVTfile, sep = "", append = T,
-                ":EndBasinInflowHydrograph", "\n"
+                ":EndBasinInflowHydrograph2", "\n"
             )
             
           } # End if for Diversions OUT OF Subbasins
