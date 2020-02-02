@@ -212,8 +212,8 @@ if(nrow(custom.timeseries) > 0){
           ## Check to see if Observation_Type is Continuous
           if(tmp[j,"Observation_Type"] != "Continuous"){stop(print(paste(custom.data.types[i], "data require continuous data records. Irregular data series cannot be read in.")))}
             
-          ## Because it is a diversion, it should not be included in the model warm-up period. Subset the data to begin following model warmup
-          custom.data <- custom.data[custom.data$Date >= demand.start.date, ]
+          ## Because it is a diversion, it should not be included in the model warm-up period. Include 0 in the period during model warm-up
+          custom.data[custom.data$Date < demand.start.date, "Mean_Daily_Diversion_m3s"] <- 0
           
           ## Make na values = 0
           custom.data[is.na(custom.data$Mean_Daily_Diversion_m3s), "Mean_Daily_Diversion_m3s"] <- 0
@@ -297,8 +297,8 @@ if(nrow(custom.timeseries) > 0){
           
           if(custom.data.types[i] == "IRRIGATION_DEMAND" & tmp[j,"IS_RES"] == "Y"){stop("Custom IRRIGATION_DEMAND timeseries cannot be provided for Reservoirs. Use DIVERSION_OUT instead.")}
         
-          ## Because it is a diversion, it should not be included in the model warm-up period. Subset the data to begin following model warmup
-          custom.data <- custom.data[custom.data$Date >= demand.start.date, ]
+          ## Because it is a diversion, it should not be included in the model warm-up period. Include 0 in the period during model warm-up
+          custom.data[custom.data$Date < demand.start.date, "Mean_Daily_Diversion_m3s"] <- 0
           
           ## Check to see if a corresponding OWDM IrrigationDemand file exists. If so, read it in and amalgamate the timeseries with this custom timeseries
           
