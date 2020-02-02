@@ -133,8 +133,8 @@ if(nrow(owdm.sub) > 0){
     ## convert extraction total to m3/s from m3/day
     tmp$extraction.total <- tmp$extraction.total / (60*60*24)
     
-    ## Because it is a diversion, it should not be included in the model warm-up period. Subset the data to begin following model warmup
-    tmp <- tmp[tmp$tiso >= demand.start.date, ]
+    ## Because it is a diversion, it should not be included in the model warm-up period. Include 0 in the period during model warm-up
+    tmp[tmp$tiso < demand.start.date, "extraction.total"] <- 0
     
     ##-------------------------------------------------------------------
     ##
