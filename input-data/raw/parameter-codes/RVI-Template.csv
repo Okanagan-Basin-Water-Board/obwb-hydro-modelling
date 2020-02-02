@@ -21,6 +21,9 @@ Options,MonthlyInterpolationMethod,MONTHINT_LINEAR_21,,
 Options,SoilModel,SOIL_MULTILAYER 3,,
 Options,ReservoirDemandAllocation,DEMANDBY_MAX_CAPACITY,,
 #Options,LakeStorage,SOIL[2],,
+Alias,Alias,TOP_SOIL,SOIL[0],
+Alias,Alias,INT_SOIL,SOIL[1],
+Alias,Alias,DEEP_SOIL,SOIL[2],
 HydrologicalProcesses,SnowRefreeze,FREEZE_DEGREE_DAY,SNOW_LIQ,SNOW
 HydrologicalProcesses,Precipitation,PRECIP_RAVEN,ATMOS_PRECIP,MULTIPLE
 HydrologicalProcesses,CanopyEvaporation,CANEVP_ALL,CANOPY,ATMOSPHERE
@@ -45,6 +48,7 @@ OutputOptions,EvaluationMetrics,RMSE,,
 OutputOptions,EvaluationMetrics,PCT_BIAS,,
 OutputOptions,EvaluationMetrics,R2,,
 OutputOptions,EvaluationMetrics,LOG_NASH,,
+OutputOptions,WriteReservoirMBFile,,
 #OutputOptions,WriteForcingFunctions,,
 #OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_HRU_GROUP,,
 #OutputOptions,CustomOutput,MONTHLY AVERAGE SNOW_LIQ BY_BASIN,,
