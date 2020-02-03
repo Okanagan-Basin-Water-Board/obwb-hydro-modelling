@@ -108,6 +108,9 @@ for(i in 1:length(unique.HRU)){
 proc.time() - ptm
 
 print("HRU table built")
+
+# save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raw-HRU-Output.RData")
+load(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raw-HRU-Output.RData")
 ###########################################################################
 ##
 ## Assign names to soil profiles, aquifer profiles, and land use classes
@@ -174,7 +177,7 @@ for(i in 1:length(unique.missing.soil.profiles.basin)){
   ## Calculate the total area covered by each land use class
   SP.proportion <- ddply(sub.df, .(SOIL_PROFILE), summarize, total = sum(as.numeric(as.character(AREA))))
   
-  ## Identify the most common land use calss that is NOT "NON-VEGETATED"
+  ## Identify the most common soil profile that is NOT blank
   common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != " ", "total"])), "SOIL_PROFILE"]
   
   HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.missing.soil.profiles.basin[i] & HRU.output.clean[, "SOIL_PROFILE"] == " "), "SOIL_PROFILE"] <- as.character(common.SP)
@@ -184,7 +187,6 @@ for(i in 1:length(unique.missing.soil.profiles.basin)){
   # HRU.output.clean[HRU.output.clean[, "ID"] == missing.soil.profiles.id[i], "SOIL_PROFILE"] <- subbasin.common.soil.profile
   
 }
-
 
 ## Replace soil profiles underneath "WATER" Landuse and "WATER" Vegetation HRUs with LAKE profiles - this turns off all soil processed under open water HRUs.
 HRU.output.clean[which(HRU.output.clean[,"LAND_USE_CLASS"] == "WATER" & HRU.output.clean[,"VEG_CLASS"] == "WATER"), "SOIL_PROFILE"] <- "LAKE"
@@ -275,9 +277,45 @@ for(i in 1:length(unique.shadow.subbasin)){
   
 }
 
+##################################################################################################
+##
+## For those HRUs that have LAKE Soil profile, but not WATER or LAKE Land use, replace the soil profiles
+##
+##################################################################################################
+
+## Identify those that are LAKE soils, but not WATER landuse
+lake.soil.subbasins <- HRU.output.clean[which(HRU.output.clean[,"SOIL_PROFILE"] == "LAKE" & HRU.output.clean[,"LAND_USE_CLASS"] != "WATER" & HRU.output.clean[,"VEG_CLASS"] != "WATER"), ]
+
+## Remove those that are LAKE soils and LAKE land use - these are correct.
+lake.soil.subbasins <- lake.soil.subbasins[which(lake.soil.subbasins[,"LAND_USE_CLASS"] != "LAKE"), "BASIN_ID"]
+
+## Identify all unique subbasins where this occurs.
+unique.lake.soil.subbasins <- unique(lake.soil.subbasins)
+
+for(i in 1:length(unique.lake.soil.subbasins)){
+  
+  sub <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == unique.lake.soil.subbasins[i], ]
+  
+  ## Convert to a datafram
+  sub.df <- as.data.frame(sub)
+  
+  ## Calculate the total area covered by each land use class
+  SP.proportion <- ddply(sub.df, .(SOIL_PROFILE), summarize, total = sum(as.numeric(as.character(AREA))))
+  
+  ## Identify the most common soil profile that is NOT blank
+  common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != "LAKE", "total"])), "SOIL_PROFILE"]
+  
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.lake.soil.subbasins[i] & HRU.output.clean[, "SOIL_PROFILE"] == "LAKE" & !HRU.output.clean[, "LAND_USE_CLASS"] %in% c("LAKE", "WATER")), "SOIL_PROFILE"] <- as.character(common.SP)
+  
+  # subbasin.common.soil.profile <- getmode(HRU.output.clean[HRU.output.clean[, "BASIN_ID"] ==  missing.soil.profiles.basin[i], "SOIL_PROFILE"])
+  
+  # HRU.output.clean[HRU.output.clean[, "ID"] == missing.soil.profiles.id[i], "SOIL_PROFILE"] <- subbasin.common.soil.profile
+  
+}
+
 
 ## Write HRU Table to csv incase adjustments are needed
-save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raven-HRU-table.RData")
+# save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raven-HRU-table.RData")
 # load("/var/obwb-hydro-modelling/input-data/processed/spatial/Raven-HRU-table.RData")
 
 # write.csv(HRU.output.clean, "/var/obwb-hydro-modelling/input-data/processed/spatial/HRU-table.csv")
@@ -506,6 +544,48 @@ for(i in 1:length(unique.non.veg.subbasin)){
   
 }
 
+
+
+##################################################################################################
+##
+## For those HRUs that have LAKE Soil profile, introduced, but but not WATER or LAKE Land use, replace the soil profiles
+##
+##################################################################################################
+
+## Identify those that are LAKE soils, but not WATER landuse
+lake.soil.subbasins <- HRU.output.clean[which(HRU.output.clean[,"SOIL_PROFILE"] == "LAKE" & HRU.output.clean[,"LAND_USE_CLASS"] != "WATER" & HRU.output.clean[,"VEG_CLASS"] != "WATER"), ]
+
+## Remove those that are LAKE soils and LAKE land use - these are correct.
+lake.soil.subbasins <- lake.soil.subbasins[which(lake.soil.subbasins[,"LAND_USE_CLASS"] != "LAKE"), "BASIN_ID"]
+
+## Identify all unique subbasins where this occurs.
+unique.lake.soil.subbasins <- unique(lake.soil.subbasins)
+
+for(i in 1:length(unique.lake.soil.subbasins)){
+  
+  sub <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == unique.lake.soil.subbasins[i], ]
+  
+  ## Convert to a datafram
+  sub.df <- as.data.frame(sub)
+  
+  ## Calculate the total area covered by each land use class
+  SP.proportion <- ddply(sub.df, .(SOIL_PROFILE), summarize, total = sum(as.numeric(as.character(AREA))))
+  
+  ## Identify the most common soil profile that is NOT blank
+  common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != "LAKE", "total"])), "SOIL_PROFILE"]
+  
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.lake.soil.subbasins[i] & HRU.output.clean[, "SOIL_PROFILE"] == "LAKE" & !HRU.output.clean[, "LAND_USE_CLASS"] %in% c("LAKE", "WATER")), "SOIL_PROFILE"] <- as.character(common.SP)
+  
+  # subbasin.common.soil.profile <- getmode(HRU.output.clean[HRU.output.clean[, "BASIN_ID"] ==  missing.soil.profiles.basin[i], "SOIL_PROFILE"])
+  
+  # HRU.output.clean[HRU.output.clean[, "ID"] == missing.soil.profiles.id[i], "SOIL_PROFILE"] <- subbasin.common.soil.profile
+  
+}
+
+
+# HRU.output.clean[HRU.output.clean[,"LAND_USE_CLASS"] == "URBAN",]
+
+# HRU.output.clean[HRU.output.clean[,"SOIL_PROFILE"] == "LAKE" & !HRU.output.clean[,"VEG_CLASS"] %in% c("LAKE", "WATER"), ]
 
 ##-----------------------------------------
 ##
