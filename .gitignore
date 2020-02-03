@@ -46,8 +46,11 @@ src/raven-input-files/archive/raven-execute-fyke.R
 src/raven_src/
 input-data/raw/parameter-codes/archive/subbasin_codes-based.csv
 input-data/processed/spatial/Raven-HRU-table.RData
+input-data/processed/spatial/Raw-HRU-Output.RData
 input-data/raw/custom-timeseries/
 archive/
 input-data/processed/spatial/temp/
 input-data/raw/parameter-codes/RVP-Template-15012020.csv
 input-data/raw/parameter-codes/RVP-Template_old.csv
+input-data/raw/parameter-codes/RVP-Template-base.csv
+input-data/raw/parameter-codes/RVP-Template_Naramata.csv
