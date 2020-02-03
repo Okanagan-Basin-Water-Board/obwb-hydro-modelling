@@ -1,0 +1,24 @@
+###############################################################################################################################################
+##
+## This file is intended to track bugs (both identified, and fixed) within OHME.
+##
+###############################################################################################################################################
+
+##--------------------------------
+##
+## OHME V1 Bugs
+##
+##--------------------------------
+
+1. Few HRUs are defined a FORESTED Land Use Class and GRASS Vegetation Class, and few are defined as FORESTED Land Use Class and SHRUBLAND Vegetation Class. The reason for this is likely an artifact of the adjustments made following HRU definition to account for Residual / Natural land bases.
+  - The number of HRUs where this is case is insignifcant within the watershed and this issue is not expected to significantly alter results.
+  - The HRU definition process should be reviewed for these unique cases.
+  
+2. Within the "pure" HBV-EC model configuration, :LakeStorage is used to move all precipitation that falls onto LAKE HRUs into a storage compartment.
+The "pure" HBV-EC model configuration uses SOIL[2] as this storage compartment. Based on a recommendation from James Craig, this component of the model was removed since it's physical representation is dubious. Precipitation on LAKE HRUs is not added directly to the Surface Water store.
+
+In addition, the "pure" HBV-EC model configuration also has a :LakeEvaporation term to evaporate water from the above storage components (i.e., SOIL[2]). Due to the poor physical representation of this process, coupled with the removal of the :LakeStorage term, :LakeEvaporation was removed from the HBV-EC configuration used in OHME V1.
+
+These adjustments result in large mass balance errors reported for watersheds that have one or more reservoirs present. It was traced to originate in the cumulative loss term within the reservoir mass balance. James Craig advised that this is likely not an issue with the model itself, but the mass balance calculations/checks performed by Raven. However, additional QAQC by James is required.
+
+3. Under residual streamflows (i.e., the inclusion of water demand from the OWDM and other diversions from the custom-timeseries), the Channel Storage compartment is observed to fill up. The physical representation of this is dubious and QAQC is required to confirm the reason for this.
