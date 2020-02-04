@@ -536,37 +536,37 @@ if(nrow(custom.timeseries) > 0){
                 ":EndObservationData", "\n"
             )
             
+          
+            ##----------------------------------------------
+            ##
+            ## Write Observation Weights for the calibration/validation period
+            ##
+            ##----------------------------------------------
+            
+            if(validate.model == FALSE){
+              
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
+              
+            } else {
+              
+              custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
+              
+            }
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                "\n",
+                "# Write ObservationWeights", "\n",
+                ":ObservationWeights HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(custom.data$Date[1])),nrow(custom.data)), "\n"
+            )
+            
+            write.table(custom.data$weights, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = customRVTfile, sep = "", append = T,
+                ":EndObservationWeights", "\n"
+            )
+          
           } # End Continuous Hydrograph
-          
-          
-          ##----------------------------------------------
-          ##
-          ## Write Observation Weights for the calibration/validation period
-          ##
-          ##----------------------------------------------
-          
-          if(validate.model == FALSE){
-            
-            custom.data$weights <- ifelse(custom.data$Date < base::as.Date(calibration.start) | custom.data$Date > base::as.Date(calibration.end), 0, 1)
-            
-          } else {
-            
-            custom.data$weights <- ifelse(custom.data$Date < base::as.Date(validation.start) | custom.data$Date > base::as.Date(validation.end), 0, 1)
-            
-          }
-          
-          cat(file = customRVTfile, sep = "", append = T,
-              "\n",
-              "# Write ObservationWeights", "\n",
-              ":ObservationWeights HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), "\n",
-              sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(custom.data$Date[1])),nrow(custom.data)), "\n"
-          )
-          
-          write.table(custom.data$weights, customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
-          
-          cat(file = customRVTfile, sep = "", append = T,
-              ":EndObservationWeights", "\n"
-          )
           
           
           if(tmp[j, "Observation_Type"] == "Irregular"){
@@ -574,14 +574,14 @@ if(nrow(custom.timeseries) > 0){
             ## Make na values = 0
             custom.data[is.na(custom.data$Mean_Daily_Discharge_m3s), "Mean_Daily_Discharge_m3s"] <- -1.2345
             
-            cat(file - customRVTfile, sep = "", append = T,
+            cat(file = customRVTfile, sep = "", append = T,
                 "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
                 ":IrregularObservations HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), " ", nrow(custom.data), " m3/s", "\n"
               )
             
-            write.table(custom.data[,c("Date_Time", "Mean_Daily_Discharge_m3")], customRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            write.table(custom.data[,c("tiso", "Mean_Daily_Discharge_m3s")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
             
-            cat(file = customRVToutFile, append = T, sep = "",
+            cat(file = customRVTfile, append = T, sep = "",
                 ":EndIrregularObservations",
                 "\n"
             )
@@ -609,7 +609,7 @@ if(nrow(custom.timeseries) > 0){
                 ":IrregularWeights HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), " ", nrow(custom.data), "\n"
             )
             
-            write.table(custom.data[,c("Date_Time", "weights")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            write.table(custom.data[,c("tiso", "weights")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
             
             cat(file = customRVTfile, sep = "", append = T,
                 ":EndIrregularWeights", "\n"
@@ -715,7 +715,7 @@ if(nrow(custom.timeseries) > 0){
                 ":IrregularWeights RESERVOIR_STAGE ", as.character(tmp[j, "Subbasin"]), " ",nrow(custom.data), "\n"
             )
             
-            write.table(custom.data[,c("Date_Time", "weights")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            write.table(custom.data[,c("tiso", "weights")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
             
             cat(file = customRVTfile, sep = "", append = T,
                 ":EndIrregularWeights", "\n"
@@ -817,7 +817,7 @@ if(nrow(custom.timeseries) > 0){
                 ":IrregularWeights HYDROGRAPH ", as.character(tmp[j, "Subbasin"]), " ", nrow(custom.data), "\n"
             )
             
-            write.table(custom.data[,c("Date_Time", "weights")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            write.table(custom.data[,c("tiso", "weights")], customRVTfile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
             
             cat(file = customRVTfile, sep = "", append = T,
                 ":EndIrregularWeights", "\n"
@@ -919,7 +919,7 @@ if(nrow(available.for.calibration) > 0){
   
   for(i in 1:nrow(available.for.calibration)){
     
-    custom.calibration.targets <- c(custom.calibration.targets, paste(tmp[i, "Data_Type"], "_", tmp[i, "Sheet_Name"], sep = ""))
+    custom.calibration.targets <- c(custom.calibration.targets, paste(available.for.calibration[i, "Data_Type"], "_", available.for.calibration[i, "Sheet_Name"], sep = ""))
     
   }
 }
