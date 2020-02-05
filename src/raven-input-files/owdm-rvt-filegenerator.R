@@ -145,8 +145,8 @@ if(nrow(owdm.sub) > 0){
     ## Determine how long the modl runs for before owdm data begins
     warmup.demand.period <- tmp$tiso[1] - model.period.start
 
-    # If the model is to be run prior to water demand being included, create "empty"/Zero demand for the warmup period
-    if(!is.na(warmup.demand.period)){
+    # If the model is to be run prior to water demand being included, create "empty"/Zero demand for the warmup period. If the demand data is available before the model run starts, no filling is needed.
+    if(!is.na(warmup.demand.period) & warmup.demand.period >1){
       
       ## Create daily date sequence that spans the model start date to the date before owdm data is available
       date.fills <- seq(model.period.start, length.out = warmup.demand.period, by = 1)
