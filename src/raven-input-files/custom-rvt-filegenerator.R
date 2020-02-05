@@ -310,7 +310,8 @@ if(nrow(custom.timeseries) > 0){
             
             owdm.merge.data <- read.table(owdm.file, skip = 2)
             
-            owdm.merge.data <- as.numeric(as.character(owdm.merge.data[owdm.merge.data$V1 != ":EndIrrigationDemand", ]))
+            ## Remove all lines below :EndIrrigationDemand
+            owdm.merge.data <- as.numeric(as.character(owdm.merge.data[1:(which(grepl(":EndIrrigationDemand", owdm.merge.data$V1))-1), ]))
             
             owdm.date.info <- read.table(owdm.file, skip = 1, nrows = 1)
             
@@ -324,7 +325,7 @@ if(nrow(custom.timeseries) > 0){
                                           owdm.demand = owdm.merge.data)
             
             total.custom.demand <- merge(custom.data, owdm.merge.data, by = "Date", all = T)
-            
+    
             total.custom.demand[is.na(total.custom.demand$Mean_Daily_Diversion_m3s), "Mean_Daily_Diversion_m3s"] <- 0
             
             total.custom.demand[is.na(total.custom.demand$owdm.demand), "owdm.demand"] <- 0
