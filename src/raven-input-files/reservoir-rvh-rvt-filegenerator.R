@@ -154,7 +154,8 @@ for(j in 1:length(include.watersheds)){
         
         LakeArea <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000)
         
-        MaxCapacity <- max(tmp2$Future_Storage_m3)
+        # Define the maximum capacity as the top of the live storage - the potential storage is not actually available at the moment.
+        MaxCapacity <- max(tmp2[tmp$Storage_Type == "Live", "Future_Storage_m3"])
         
         ##-----------------------------------------------------------------------------
         ##
