@@ -39,6 +39,7 @@ rm(DT, DT.revert)
 #################################################3
 
 # currently just duplicating the "landcover" column. This is an unnecessary step, but is nice for cosistency/visual interpretation
+# The vegetation type could simply be determined from the landcover column instead.
 HRU.table$vegetation <- HRU.table$landcover
 
 
