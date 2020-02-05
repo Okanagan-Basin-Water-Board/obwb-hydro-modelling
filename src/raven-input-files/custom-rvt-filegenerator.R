@@ -350,6 +350,36 @@ if(nrow(custom.timeseries) > 0){
             )
             
             
+            ##-------------------------------------------------------------------
+            ##
+            ## Add :ReservoirDownstreamDemand command to specify how water demand is supplied to the given subbasin
+            ##
+            ##-------------------------------------------------------------------
+            
+            if(manage.reservoirs == TRUE){
+              
+              ## Only write the reservoir demand tag if the flag is not <Null>
+              if(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"] != "<Null>" & subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"] != "<Null>"){
+                
+                cat(file = customRVTfile, append = T, sep = "",
+                    "\n",
+                    "#---------------------------------------------", "\n",
+                    paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"]), "\n",
+                    paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"]), sep = " "), "\n"
+                )
+                
+              } else {
+                
+                cat(file = customRVTfile, append = T, sep = "",
+                    "\n",
+                    "#---------------------------------------------", "\n",
+                    paste("# Subbasin", as.character(tmp[j, "Subbasin"]), "is NOT supported by upland storage."), "\n"
+                )
+                
+              } # End if reservoir is managed.
+              
+            } # End if manage.reservoir
+            
             
             ## Comment out the corresponding Redirect command in the main RVT file
             
@@ -373,6 +403,32 @@ if(nrow(custom.timeseries) > 0){
             cat(file = customRVTfile, sep = "", append = T,
                 ":EndIrrigationDemand", "\n"
             )
+            
+            
+            if(manage.reservoirs == TRUE){
+              
+              ## Only write the reservoir demand tag if the flag is not <Null>
+              if(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"] != "<Null>" & subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"] != "<Null>"){
+                
+                cat(file = customRVTfile, append = T, sep = "",
+                    "\n",
+                    "#---------------------------------------------", "\n",
+                    paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"])), "\n",
+                    paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"]), sep = " "), "\n"
+                )
+                
+              } else {
+                
+                cat(file = customRVTfile, append = T, sep = "",
+                    "\n",
+                    "#---------------------------------------------", "\n",
+                    paste("# Subbasin", as.character(tmp[j, "Subbasin"]), "is NOT supported by upland storage."), "\n"
+                )
+                
+              } # End if reservoir is managed.
+              
+            } # End if manage.reservoir
+            
             
             
           } # End if not an owdm file too
