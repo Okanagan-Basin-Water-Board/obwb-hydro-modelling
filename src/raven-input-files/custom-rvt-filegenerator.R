@@ -45,7 +45,8 @@ custom.timeseries$IS_RES <- ifelse(custom.timeseries$Subbasin %in% subbasin.code
 
 
 ## Determine the date that diversions should begin (following model startup). Calibration start date is used, regardless of whether or not validation is being run (this just removes the warmup period.)
-demand.start.date <- calibration.start
+## TEMPORARY - set this as 1996-01-01 to allow custom calibration periods to be defined, but the effects of demand seen from 1996 onwards.
+demand.start.date <- "1996-01-01"
 
 
 ## Create empty vector to store timeseries that cannot be included in calibration
@@ -364,7 +365,7 @@ if(nrow(custom.timeseries) > 0){
                 cat(file = customRVTfile, append = T, sep = "",
                     "\n",
                     "#---------------------------------------------", "\n",
-                    paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"]), "\n",
+                    paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"])), "\n",
                     paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"]), sep = " "), "\n"
                 )
                 
