@@ -73,7 +73,8 @@ model.period.start <- base::as.Date(time$DEFINITION[time$PARAMETER == ":StartDat
 model.period.end <- base::as.Date(time$DEFINITION[time$PARAMETER == ":EndDate"])
 
 ## Determine the date that diversions should begin (following model startup). Calibration start date is used, regardless of whether or not validation is being run (this just removes the warmup period.)
-demand.start.date <- calibration.start
+## TEMPORARY - set this as 1996-01-01 to allow custom calibration periods to be defined, but the effects of demand seen from 1996 onwards.
+demand.start.date <- "1996-01-01"
 
 # model.period <- data.frame(Date = seq(as.Date(model.period.start), as.Date(model.period.end), by = "day"))
 
