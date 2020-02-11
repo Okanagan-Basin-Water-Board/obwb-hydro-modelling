@@ -426,7 +426,7 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
         
-        SC.station.watershed <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "GNIS_NAME"])
+        SC.station.watershed <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "GNIS_NAME"])
         
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
@@ -460,7 +460,7 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
         
-        SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "GNIS_NAME"])
+        SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "GNIS_NAME"])
         
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
@@ -507,7 +507,7 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
         
-        SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "Subbasin_ID"])
+        SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "Subbasin_ID"])
         
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
@@ -540,7 +540,7 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
         
-        SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "Subbasin_ID"])
+        SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "Subbasin_ID"])
         
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
@@ -737,7 +737,7 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
         
-        SC.station.watershed <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "GNIS_NAME"])
+        SC.station.watershed <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "GNIS_NAME"])
         
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
@@ -771,7 +771,7 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
         
-        SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "GNIS_NAME"])
+        SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "GNIS_NAME"])
         
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
@@ -816,7 +816,7 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SC.station <- paste("SC", all.snow.courses.included[i], sep= "_")
         
-        SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$Snow_Course == all.snow.courses.included[i], "Subbasin_ID"])
+        SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "Subbasin_ID"])
         
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
@@ -849,7 +849,7 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SP.station <- paste("SP", all.snow.pillows.included[i], sep= "_")
         
-        SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$Snow_Pillow == all.snow.pillows.included[i], "Subbasin_ID"])
+        SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "Subbasin_ID"])
        
         n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
    
