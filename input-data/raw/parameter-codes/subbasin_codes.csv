@@ -83,9 +83,9 @@ OBJECTID,GEOMETRY,GNIS_NAME,AREA_HA,GEOMETRY_Length,GEOMETRY_Area,Subbasin_ID,Su
 170,Polygon,Trout Creek,0,38570.92402,46411646.05,2825,Trout Creek2825,2824,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,1
 163,Polygon,Trout Creek,0,90385.29166,157853957.1,2824,Trout Creek2824,2823,<Null>,<Null>,<Null>,2F01AP,2F01A,<Null>,<Null>,<Null>,1
 101,Polygon,Trout Creek,0,4117.03857,485013.4321,2823,Trout Creek2823,2821,<Null>,Thirsk,08NM238,<Null>,<Null>,<Null>,<Null>,<Null>,1
-171,Polygon,Trout Creek,0,10325.71129,5437030.783,2821,Trout Creek2821,2838,<Null>,<Null>,08NM237,<Null>,<Null>,<Null>,<Null>,<Null>,1
+171,Polygon,Trout Creek,0,10325.71129,5437030.783,2821,Trout Creek2821,2807,<Null>,<Null>,08NM237,<Null>,<Null>,<Null>,<Null>,<Null>,1
 173,Polygon,Trout Creek,0,10422.3426,1986359.964,2819,Trout Creek2819,2818,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,1
-104,Polygon,Trout Creek,0,2446.848375,162111.721,2818,Trout Creek2818,2838,<Null>,Tsuh,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,1
+104,Polygon,Trout Creek,0,2446.848375,162111.721,2818,Trout Creek2818,2807,<Null>,Tsuh,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,1
 174,Polygon,Trout Creek,0,5022.47717,407939.1154,2817,Trout Creek2817,2816,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,1
 102,Polygon,Trout Creek,0,1275.924003,102621.4901,2816,Trout Creek2816,2813,<Null>,Munro,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,1
 175,Polygon,Trout Creek,0,18035.81161,6540047.802,2815,Trout Creek2815,2814,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,<Null>,1
