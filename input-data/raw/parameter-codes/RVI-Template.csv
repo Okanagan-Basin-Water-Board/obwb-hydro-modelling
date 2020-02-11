@@ -50,9 +50,9 @@ OutputOptions,EvaluationMetrics,R2,,
 OutputOptions,EvaluationMetrics,LOG_NASH,,
 OutputOptions,WriteReservoirMBFile,,
 #OutputOptions,WriteForcingFunctions,,
-#OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_HRU_GROUP,,
+OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_HRU_GROUP,,
 #OutputOptions,CustomOutput,MONTHLY AVERAGE SNOW_LIQ BY_BASIN,,
-#OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_BASIN,,
+OutputOptions,CustomOutput,DAILY AVERAGE SNOW BY_BASIN,,
 #OutputOptions,CustomOutput,MONTHLY AVERAGE SOIL[1] BY_BASIN,,
 CalibrationOptions,SuppressOutput
 CalibrationOptions,SilentMode
