@@ -19,28 +19,28 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "Diversion-working"
+ws.interest <- "manual-residual-calibrations"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Mission"
+include.watersheds <- c("Mill", "Mission")
 
 ## Specify a run number to associated with outputs
-run.number <- "mission-div-test-w-demand"
+run.number <- "mill-mission-res-v1-1-0-cal2"
 
 ## Add comments to README file.
-run.comments <- "Testing diversion calculation for Mission Creek"
+run.comments <- "Calibration 2- Manual residual run for Mill and Mission Creek watersheds to ensure Mill - Mission flood diversion is accounted for. Standar validation period used to provide diagnostics at WSC 08NM116 and WSC 08NM232. Reservoir demand manually distributed out."
 
 ## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
-disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
-# disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
+# disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
+disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
-validate.model <- FALSE
+validate.model <- TRUE
 
 ## Should the global rvh files be regenerated?
 recreate.rvh <- FALSE
@@ -52,7 +52,7 @@ include.water.demand <- TRUE
 calibrate.reservoirs <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
-manage.reservoirs <- FALSE
+manage.reservoirs <- TRUE
 
 ## Should soil thicknesses be calibrated?
 calibrate.soil.thicknesses <- FALSE
@@ -61,7 +61,7 @@ calibrate.soil.thicknesses <- FALSE
 calculate.diversions <- FALSE
 
 ## Define the period of calibration / diagnostics
-calibration.start <- "1996-01-01"
+calibration.start <- "1996-06-01"
 
 calibration.end <- "2010-12-31"
 
@@ -185,12 +185,12 @@ if(run.ostrich == T){
 ##
 #####################################################################
 
-#RVP ADJUSTMENT SCRIPT HERE
-if(run.ostrich == TRUE & include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoirs == FALSE & calibrate.soil.thicknesses == FALSE){
-  
-  source("/var/obwb-hydro-modelling/src/rvp-template-residual-adjustor.R")
-  
-}
+# #RVP ADJUSTMENT SCRIPT HERE
+# if(run.ostrich == TRUE & include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoirs == FALSE & calibrate.soil.thicknesses == FALSE){
+#   
+#   source("/var/obwb-hydro-modelling/src/rvp-template-residual-adjustor.R")
+#   
+# }
 
 
 
@@ -265,9 +265,9 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   ## Request user input on which WSC station the model should be calibrated to.
   source("/var/obwb-hydro-modelling/src/calibration-select.R")
   # 
-  # calibration.stations <- c("Whiteman_Nat_Q", "Whiteman_Nat_Q")
+  calibration.stations <-c("HYDROGRAPH_Powers_EPP_Irr_08NM570")
   # 
-  # calibration.station.weights <- c(0.5, 0.5)
+  calibration.station.weights <- c(1)
   
   ## set working directory to current model run directory
   setwd(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
