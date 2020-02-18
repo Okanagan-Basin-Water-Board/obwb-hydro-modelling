@@ -35,3 +35,5 @@ These adjustments result in large mass balance errors reported for watersheds th
     *** THIS BUG HAS BEEN FIXED AND TESTED ON TROUT CREEK WATERSHED - CONTINUED TESTING IS REQUIRED ***
     
 6. If validate.model == TRUE and calibration and validation periods overlap, the observation weights are not written correctly. This is because the calibration period is written with zero weights whilst the validation period is written with 1 weights. This issue can be avoided if calibration dates always PRECEED the validation period.
+
+7. MISSION CREEK - Flood diversion from Mill Creek currently enters the Mission Creek watershed in subbasin 202 (i.e., on the alluvial fan). However, it should come into subbasin 204, above the alluvial fan. Review the subbasin map and update the custom timeseries to define the correct To_Subbasin before providing additional model output for these lower subbasins.
