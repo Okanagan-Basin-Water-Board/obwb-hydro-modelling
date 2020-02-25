@@ -119,7 +119,7 @@ cat(file = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste
       "- Run completed using climate data last modified as follows:", "\n",
       paste("   - Precipitation: ", file.info(paste("/var/obwb-hydro-modelling/input-data/processed/climate/pr.HRU.timeseries", Climate.Version.Tag, "nc", sep = "."))$mtime), "\n",
       paste("   - Maximum Daily Temperature: ", file.info(paste("/var/obwb-hydro-modelling/input-data/processed/climate/tasmax.HRU.timeseries", Climate.Version.Tag, "nc", sep = "."))$mtime), "\n",
-      paste("   - Minimum Daily Temperature: ", file.info(paste("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries", Climate.Version.Tag, "nc"))$mtime), "\n",
+      paste("   - Minimum Daily Temperature: ", file.info(paste("/var/obwb-hydro-modelling/input-data/processed/climate/tasmin.HRU.timeseries", Climate.Version.Tag, "nc", sep = "."))$mtime), "\n",
 
       paste("- Model Diagnostics were calculated for the period", calibration.start, "to", calibration.end), "\n",
     "\n", 
