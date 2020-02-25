@@ -171,6 +171,10 @@ soils.values <- values(soils.ok)
 aquifer.values <- values(aquifers.ok)
 
 
+## TODO : BUG 8 - Feb 24-2020 - Raven expects aspect values calculated as positive COUNTERCLOCKWISE from north.
+## Standard convention computes aspect as positive CLOCKWISE from north. Therefore, an adjustment is needed.
+## aspect.values.adjusted <- 360 - aspect.values
+
 ## TEMP SAVE #1
 # save.image(file = file.path(tmp.loc, "temp1.RData"))
 
@@ -185,6 +189,8 @@ DT <- data.table(
   # coords.subbasin = coords.subbasin,
   slope = slope.values,
   aspect = aspect.values,
+## TODO : BUG 8 - Feb-24-2020 - Replace aspect values here with aspect.values.adjusted
+## aspect = aspect.values.adjusted,
   elevation = elevation.values,
   landcover = landcover.values,
   soils = soils.values,
@@ -257,6 +263,13 @@ DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
 # DT$aspect.bin <- ifelse(aspect.values >= 270, 400, # north
 #                  ifelse(aspect.values >= 0 & aspect.values < 90, 400, # north
 #                  ifelse(aspect.values >= 90 & aspect.values < 270, 401, 999))) # south (999 = something went wrong)
+
+## TODO : BUG 8 - Feb-24-2020 - Replace aspect.values in ifelse() with aspect.values.adjusted. In addition, note difference in bins (east = west; west = east)
+## DT$aspect.bin <- ifelse(aspect.values.adjusted >= 315, 400, # North
+##                        ifelse(aspect.values.adjusted >= 0 & aspect.values.adjusted < 45, 400, # North
+##                        ifelse(aspect.values.adjusted >= 45 & aspect.values.adjusted < 135, 401, # West
+##                        ifelse(aspect.values.adjusted >= 135 & aspect.values.adjusted < 225, 402, # South
+##                        ifelse(aspect.values.adjusted >= 225 & aspect.values.adjusted < 315, 403, 999))))) # East (999 = something went wrong)
 
 ## Determine slope bins
 
