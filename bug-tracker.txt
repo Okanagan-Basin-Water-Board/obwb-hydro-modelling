@@ -44,3 +44,9 @@ These adjustments result in large mass balance errors reported for watersheds th
   - If aspect is adjusted BEFORE HRUs are define, more HRUs are defined (assumed to be because cells on the margin of two aspect bins get pushed into the other bin). However, HRUs have not been redfined and climate data has not been remapped. Preliminary testing involved manually adjusting the MEAN aspect of each HRU (by: 360 - current value) to conform to the Raven requirement.
   
 9. Some WATER / LAKE HRUs have non-zero slope: this is an artifact of the spatial overlay used to define HRUs (i.e., boundaries of water bodies defined by Dan, EOSD, and DEM). All HRUs / cells with LAKE/WATER should be overwritten to have zero slope in the same manor that land use / veg class is overwritten for these areas.
+
+10. NO BUG - assess the impact of using median latitude / longitude rather than mean. Was was originally selected, but median is also appropriate. It is not expected to alter results much since lat/lon is only used for raiation modelling.
+
+11. NO BUG - should maximum stage constraints (i.e., :ReservoirMaximumStage) timeseries be added to constrain reservoir stages to within the "Live" storage of all curves? Currently, reservoirs are allow to fill to the top of "Potential" storage. In practice, I don't think that this ever actually happens since reservoirs act as flow-through systems under natural conditions, and are often drawn-down under residual conditions.
+
+12. NO BUG - Update subbasin_codes.csv to ensure that ALL available/possible WSC stations are captured. For example, WSC 08NM233 should be assigned to Mission Creek Subbasin 217 to ensure that data are retrieved under historic runs.
