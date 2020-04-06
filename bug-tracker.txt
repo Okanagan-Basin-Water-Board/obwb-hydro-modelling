@@ -54,3 +54,5 @@ These adjustments result in large mass balance errors reported for watersheds th
 13. NO BUG - Check the code used to select file/value position for response variables in Ostrich File Generator. Currently, I believe %like% is used - it may make sense to update this to an exact "pattern match".
 
 14. NO BUG - Check the output data files / Observed Input files for any required date offsets. Ensure that period-starting and period-ending is correctly captured.
+
+15. NO BUG - Collate all calibrated reservoirs for Cal 1 and Cal 2 back into one master Excel workbook. This reduces the number of files that need to be maintained. Will have to correctly determine the "final" version for each Version 1 calibration and amalgamate into master version. This can be tied in with OHME Clean Up Task, and can maybe be coupled with update/inclusion of Stage-Area curve for each reservoir.
