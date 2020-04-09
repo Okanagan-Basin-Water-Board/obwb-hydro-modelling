@@ -60,3 +60,5 @@ These adjustments result in large mass balance errors reported for watersheds th
 16. NO BUG - Check the generation of "AWDM weeks" - Ensure that week definitions match the AWDM and the associated weekly average/definition included in the Naturalized Streamflow datasets developed by Drew. Original code was written to match these, but this should be confirmed.
 
 17. NO BUG - Collate all calibrated soil thicknesses for Cal 1 and Cal 2 back into master *.csv. In addition, explore opportunity to streamline this process.
+
+18. Update plotting functions to account for 1-day offset in Model output. Output values relate to the PREVIOUS timestep, so a 1-day date shift is required. Ensure that all other datasets are read-in in appropriate period-starting/period-ending format.
