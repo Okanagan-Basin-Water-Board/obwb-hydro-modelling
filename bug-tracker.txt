@@ -61,4 +61,4 @@ These adjustments result in large mass balance errors reported for watersheds th
 
 17. NO BUG - Collate all calibrated soil thicknesses for Cal 1 and Cal 2 back into master *.csv. In addition, explore opportunity to streamline this process.
 
-18. Update plotting functions to account for 1-day offset in Model output. Output values relate to the PREVIOUS timestep, so a 1-day date shift is required. Ensure that all other datasets are read-in in appropriate period-starting/period-ending format.
+18. Update plotting functions to account for 1-day offset in Model output. Output values relate to the PREVIOUS timestep, so a 1-day date shift is required. Ensure that all other datasets are read-in in appropriate period-starting/period-ending format. This also requires that generation of weekly values be updated to ensure that dates are cross-referenced correctly with naturalized streanflow estimates. It could be appropriate to simply generate weekly estimates from the Observed Raven output, although this would include any differences introduced from the disaggregation process.
