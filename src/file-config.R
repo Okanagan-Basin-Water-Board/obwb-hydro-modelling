@@ -181,3 +181,27 @@ raw.hydat.in.dir <- "raw/wsc-hydat"
 hydat.in.file <- file.path(input.dir, raw.hydat.in.dir, "Hydat.sqlite3")
 
 hydat.read.me.file <- file.path(input.dir, raw.hydat.in.dir, "README.txt")
+
+
+#####################################
+#####################################
+##
+## DEFINE PROCESSED INPUT DATA FILE NAMES
+##
+#####################################
+#####################################
+
+##-----------------------------------
+## CLIMATE DATA
+##-----------------------------------
+
+processed.climate.in.dir <- "processed/climate"
+
+precip.processed.in.file <- file.path(input.dir, processed.climate.in.dir, "pr.HRU.timeseries.V1.0.1.nc")
+
+tasmax.processed.in.file <- file.path(input.dir, processed.climate.in.dir, "tasmax.HRU.timeseries.V1.0.1.nc")
+
+tasmin.processed.in.file <- file.path(input.dir, processed.climate.in.dir, "tasmin.HRU.timeseries.V1.0.1.nc")
+
+climate.processed.read.me.file <- file.path(input.dir, processed.climate.in.dir, "README.txt")
+
