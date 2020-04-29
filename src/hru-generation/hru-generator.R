@@ -155,7 +155,8 @@ if(base::all.equal(coords, coords.slope) != TRUE |
 ## Extract values for all required components
 ##
 ## ----------------------------------------
-
+## TODO: Change values() to getValues() to allow reading from file if rasters become too large to load to memory in future
+## TODO: Could update process to use rasterToPoints() rather than values() and then coordinates().
 slope.values <- values(slope.ok)
 
 aspect.values <- values(aspect.ok)
