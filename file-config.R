@@ -184,8 +184,16 @@ raw.hru.processed.file <- "raw-HRU-id.tif" # NOT INPUT FILE
 subbasin.processed.file <- "subbasin.tif"
 tidy.hru.processed.file <- "tidy-HRU-id.tif"
 
+## SOIL
 soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
 soil.attribute.in.file <- "soils/soil_attributes.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
+processed.soil.image <- "soils/post-process-image.RData" ## TODO: renames to soil-post-process-image.DATE.RData
+
+soil.thickness.range.calibration.file <- "soils/soil-thickness-ranges-calibration.csv"
+
+## SNOW
+snow.course.locations.processed.file <- "snow-course-locations-model-domain.csv"
+snow.pillow.locations.processed.file <- "snow-pillow-locations-model-domain.csv"
 
 #####################################
 #####################################

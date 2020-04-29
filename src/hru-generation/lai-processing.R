@@ -4,6 +4,9 @@
 ##
 ######################################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 library(raster)
 library(sf)
 library(plyr)
@@ -22,12 +25,12 @@ library(methods)
 ## Read in GIS data except for the LAI *.tif files
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
-landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/eosd_urban41.tif", crs = bc.albers)
-
-vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
-
-model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Boundaries_Final.shp", crs = bc.albers)
-
+landcover <- raster(file.path(global.input.dir, raw.spatial.in.dir, landcover.in.file), crs = bc.albers)
+  
+vegetation.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, Veg.in.file))
+  
+model.watersheds <- st_read(file.path(global.input.dir, raw.spatial.in.dir, WS.shape.in.file), crs = bc.albers)
+  
 ## New version of raster package does not seem to support "sf" objects for cropping/masking. So shapefile must be converted to spatialpolygon
 model.watersheds.shape <- as(model.watersheds, "Spatial")
 
@@ -49,8 +52,8 @@ data <- data.frame(coords)
 
 for(i in months){
   
-  lai <- raster(paste("/var/obwb-hydro-modelling/input-data/raw/spatial/GEE-LAI/reproject_", months[i], ".tif", sep = ""), crs = bc.albers)
-  
+  lai <- raster(paste(file.path(global.input.dir, raw.spatial.in.dir, LAI.in.dir, "reproject_"), months[i], ".tif", sep = ""), crs = bc.albers)
+    
   lai <- mask(crop(lai, model.watersheds.shape), model.watersheds.shape)
   
   assign(lai.var.names[i], lai)
@@ -115,11 +118,10 @@ LAI[LAI$Bin_Type %in% c("BROADLEAF_DENSE", "BROADLEAF_OPEN"), 2:13] <- LAI[LAI$B
 # LAI[LAI$Bin_Type %in% c("CONIFEROUS", "CONIFEROUS_OPEN", "CONIFEROUS_DENSE"), grepl("lai", names(LAI))] <- 1
 
 
-write.csv(max, "/var/obwb-hydro-modelling/input-data/processed/spatial/lai/max-lai.csv", row.names = FALSE)
-
-write.csv(LAI, "/var/obwb-hydro-modelling/input-data/processed/spatial/lai/seasonal-lai.csv", row.names = FALSE)
-
-
+write.csv(max, file.path(global.input.dir, processed.spatial.dir, "lai", paste("max-lai.", Sys.Date(), ".csv", sep = "")), row.names = FALSE)
+          
+write.csv(LAI, file.path(global.input.dir, processed.spatial.dir, "lai", paste("seasonal-lai.", Sys.Date(), ".csv", sep = "")), row.names = FALSE)
+          
 
 # ## Plot monthly LAI across different bin types
 # require(reshape)

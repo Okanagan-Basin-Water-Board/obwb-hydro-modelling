@@ -1,5 +1,8 @@
 # Diversions
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 library(tidyverse)
 library(lubridate)
 library(ggplot2)
@@ -8,23 +11,18 @@ library(openxlsx)
 library(tidyhydat)
 library(reshape2)
 
-rm(list = ls())
-
-######--------- CHANGE DIRECTORY AWAY FROM TEMPORARY DIR.
-setwd("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/AJS_temp/")
-
 # include.watersheds will be pulled in from elsewhere. This 'watershed' variable is just a
 # placeholder to get the script functional and to test the rules for all of the diversions
-include.watersheds <- c("Trepanier", "Shorts", "Mission", "Powers", "Naramata")
+# include.watersheds <- c("Trepanier", "Shorts", "Mission", "Powers", "Naramata")
 
 # read in data files
 # can't write to VM yet except for directories made by me
-rules.df <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/AJS_temp/diversion_rules_summary.csv",
+rules.df <- read.csv(file.path(global.input.dir, raw.custom.timeseries.in.dir, diversion.rules.in.file),
                      stringsAsFactors = FALSE, check.names = FALSE)
 
 ######--------- UPDATE DIRECTORY FOR custom_timeseries.xlsx AWAY FROM TEMPORARY
 # load custom_timeseries workbook
-cts.fn <- "/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/AJS_temp/custom_timeseries.xlsx"
+cts.fn <- file.path(global.input.dir, raw.custom.timeseries.in.dir, custom.timeseres.in.file)
 cts.wb <- loadWorkbook(cts.fn)
 
 # load Summary sheet and vector of worksheet names
@@ -257,13 +255,14 @@ for(i in 1:length(include.watersheds)){
     
     # read in Stirling Creek data that forms the basis of the Mission
     # Creek diversion amounts. 
-    stirling_df <- read.csv("./stirling_ck_mean_monthly_flows.csv",
+    stirling_df <- read.csv(file.path(global.input.dir, raw.custom.timeseries.in.dir, stirling.creek.flows.in.file),
                             stringsAsFactors = FALSE, header = TRUE)
     colnames(stirling_df) <- c("Year", "2003", "2004", "2005", "2006")
     
     # read in 241 creek daily flows
     Q241_df <- hy_daily_flows(station_number = "08NM241",
-                              hydat_path = "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3")
+                              hydat_path = file.path(global.input.dir, raw.hydat.in.dir, hydat.in.file))
+
     
     
     # compute the monthly streamflows averaged over the period of interest for

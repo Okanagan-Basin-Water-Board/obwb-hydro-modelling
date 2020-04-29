@@ -1,3 +1,6 @@
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 # function to find mode.
 getmode <- function(v) {
   uniqv <- unique(v)
@@ -267,10 +270,10 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   ##
   ###############################
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
   
     ## Read-in modelled hydrographs
-    hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
     
     ## Identify which columns have obsrved data available
     subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
@@ -329,9 +332,9 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   ##
   ###############################
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
   
-    ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+    ws.storage <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
     
     par(mfrow = c(4, 1), mar= c(2,4,2,2))
     
@@ -348,9 +351,9 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   ##
   ###############################
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))){
   
-    forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+    forcing <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
     
     forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
     
@@ -390,11 +393,11 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   
   par(mfrow = c(1,1), mar = c(5, 4, 4, 2))
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
     
     reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
     
-    reservoir.stage <- res.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
     for(i in 1:length(reservoir.subbasins)){
       
@@ -413,10 +416,10 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   ##
   ###############################
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))){
     
     ## Read-in modelled snow
-    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
+    snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
     
     dates <- index(snow)
     
@@ -428,9 +431,9 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SC.station.watershed <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "GNIS_NAME"])
         
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
         
         mod.snow <- as.numeric(snow[,SC.station])
         
@@ -462,9 +465,9 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "GNIS_NAME"])
         
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
         
         mod.snow <- as.numeric(snow[,SP.station])
         
@@ -491,12 +494,12 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
   ##
   ##------------------------------------------
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))){
     
     ## Read-in modelled snow
     # CALIBRATION FILE LOC
     # snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
-    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
+    snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
     
     dates <- index(snow)
     
@@ -509,9 +512,9 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "Subbasin_ID"])
         
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
         
         mod.snow <- as.numeric(snow[,as.character(SC.station.subbasin)])
         
@@ -542,9 +545,9 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
         
         SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "Subbasin_ID"])
         
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
         
         mod.snow <- as.numeric(snow[,as.character(SP.station.subbasin)])
         
@@ -576,9 +579,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   ##
   ###############################
 
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
   
-    hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
     
     ## Identify which columns have obsrved data available
     subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
@@ -639,9 +642,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   ##
   ###############################
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
   
-    ws.storage <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
+    ws.storage <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))
     
     par(mfrow = c(4, 1), mar= c(2,4,2,2))
     
@@ -658,9 +661,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   ##
   ###############################
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))){
   
-    forcing <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
+    forcing <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ForcingFunctions.csv", sep = "")))
     
     forcing$tiso <- as.POSIXct(forcing$date, format = "%Y-%m-%d")
     
@@ -701,11 +704,11 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   
   par(mfrow = c(1,1), mar = c(5, 4, 4, 2))
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
     
     reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
     
-    reservoir.stage <- res.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
     for(i in 1:length(reservoir.subbasins)){
       
@@ -724,10 +727,10 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   ##
   ###############################
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))){
      
     ## Read-in modelled snow
-    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
+    snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
     
     dates <- index(snow)
     
@@ -739,9 +742,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SC.station.watershed <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "GNIS_NAME"])
         
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
         
         mod.snow <- as.numeric(snow[,SC.station])
         
@@ -773,9 +776,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SP.station.watershed <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "GNIS_NAME"])
         
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
         
         mod.snow <- as.numeric(snow[,SP.station])
         
@@ -802,10 +805,10 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   ##
   ##------------------------------------------
   
-  if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))){
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))){
     
     ## Read-in modelled snow
-    snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
+    snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
     
     dates <- index(snow)
     
@@ -818,9 +821,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SC.station.subbasin <- unique(snow.course.locations[snow.course.locations$LCTN_ID == all.snow.courses.included[i], "Subbasin_ID"])
         
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
         
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SC.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
       
         mod.snow <- as.numeric(snow[,as.character(SC.station.subbasin)])
         
@@ -851,9 +854,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
         
         SP.station.subbasin <- unique(snow.pillow.locations[snow.pillow.locations$LCTN_ID == all.snow.pillows.included[i], "Subbasin_ID"])
        
-        n.records <- strsplit(readLines(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
+        n.records <- strsplit(readLines(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), n = 1), " ")[[1]][4]
    
-        obs.snow <- read.table(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
+        obs.snow <- read.table(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(SP.station, ".rvt", sep = "")), skip = 1, nrows = as.numeric(n.records), na.strings = "-1.2345")
    
         mod.snow <- as.numeric(snow[,as.character(SP.station.subbasin)])
         
@@ -879,9 +882,9 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
 ## Function to remove the :SuppressOutput command from the rvi file to facilitate plotting of calibration results
 rewrite.output <- function(ws.interest, run.number){
   
-  main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+  main.RVI.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, ".rvi", sep = ""))
   
-  new.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-replace.rvi", sep = ""))
+  new.RVI.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "-replace.rvi", sep = ""))
   
   con <- file(main.RVI.file, open = 'r')
   while(TRUE) {
@@ -892,8 +895,8 @@ rewrite.output <- function(ws.interest, run.number){
     } 
   }
   
-  RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
-  
+  RVI.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVI.template.in.file))
+    
   ## Add colon to all parameter calls - this is required by Raven
   RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
   
@@ -953,7 +956,7 @@ ephemeral.calibration <- function(ws.interest, run.number){
   # - Execute rewrite output function
   # - Execute plot.calibration.results function
   
-  plotting.script <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, "-plot-results.R", sep = ""))
+  plotting.script <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, "-plot-results.R", sep = ""))
   
   
   ## Copy initial Raven run/results and Ostrich input files and executables to the ephemeral VM

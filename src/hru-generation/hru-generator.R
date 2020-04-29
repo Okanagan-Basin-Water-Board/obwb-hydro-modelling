@@ -5,8 +5,18 @@
 ## Feb-15-2019 LAB
 ###########################################################################################
 
-tmp.loc <- "/var/obwb-hydro-modelling/input-data/processed/spatial/temp"
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
 
+## Source function
+source(file.path(global.src.dir, "functions.R"))
+
+
+## Create temporary directory to store intermediate output
+tmp.loc <- file.path(global.input.dir, processed.spatial.dir, "temp")
+
+ifelse(dir.exists(tmp.loc), "Temporary location exists", dir.create(tmp.loc))
+  
 ##########################
 ## LOAD REQUIRED PACKAGES
 ##########################
@@ -28,8 +38,6 @@ library(methods)
 # require(base)
 # require(tfruns)
 
-source("/var/obwb-hydro-modelling/src/functions.R")
-
 ###########################################################################################
 ##
 ##  Specify bc.albers coordinate reference system to ensure everything is consistent
@@ -50,30 +58,21 @@ print("reading in spatial data...")
 
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
-dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/DEM_Fix2.tif", crs = bc.albers)
+dem <- raster(file.path(global.input.dir, raw.spatial.in.dir, dem.in.file), crs = bc.albers)
 
-# dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/dem_alb_fill.tif", crs = bc.albers)
+landcover <- raster(file.path(global.input.dir, raw.spatial.in.dir, landcover.in.file), crs = bc.albers)
 
-# dem <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/archive/DEM_alb.tif", crs = bc.albers)
+soils <- raster(file.path(global.input.dir, processed.spatial.dir, soils.processed.file), crs = bc.albers)
+  
+aquifers <- raster(file.path(global.input.dir, raw.spatial.in.dir, aquifer.in.file), crs = bc.albers)
 
-landcover <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/eosd_urban41.tif", crs = bc.albers)
+subbasin <- raster(file.path(global.input.dir, raw.spatial.in.dir, WS.raster.in.file), crs = bc.albers)
+  
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 
-# soils <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/Soils_PM1.tif", crs = bc.albers)
-
-soils <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/Soils_final.tif", crs = bc.albers)
-
-aquifers <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/OBWB_Aquifer.tif", crs = bc.albers)
-
-subbasin <- raster("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Raster_Final_ID.tif", crs = bc.albers)
-
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
-
-
-#okanagan.basin <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/FW_Atlas_OK_Basin.shp", crs = bc.albers)
-
-model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Boundaries_Final.shp", crs = bc.albers)
-
+model.watersheds <- st_read(file.path(global.input.dir, raw.spatial.in.dir, WS.shape.in.file), crs = bc.albers)
+  
 ## New version of raster package does not seem to support "sf" objects for cropping/masking. So shapefile must be converted to spatialpolygon
 model.watersheds.shape <- as(model.watersheds, "Spatial")
 
@@ -177,7 +176,7 @@ aquifer.values <- values(aquifers.ok)
 ## aspect.values.adjusted <- 360 - aspect.values
 
 ## TEMP SAVE #1
-# save.image(file = file.path(tmp.loc, "temp1.RData"))
+# save.image(file = file.path(tmp.loc, paste("temp1.", Sys.Date(), ".RData", sep = "")))
 
 ## Remove unneeded items from workspace
 rm(aquifers, aquifers.ok, dem, dem.ok, landcover, landcover.ok, slope.aspect, slope, aspect, slope.ok, aspect.ok, soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape)
@@ -288,9 +287,9 @@ DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
 ########################################
 
 ## TEMP SAVE #2
-# save.image(file = file.path(tmp.loc, "temp2.RData"))
+# save.image(file = file.path(tmp.loc, paste("temp2.", Sys.Date(), ".RData", sep = "")))
 
-soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil_attributes.csv",
+soil.codes <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.attribute.in.file), 
                        col.names = c("OID", "Value", "Count", "soil_type"))
 
 
@@ -380,7 +379,7 @@ m.landcover.bin <- do.call(cbind, list(x, y, landcover.bin))
 
 r.landcover.bin <- rasterFromXYZ(m.landcover.bin, crs = bc.albers)
 
-writeRaster(r.landcover.bin, "/var/obwb-hydro-modelling/input-data/processed/spatial/landcover-bin.tif", overwrite = T)
+writeRaster(r.landcover.bin, file.path(global.input.dir, processed.spatial.dir, paste("landcover.bin.", Sys.Date(), ".tif", sep = "")), overwrite = T)
 
 
 ## write subbasin to raster
@@ -388,7 +387,7 @@ m.subbasin <- do.call(cbind, list(x, y, subbasin))
 
 r.subbasin <- rasterFromXYZ(m.subbasin, crs = bc.albers)
 
-writeRaster(r.subbasin, "/var/obwb-hydro-modelling/input-data/processed/spatial/subbasin.tif", overwrite = T)
+writeRaster(r.subbasin, file.path(global.input.dir, processed.spatial.dir, paste("subbasin.", Sys.Date(), ".tif", sep = "")), overwrite = T)
 
 
 ## write elevation bin to raster
@@ -396,7 +395,7 @@ m.elevation.bin <- do.call(cbind, list(x, y, elevation.bin))
 
 r.elevation.bin <- rasterFromXYZ(m.elevation.bin, crs = bc.albers)
 
-writeRaster(r.elevation.bin, "/var/obwb-hydro-modelling/input-data/processed/spatial/elevation-bin.tif", overwrite = T)
+writeRaster(r.elevation.bin, file.path(global.input.dir, processed.spatial.dir, paste("elevation-bin.", Sys.Date(), ".tif", sep = "")), overwrite = T)
 
 
 ## write aspect bin to raster
@@ -404,7 +403,7 @@ m.aspect.bin <- do.call(cbind, list(x, y, aspect.bin))
 
 r.aspect.bin <- rasterFromXYZ(m.aspect.bin, crs = bc.albers)
 
-writeRaster(r.aspect.bin, "/var/obwb-hydro-modelling/input-data/processed/spatial/aspect-bin.tif", overwrite = T)
+writeRaster(r.aspect.bin, file.path(global.input.dir, processed.spatial.dir, paste("aspect-bin.", Sys.Date(), ".tif", sep = "")), overwrite = T)
 
 
 ## write raw ID to raster
@@ -412,7 +411,7 @@ raw.m.ID <- do.call(cbind, list(x, y, raw.ID))
 
 raw.r.ID <- rasterFromXYZ(raw.m.ID, crs = bc.albers)
 
-writeRaster(raw.r.ID, "/var/obwb-hydro-modelling/input-data/processed/spatial/raw-HRU-id.tif", overwrite = T)
+writeRaster(raw.r.ID, file.path(global.input.dir, processed.spatial.dir, paste("raw-HRU-id.", Sys.Date(), ".tif", sep = "")), overwrite = T)
 
 
 ## write soils to raster
@@ -420,7 +419,7 @@ m.soils.type <- do.call(cbind, list(x, y, soils.type))
 
 r.soils.type <- rasterFromXYZ(m.soils.type, crs = bc.albers)
 
-writeRaster(r.soils.type, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils.tif", overwrite = T)
+writeRaster(r.soils.type, file.path(global.input.dir, processed.spatial.dir, paste("soils.", Sys.Date(), ".tif", sep = "")), overwrite = T)
 
 print("Done writing spatial layers...")
 
@@ -453,8 +452,8 @@ tidy.m.ID <- do.call(cbind, list(x, y, DT$Tidy.ID))
 
 tidy.r.ID <- rasterFromXYZ(tidy.m.ID, crs = bc.albers)
 
-writeRaster(tidy.r.ID, "/var/obwb-hydro-modelling/input-data/processed/spatial/tidy-HRU-id.tif", overwrite = T)
-
+writeRaster(tidy.r.ID, file.path(global.input.dir, processed.spatial.dir, paste("tidy-HRU-id.", Sys.Date(), ".tif", sep = "")), overwrite = T)
+            
 print("Done writing TIdy HRU layer to file...")
 
 ########################################
@@ -466,7 +465,7 @@ print("Done writing TIdy HRU layer to file...")
 print("Saving all spatial plots to file...")
 
 # ## Plot tidy ID
-pdf("/var/obwb-hydro-modelling/input-data/processed/spatial/HRU-output.pdf", height = 17, width = 11)
+pdf(file.path(global.input.dir, processed.spatial.dir, paste("HRU-output.", Sys.Date(), ".pdf", sep = "")), height = 17, width = 11)
 
 ncolors=length(unique.ID)
 colpalette<-rgb(runif(ncolors),runif(ncolors ),runif(ncolors ))
@@ -516,8 +515,6 @@ print("Saving output to file...")
 # rm(list = ls()[! ls() %in% c("DT", "DT.revert")])
 rm(list = ls()[! ls() %in% c("DT", "DT.revert")])
 
-save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.RData")
-
-# write.csv(DT, "/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.csv")
-
+save.image(file = file.path(global.input.dir, processed.spatial.dir, paste("okanagan_hru.", Sys.Date(), ".RData", sep = "")))
+ 
 print("Done!")
