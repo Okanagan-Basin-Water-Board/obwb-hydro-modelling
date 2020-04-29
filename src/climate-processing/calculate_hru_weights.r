@@ -7,8 +7,9 @@
 ##
 ###################################################################################################################
 
-## Specify the Version Number for the Climate Data to be Generated.
-Version.Tag <- "V1.0.1"
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 
 suppressMessages(library(proj4))
 suppressMessages(library(ncdf4))
@@ -34,15 +35,15 @@ require(methods)
 
 Remake.Data <- TRUE
 
-output.dir <- "/var/obwb-hydro-modelling/input-data/processed/climate"
-
+output.dir <- file.path(global.input.dir, processed.climate.dir)
+  
 if (Remake.Data){
   
   print("...loading high-res HRU grid point indices...")
   
-  input.dir <- "/var/obwb-hydro-modelling/input-data/processed/spatial"
-  
-  input.file <- "okanagan_hru.RData"
+  input.dir <- file.path(global.input.dir, processed.spatial.dir)
+    
+  input.file <- okanagan.hru.table.file
   
   load(file.path(input.dir,input.file))
   
@@ -60,13 +61,13 @@ if (Remake.Data){
   
  # rm(f)
   
-  save.image(file.path(output.dir, paste("spatial.grid.data", Version.Tag, "RData", sep = ".")))
+  save.image(file.path(output.dir, paste("spatial.grid.data", Sys.Date(), "RData", sep = ".")))
 
   } else {
   
     print("...loading spatial data...")
   
-    load(file.path(output.dir, paste("spatial.grid.data", Version.Tag, "RData", sep = ".")))
+    load(file.path(output.dir, spatial.grid.data.processed.file))
   }
 
 args <- commandArgs(trailingOnly=TRUE)
@@ -79,9 +80,9 @@ if (length(args)==1) {
 
 print("...loading climate data grid point time/lat/lon...")
 
-input.dir <- "/var/obwb-hydro-modelling/input-data/raw/climate"
-
-input.file <- paste(Var,".downscaled.nc",sep="")
+input.dir <- file.path(global.input.dir, raw.climate.in.dir)
+  
+input.file <- paste(Var, ".downscaled.nc", sep ="")
 
 f <- nc_open(file.path(input.dir,input.file))
 
@@ -183,7 +184,7 @@ if(Var == "pr"){
 }
 
 
-ncout <- nc_create(file.path(output.dir, paste(Var, "HRU.timeseries", Version.Tag, "nc", sep=".")), list(HRU_def), force_v4=T)
+ncout <- nc_create(file.path(output.dir, paste(Var, "HRU.timeseries", Sys.Date(), "nc", sep=".")), list(HRU_def), force_v4=T)
 
 ncvar_put(ncout,HRU_def,CLIMts)
 
