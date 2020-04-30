@@ -4,18 +4,21 @@
 ##
 #############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 ## Load required packages
 # library(cloudml)
 
 ####################################################################
 ## Read in required files
 ##
-RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
-
+RVI.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVI.template.in.file))
+  
 # soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
 
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 
 ## Add colon to all parameter calls - this is required by Raven
 RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
@@ -103,7 +106,7 @@ if(nrow(customOptions) >0){
 ##
 ############################################################################################################################
 
-RVIoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+RVIoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
 
 cat(file = RVIoutFile, append = F, sep = "",
     

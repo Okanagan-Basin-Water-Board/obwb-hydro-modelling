@@ -70,7 +70,7 @@ trepanier.nat.flow.in.file <- "Trepanier Creek_OK Tennant Streamflows_Associated
 trout.nat.flow.in.file <- "Trout Creek_OK Tennant Streamflow Datasets_Associated_FINAL_15042019.xlsx"
 vaseux.nat.flow.in.file <- "Vaseux Creek_OK Tennant Streamflow Datasets_Associated_FINAL_21032019_VERSION 2.xlsx"
 vernon.nat.flow.in.file <- "Vernon Creek Outlet of Kal Lake-1996-2006_OWSDP (Phase 2) Naturalized Streamflow.xlsx"
-vernon.nat.flow.in.file <- "Whiteman Creek_OK Tennant Streamflow Datasets_Associated_FINAL_10122018.xlsx"
+whiteman.nat.flow.in.file <- "Whiteman Creek_OK Tennant Streamflow Datasets_Associated_FINAL_10122018.xlsx"
 nat.flow.read.me.file <- "README.txt"
 nat.flow.summary.in.file <- "naturalized-flows-summary.csv"  
 
@@ -187,13 +187,20 @@ tidy.hru.processed.file <- "tidy-HRU-id.tif"
 ## SOIL
 soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
 soil.attribute.in.file <- "soils/soil_attributes.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
+soil.profile.table.in.file <- "soils/soil-profile-table.csv" # This will be date stamped when soils are re-processed.
+soil.class.table.in.file <- "soils/soil-class-table.csv" # This will be date stamped when soils are re-processed.
 processed.soil.image <- "soils/post-process-image.RData" ## TODO: renames to soil-post-process-image.DATE.RData
 
 soil.thickness.range.calibration.file <- "soils/soil-thickness-ranges-calibration.csv"
+soil.profile.table.calibration.file <- "soils/soil-profile-table-calibration.csv"
 
 ## SNOW
-snow.course.locations.processed.file <- "snow-course-locations-model-domain.csv"
-snow.pillow.locations.processed.file <- "snow-pillow-locations-model-domain.csv"
+snow.course.locations.processed.file <- "snow/snow-course-locations-model-domain.csv"
+snow.pillow.locations.processed.file <- "snow/snow-pillow-locations-model-domain.csv"
+
+## LAI
+seasonal.lai.processed.file <- "lai/seasonal-lai.csv"
+max.lai.processed.file <- "lai/manual-max-lai.csv"
 
 #####################################
 #####################################
@@ -203,16 +210,28 @@ snow.pillow.locations.processed.file <- "snow-pillow-locations-model-domain.csv"
 #####################################
 #####################################
 
-raven.executable.directory <- "src/raven_src/src"
+raven.executable.directory <- "raven_src/src"
 
 raven.executable.name <- "Raven.exe"
 
 
-ostrich.executable.directory <- "src/ostrich_src/Linux/openmpi/2.0.2"
+ostrich.executable.directory <- "ostrich_src/Linux/openmpi/2.0.2"
 
 ostrich.executable.name <- "Ostrich"
 
 ostrich.parallel.executable.name <- "OstrichMPI"
 
+mpirun.dir <- "/usr/bin/mpirun"
 
 
+#####################################
+#####################################
+##
+## RAVEN *.RVH FILES
+##
+#####################################
+#####################################
+
+master.natural.rvh.file <- "Master_natural.rvh"
+
+master.residual.rvh.file <- "Master_residual.rvh"

@@ -6,6 +6,9 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 #####################################################################
 ##
 ## Read in and format required information to support OWDM *.rvt file generation
@@ -18,12 +21,12 @@
 ##
 ##-------------------------------------------------------------------
 
-RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
-
-subbasins <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
-owdm <- read.csv("/var/obwb-hydro-modelling/input-data/raw/owdm/OWDM_water_demands_timeseries.csv")
-
+RVI.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVI.template.in.file))
+  
+subbasins <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
+owdm <- read.csv(file.path(global.input.dir, raw.owdm.in.dir, owdm.water.demand.in.file))
+  
 colnames(owdm) <- c("subbasin", "day", "year", "extraction.total")
 
 ##-------------------------------------------------------------------
@@ -91,7 +94,7 @@ if(nrow(owdm.sub) > 0){
   subs <- unique(owdm.sub$Subbasin_ID)
   
   ## Creat a sub-directory to house all owdm timeseries
-  dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm"))
+  dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm"))
   
   for(i in 1:length(subs)){
     
@@ -193,7 +196,7 @@ if(nrow(owdm.sub) > 0){
     ## If reservoir_name is NULL, then it is NOT a reservoir - add :IrrigationDemand tags
     if(subbasins[subbasins$Subbasin_ID == subs[i], "Reservoir_name"] == "<Null>"){
     
-      fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
+      fc <- file(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
       
       writeLines(sprintf(':IrrigationDemand %i # %s',subs[i], paste(subs[i], "owdm.rvt", sep = "_")), fc)
       writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(tmp$tiso[1]),nrow(tmp)), fc)
@@ -237,7 +240,7 @@ if(nrow(owdm.sub) > 0){
       ## IF subs[i] IS a reservoir, then use :ReservoirExtraction command instead of :IrrigationDemand
     } else {
       
-      fc <- file(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
+      fc <- file(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "owdm", paste(subs[i], "owdm.rvt", sep = "_")), open = "w+")
       
       writeLines(sprintf(':ReservoirExtraction %i # %s',subs[i], paste(subs[i], "owdm.rvt", sep = "_")), fc)
       writeLines(sprintf('%s 00:00:00 1.0 %i',as.character(tmp$tiso[1]),nrow(tmp)), fc)
@@ -278,10 +281,10 @@ if(nrow(owdm.sub) > 0){
     ##
     #####################################################################
     
-    if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+    if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
       
       
-      OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+      OstrichRVTTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
       
       ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
       if(i == 1){

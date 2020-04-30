@@ -7,6 +7,9 @@
 ##
 #####################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 require(raster)
 
 

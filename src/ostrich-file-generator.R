@@ -6,10 +6,13 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 require(dplyr)
 
-OST.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/OST-Template.csv")
-
+OST.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, OST.template.in.file))
+  
 essential.var <- OST.template[OST.template$VARIABLE == "Essential", c("TYPE", "DEFINITION")]
 
 useful.var <- OST.template[OST.template$VARIABLE == "Useful", c("TYPE", "DEFINITION")]
@@ -31,7 +34,7 @@ seed.var <- OST.template[OST.template$VARIABLE == "Seed", c("TYPE", "DEFINITION"
 
 
 ### Identify all *.tpl files
-OST.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = ".tpl", recursive = TRUE)
+OST.template.files <- list.files(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = ".tpl", recursive = TRUE)
 
 ## Create an empty matrix to house all file pairs
 file.pairs <- matrix(NA, nrow = length(OST.template.files), ncol = 2)
@@ -42,7 +45,7 @@ do.not.move <- c()
 ## Loop over *.tpl files and find the location of the partner
 for(i in 1:length(OST.template.files)){
   
-  Raven.template.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = gsub('.{4}$', '', strsplit(OST.template.files[i], "/")[[1]][2]), recursive = TRUE)
+  Raven.template.files <- list.files(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-")), pattern = gsub('.{4}$', '', strsplit(OST.template.files[i], "/")[[1]][2]), recursive = TRUE)
   
   raven.files <- dplyr::setdiff(Raven.template.files, OST.template.files)
   
@@ -91,7 +94,7 @@ for(i in 1:length(OST.template.files)){
 ##
 ##------------------------------------------------------------
 
-RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
+RVP.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVP.template.in.file), na.strings = c(""))
 
 
 
@@ -221,7 +224,7 @@ if(calibrate.reservoirs == TRUE){
     
     for(i in 1:length(all.reservoirs)){
       
-      tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = all.reservoirs[i])
+      tmp <- read_xlsx(file.path(global.input.dir, raw.reservoir.in.dir, reservoir.in.file), sheet = all.reservoirs[i])
       
       calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
       
@@ -264,8 +267,8 @@ if(calibrate.reservoirs == TRUE){
 
 if(calibrate.soil.thicknesses == TRUE){
 
-  soil.thickness.ranges <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv")
-
+  soil.thickness.ranges <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.thickness.range.calibration.file))
+    
   ## Remove gravel pit, cut fill, and dike soils from calibrate soils
   
   soils.to.calibrate <- soils.to.calibrate[startsWith(soils.to.calibrate, "CUT_FILL") == FALSE]
@@ -309,7 +312,7 @@ if(calibrate.soil.thicknesses == TRUE){
 ####################################
 
 ## Read-in the diagnostic file from the current model run
-diag <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
+diag <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
 
 
 ## Determine the file path for the response variables
@@ -431,7 +434,7 @@ col.constraint <- which(colnames(diag) == "DIAG_PCT_BIAS")
 ##
 ###################################################################
 
-OSTInFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "ostIn.txt")
+OSTInFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "ostIn.txt")
 
 cat(file = OSTInFile, append = F, sep = "",
     
@@ -590,7 +593,7 @@ cat(file = OSTInFile, append = T, sep = "",
 ##
 ###################################################################
 
-OSTRAVENFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ost-RAVEN.sh")
+OSTRAVENFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "Ost-RAVEN.sh")
 
 cat(file = OSTRAVENFile, append = F, sep = "",
     "set -e", "\n",
@@ -616,7 +619,7 @@ cat(file = OSTRAVENFile, append = T, sep = "",
 
 
 ## Specify file permission for Ost-RAVEN.sh to allow it to be executable
-Sys.chmod(path = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "Ost-RAVEN.sh"),
+Sys.chmod(path = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "Ost-RAVEN.sh"),
           mode = "777")
 
 ###################################################################
@@ -626,7 +629,7 @@ Sys.chmod(path = file.path("/var/obwb-hydro-modelling/simulations", ws.interest,
 ###################################################################
 
 
-SaveBestFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "save_best.sh")
+SaveBestFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "save_best.sh")
 
 cat(file = SaveBestFile, append = F, sep = "",
     "set -e", "\n",
@@ -671,5 +674,5 @@ cat(file = SaveBestFile, append = T, sep = "",
     "exit 0", "\n"
 )
 
-Sys.chmod(path = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "save_best.sh"),
+Sys.chmod(path = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "save_best.sh"),
           mode = "777")

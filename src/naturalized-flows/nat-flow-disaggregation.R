@@ -6,6 +6,9 @@
 ## 
 ###################################################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 ## Modified to accept a vector of watersheds to loop through and process,
 ## producing disaggregated daily naturalized Q. 
 ## 14-Nov-2019 AJS 
@@ -34,17 +37,17 @@ ratio.gauges <- c("Whiteman" = "08NM174", "Camp" = "08NM134",
                   "Two Forty" = "08NM240", "Two Forty One" = "08NM241")
 
 ## Create a subdirectory to house all naturalized streamflow timeseries
-dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows"))
+dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows"))
 
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 ## Specify the location where the HYDAT database is saved
-hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
-
+hydat_here <- file.path(global.input.dir, raw.hydat.in.dir, hydat.in.file)
+  
 # read in naturalized-flows-summary to append 'lookup' info. Which WSC 
 # gauge(s) to apply to which watershed, and in what proportion 
 ## Read in master Naturalized flows map file
-nfs <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/naturalized-flows-summary.csv",
+nfs <- read.csv(file.path(global.input.dir, raw.nat.flows.in.dir, nat.flow.summary.in.file),
                 stringsAsFactors = FALSE)
 
 ###################################################################################################################################################
@@ -54,8 +57,11 @@ nfs <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/natu
 ###################################################################################################################################################
 
 ## List all files (all Associated Naturalized Streamflow files)
-filenames <- list.files("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/")
-
+filenames <- c(coldstream.nat.flow.in.file, equesis.nat.flow.in.file, inkaneep.nat.flow.in.file, mcdougall.nat.flow.in.file, mclean.nat.flow.in.file,
+               mill.nat.flow.in.file, mission.nat.flow.in.file, naramata.nat.flow.in.file, naswhito.nat.flow.in.file, penticton.nat.flow.in.file,
+               powers.nat.flow.in.file, shingle.nat.flow.in.file, shorts.nat.flow.in.file, shuttleworth.nat.flow.in.file, trepanier.nat.flow.in.file,
+               trout.nat.flow.in.file, vaseux.nat.flow.in.file, vernon.nat.flow.in.file, whiteman.nat.flow.in.file)
+  
 ## Identify which file is required to be read in based on the "disagg.watersheds" variable
 required.files <- filenames[sapply(disagg.watersheds, grep, filenames)]
 
@@ -240,11 +246,11 @@ for (i in 1:length(disagg.watersheds)){
   
     # read in worksheet with EFN data for current watershed
     # Vernon has at the Mouth and Kal Lake Outlet flows to handle
-    nat.stream.flow.mouth <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
+    nat.stream.flow.mouth <- read.xlsx(file.path(global.input.dir, raw.nat.flows.in.dir,
                                        required.files[grep(disagg.watersheds[i], required.files)]),
                                        sheet = required.tab,
                                        startRow = 2)  
-    nat.stream.flow.outlet <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
+    nat.stream.flow.outlet <- read.xlsx(file.path(global.input.dir, raw.nat.flows.in.dir,
                                         required.files[grep(disagg.watersheds[i], required.files)]),
                                         sheet = required.tab2,
                                         startRow = 2)  
@@ -341,7 +347,7 @@ for (i in 1:length(disagg.watersheds)){
     required.tab <- paste(disagg.watersheds[i], "Nat Q_EFN-POI")
     
     # read in worksheet with EFN data for current watershed
-    nat.stream.flow <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows",
+    nat.stream.flow <- read.xlsx(file.path(global.input.dir, raw.nat.flows.in.dir,
                                            required.files[grep(disagg.watersheds[i], required.files)]),
                                  sheet = required.tab)
     
@@ -471,9 +477,9 @@ for (i in 1:length(disagg.watersheds)){
   ##
   ###################################################################################################################################################
   
-  DailyNatQRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows", paste(disagg.watersheds[i], "_Nat_Q", ".rvt", sep = ""))
+  DailyNatQRVTFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows", paste(disagg.watersheds[i], "_Nat_Q", ".rvt", sep = ""))
   
-  main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
+  main.RVT.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
   
   apex.subbasin <- subbasin.codes[gsub(" Creek", "", subbasin.codes$GNIS_NAME) == disagg.watersheds[i] & subbasin.codes$Reports_to_Fan == "A", "Subbasin_ID"]
   
@@ -498,9 +504,9 @@ for (i in 1:length(disagg.watersheds)){
   ### for KAL LAKE OUTLET
   if(disagg.watersheds[i] == "Vernon"){
     
-    DailyNatQRVTFile.Kal <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows", paste(disagg.watersheds[i], "_Kal_Nat_Q", ".rvt", sep = ""))
+    DailyNatQRVTFile.Kal <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "daily_naturalized_flows", paste(disagg.watersheds[i], "_Kal_Nat_Q", ".rvt", sep = ""))
     
-    main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
+    main.RVT.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
     
     kal.subbasin <- "3017"
     
@@ -618,9 +624,9 @@ for (i in 1:length(disagg.watersheds)){
   ##
   ## ----------------------------------------------------------------------
   
-  if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+  if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
     
-    OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+    OstrichRVTFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
     
     if(i == 1){
       

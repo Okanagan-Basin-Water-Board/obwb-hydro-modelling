@@ -411,7 +411,7 @@ soil_profiles <- do.call("rbind", list(soil_profiles, lake, rock))
 
 
 ## Write soil_profiles to csv to be read-in to rvp-filegenertor.R. The format is as required by Raven
-write.csv(soil_profiles, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soils-profile-table.", Sys.Date(), ".csv", sep = "")), 
+write.csv(soil_profiles, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soil-profile-table.", Sys.Date(), ".csv", sep = "")), 
           na = "", row.names = FALSE)
 
 

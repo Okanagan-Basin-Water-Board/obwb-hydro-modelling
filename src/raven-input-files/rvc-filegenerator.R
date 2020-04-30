@@ -8,10 +8,13 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 require(readxl)
 
 
-RVCoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvc", sep = ""))
+RVCoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvc", sep = ""))
 
 cat(file = RVCoutFile, append = F, sep = "",
     
@@ -35,8 +38,8 @@ cat(file = RVCoutFile, append = F, sep = "",
 #################################################
 
 ## Read in the subbasin attribute table
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 ## Subset to isolate only the rows relevant to the watershed(s) of interest. gsub command removes the " Creek" from GNIS_NAME
 subbasins.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
 
@@ -52,7 +55,7 @@ if(length(reservoirs) <1){print("No initial conditions specified...")
   ## For all unique reservoirs, read in the stage-storage and stage-are information
   for(i in 1:length(reservoirs)){
     
-    tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = reservoirs[i])
+    tmp <- read_xlsx(file.path(global.input.dir, raw.reservoir.in.dir, reservoir.in.file), sheet = reservoirs[i])
     
     ## Check if there is a stage-storage curve
     if("Future_Storage_dam3" %in% names(tmp)){

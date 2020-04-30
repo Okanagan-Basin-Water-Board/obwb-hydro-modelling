@@ -6,6 +6,9 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 require(readxl)
 require(RavenR)
 
@@ -16,15 +19,15 @@ require(RavenR)
 #################################################
 
 ## Read in the subbasin attribute table
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 ## Check if there are reservoirs present in any of the include.watersheds. If so, create a "reservoirs" directory.
 subbasins.present <- subbasin.codes[gsub( " .*$", "", subbasin.codes$GNIS_NAME) %in% include.watersheds,]
 
 ## Remove any subbasins that are included in the disable.subbasins string
 subbasins.present <- subbasins.present[!subbasins.present$Subbasin_ID %in% disable.subbasins, ]
 
-if(length(unique(subbasins.present$Reservoir_name)) > 1){dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))}
+if(length(unique(subbasins.present$Reservoir_name)) > 1){dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs"))}
 
 
 for(j in 1:length(include.watersheds)){
@@ -42,7 +45,7 @@ for(j in 1:length(include.watersheds)){
     } else {
   
     ## Read in the rvh file to identify HRU number associated with each reservoir
-    main.HRU.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
+    main.HRU.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
     
     HRUs <- rvh.read(main.HRU.file)
     
@@ -60,7 +63,7 @@ for(j in 1:length(include.watersheds)){
     ## For all unique reservoirs, read in the stage-storage and stage-are information
     for(i in 1:length(reservoirs)){
       
-      tmp <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/reservoirs/raven-reservoirs.xlsx", sheet = reservoirs[i])
+      tmp <- read_xlsx(file.path(global.input.dir, raw.reservoir.in.dir, reservoir.in.file), sheet = reservoirs[i])
       
       ##-----------------------------------------------------------------------------
       ##
@@ -163,7 +166,7 @@ for(j in 1:length(include.watersheds)){
         ##
         ##-----------------------------------------------------------------------------
         
-        ReservoirRVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
+        ReservoirRVHoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
         
         
         if(variable.stage == TRUE){
@@ -242,7 +245,7 @@ for(j in 1:length(include.watersheds)){
         ##
         ##-----------------------------------------------------------------------------
         
-        ReservoirRVToutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = ""))
+        ReservoirRVToutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = ""))
         
         cat(file=ReservoirRVToutFile, append=F, sep="",
             
@@ -285,7 +288,7 @@ for(j in 1:length(include.watersheds)){
         ##
         ##-----------------------------------------------------------------------------
         
-        ReservoirRVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
+        ReservoirRVHoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
         
         cat(file=ReservoirRVHoutFile, append=F, sep="",
             
@@ -337,7 +340,7 @@ for(j in 1:length(include.watersheds)){
       ## NOTE: This is only completed if a reservoir-specific *.rvt file was generated (use file.exists to check this)
       ##
       ##----------------------------------------------------------------------------- 
-      if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = "")))){
+      if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = "")))){
         if(i == 1){
           cat(file = main.RVT.file, append = T, sep = "",
                "\n",
@@ -358,9 +361,9 @@ for(j in 1:length(include.watersheds)){
       ##
       ############################################################################################################################
       
-      if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))){
+      if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))){
         
-        OstrichRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
+        OstrichRVHTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
         
         if(i == 1){
           cat(file = OstrichRVHTemplateFile, append = T, sep = "",
@@ -383,11 +386,11 @@ for(j in 1:length(include.watersheds)){
       ############################################################################################################################
       
       
-      if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+      if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
       
-        OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+        OstrichRVTTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
         
-        if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = "")))){
+        if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = "")))){
           if(i == 1){
             cat(file = OstrichRVTTemplateFile, append = T, sep = "",
                 "\n",
@@ -442,7 +445,7 @@ for(j in 1:length(include.watersheds)){
         ##
         ##-----------------------------------------------------------------------------
         
-        OstrichReservoirRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(reservoirs[i], ".rvh.tpl", sep = ""))
+        OstrichReservoirRVHTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(reservoirs[i], ".rvh.tpl", sep = ""))
         
           ##-----------------------------------------------------------------------------
           ##

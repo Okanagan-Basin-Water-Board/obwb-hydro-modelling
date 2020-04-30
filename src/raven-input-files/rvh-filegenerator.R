@@ -6,12 +6,16 @@
 ##
 ############################################################################################################################
 
-## Load Required Packages
-require(raster)
-require(plyr)
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
 
 ## Generate required functions
 source("/var/obwb-hydro-modelling/src/functions.R")
+
+
+## Load Required Packages
+require(raster)
+require(plyr)
 
 ## Specify the subbasin ID for Brenda Mines - this is used to replace landuse/vegetation cover under natural conditions
 bm.subbasin.id <- 2709
@@ -24,8 +28,8 @@ bm.subbasin.id <- 2709
 #################################################3
 print("loading okanagan_hru.RData")
 
-load("/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.RData")
-
+load(file.path(global.input.dir, processed.spatial.dir, okanagan.hru.table.file))
+  
 print("all loaded")
 
 HRU.table <- as.data.frame(DT)
@@ -110,8 +114,9 @@ proc.time() - ptm
 
 print("HRU table built")
 
-# save.image(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raw-HRU-Output.RData")
-load(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raw-HRU-Output.RData")
+save.image(file = file.path(global.input.dir, processed.spatial.dir, paste("Raw-HRU-Output.", Sys.Date(), ".RData", sep = "")))
+  
+load(file = file.path(global.input.dir, processed.spatial.dir, paste("Raw-HRU-Output.", Sys.Date(), ".RData", sep = "")))
 ###########################################################################
 ##
 ## Assign names to soil profiles, aquifer profiles, and land use classes
@@ -121,16 +126,16 @@ load(file = "/var/obwb-hydro-modelling/input-data/processed/spatial/Raw-HRU-Outp
 ###########################################################################
 
 # soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
-soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil_attributes.csv",
-                       col.names = c("OID", "Value", "Count", "soil_type"))
+soil.codes <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.attribute.in.file), col.names = c("OID", "Value", "Count", "soil_type"))
 
-aquifer.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/aquifer_codes.csv")
-
-landcover.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/landcover_codes.csv")
-
-vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
-
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+aquifer.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, AQ.in.file))
+  
+landcover.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, LC.in.file))
+  
+vegetation.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, Veg.in.file))
+  
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 
 for(i in 1:nrow(HRU.output)){
 
@@ -329,7 +334,7 @@ for(i in 1:length(unique.lake.soil.subbasins)){
 ## Read in subbasin attribute table from Dan - **ensure the attribute table matches the version of WS_RasterX.tif raster being used**
 
 
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
 
 ## replce space in watershed name with "_"
 subbasin.codes$GNIS_NAME <- gsub("\\s", "_", subbasin.codes$GNIS_NAME)
@@ -383,8 +388,8 @@ Subbasin.output[Subbasin.output[,1] %in% subbasin.codes$Subbasin_ID[subbasin.cod
 ###########################################################################
 
 # RVHoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
-RVHoutFile.Residual <- file.path("/var/obwb-hydro-modelling/simulations/Master_residual.rvh")
-
+RVHoutFile.Residual <- file.path(global.simulation.dir, paste("Master_residual.", Sys.Date(), ".rvh", sep = ""))
+  
 cat(file=RVHoutFile.Residual, append=F, sep="",
     
     "#########################################################################","\n",
@@ -456,7 +461,7 @@ for(i in 1:length(watersheds)){
 
 tomatch <- c("GRAVEL_PIT", "CUT_FILL", "DIKE", "URBAN")
 
-matches <- unique (grep(paste(tomatch,collapse="|"), 
+matches <- unique(grep(paste(tomatch,collapse="|"), 
                         HRU.output.clean[,"SOIL_PROFILE"], value=TRUE))
 
 zero.soils <- HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] %in% matches, "ID"]
@@ -639,7 +644,7 @@ HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] != "LAKE" & HRU.output.clean
 ##
 
 
-RVHoutFile.Natural <- file.path("/var/obwb-hydro-modelling/simulations/Master_natural.rvh")
+RVHoutFile.Natural <- file.path(global.simulation.dir, paste("Master_natural.", Sys.Date(), ".rvh", sep = ""))
 
 cat(file=RVHoutFile.Natural, append=F, sep="",
     
