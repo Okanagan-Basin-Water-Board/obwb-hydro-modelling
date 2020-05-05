@@ -1,5 +1,8 @@
 # Diversions
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 # library(tidyverse)
 library(lubridate)
 library(ggplot2)
@@ -19,11 +22,11 @@ library(dplyr)
 
 
 # read in data files
-rules.df <- read.csv("/var/obwb-hydro-modelling/input-data/raw/custom-timeseries/diversion_rules_summary.csv",
+rules.df <- read.csv(file.path(global.input.dir, raw.custom.timeseries.in.dir, diversion.rules.in.file),
                      stringsAsFactors = FALSE, check.names = FALSE)
 
 # load custom_timeseries workbook
-cts.fn <- "/var/obwb-hydro-modelling/input-data/raw/custom-timeseries/custom_timeseries.xlsx"
+cts.fn <- file.path(global.input.dir, raw.custom.timeseries.in.dir, custom.timeseres.in.file)
 cts.wb <- loadWorkbook(cts.fn)
 
 # load Summary sheet and vector of worksheet names
@@ -54,9 +57,9 @@ rules.df <- rules.df %>%
 
 ## LB - Read in the hydrographs file from the given model run. Source depends on whether OSTRICH run has just been completed or not.
 if(run.ostrich == TRUE){
-  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
 } else {
-  hydrographs <- hyd.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+  hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
 }
 
 ## LB - Convert hydrographs to Q.df
@@ -275,13 +278,13 @@ for(i in 1:length(include.watersheds)){
 
     # read in Stirling Creek data that forms the basis of the Mission
     # Creek diversion amounts.
-    stirling_df <- read.csv("/var/obwb-hydro-modelling/input-data/raw/custom-timeseries/stirling_ck_mean_monthly_flows.csv",
+    stirling_df <- read.csv(file.path(global.input.dir, raw.custom.timeseries.in.dir, stirling.creek.flows.in.file),
                             stringsAsFactors = FALSE, header = TRUE)
     colnames(stirling_df) <- c("Year", "2003", "2004", "2005", "2006")
 
     # read in 241 creek daily flows
     Q241_df <- hy_daily_flows(station_number = "08NM241",
-                              hydat_path = "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3")
+                              hydat_path = file.path(global.input.dir, raw.hydat.in.dir, hydat.in.file))
 
 
     # compute the monthly streamflows averaged over the period of interest for

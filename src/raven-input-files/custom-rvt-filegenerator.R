@@ -20,6 +20,9 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 require(readxl)
 
 ## --------------------------------------------------
@@ -29,10 +32,10 @@ require(readxl)
 ## --------------------------------------------------
 
 ## Read in subbasin.codes, for completeness
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 ## Read in the Summary sheet from custom_timeseries.xlsx
-custom.timeseries <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/custom-timeseries/custom_timeseries.xlsx", sheet = "Summary")
+custom.timeseries <- read_xlsx(file.path(global.input.dir, raw.custom.timeseries.in.dir, custom.timeseres.in.file), sheet = "Summary")
 
 ## Isolate only the custom timeseries for the watersheds included
 custom.timeseries <- custom.timeseries[custom.timeseries$Watershed %in% include.watersheds, ]
@@ -57,7 +60,7 @@ not.available.for.calibration <- c()
 if(nrow(custom.timeseries) > 0){
   
   ## Create a subdirectory to house all custom timeseries
-  dir.create(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries"))
+  dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries"))
 
   ## Loop over all custom data types
   for(i in 1:length(custom.data.types)){
@@ -67,11 +70,11 @@ if(nrow(custom.timeseries) > 0){
     ## Loop over each row (i.e., different custom timeseries)
     for(j in 1:nrow(tmp)){
     
-      custom.data <- read_xlsx("/var/obwb-hydro-modelling/input-data/raw/custom-timeseries/custom_timeseries.xlsx", sheet = as.character(tmp[j,"Sheet_Name"]))
+      custom.data <- read_xlsx(file.path(global.input.dir, raw.custom.timeseries.in.dir, custom.timeseres.in.file), sheet = as.character(tmp[j,"Sheet_Name"]))
       
-      main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
+      main.RVT.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), paste(ws.interest, "-", run.number, ".rvt", sep = ""))
       
-      customRVTfile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries", paste(tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""))
+      customRVTfile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "custom_timeseries", paste(tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""))
       
       ## ------------------------------------------------
       ##
@@ -107,9 +110,9 @@ if(nrow(custom.timeseries) > 0){
             ":RedirectToFile  ", paste("custom_timeseries/", tmp[j, "Data_Type"], "_", tmp[j, "Sheet_Name"], ".rvt", sep = ""), "\n"
         )
         
-          if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+          if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
             
-            OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+            OstrichRVTFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
             
             cat(file = OstrichRVTFile, append = T, sep = "",
                 "\n",
@@ -154,9 +157,9 @@ if(nrow(custom.timeseries) > 0){
         )
         
         
-        if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+        if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
           
-          OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+          OstrichRVTFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
         
           cat(file = OstrichRVTFile, append = T, sep = "",
               "\n",
@@ -305,9 +308,9 @@ if(nrow(custom.timeseries) > 0){
           
           subbasin <- tmp[j, "Subbasin"]
           
-          if(file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "owdm", paste(subbasin, "owdm.rvt", sep = "_")))){
+          if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "owdm", paste(subbasin, "owdm.rvt", sep = "_")))){
             
-            owdm.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "owdm", paste(subbasin, "owdm.rvt", sep = "_"))
+            owdm.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "owdm", paste(subbasin, "owdm.rvt", sep = "_"))
             
             owdm.merge.data <- read.table(owdm.file, skip = 2)
             
@@ -519,9 +522,9 @@ if(nrow(custom.timeseries) > 0){
               ":OverrideStreamflow  ", as.character(tmp[j, "Subbasin"]), "\n"
               )
           
-          if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+          if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
             
-              OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+              OstrichRVTFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
             
               ## RAVEN Requires that the :OverrideStreamflow command occurs AFTER the :ObservationData is read in. Therfore, the :RedirectToFile command must be written here for OVERRIDE_STREAMFLOW ONLY
               cat(file = OstrichRVTFile, append = T, sep = "",
@@ -918,9 +921,9 @@ if(nrow(custom.timeseries) > 0){
         ##
         ## ----------------------------------------------------------------------
         
-        if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+        if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
           
-          OstrichRVTFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+          OstrichRVTFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, "-", run.number, sep = ""), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
           
           if(i == 1 & j == 1 & custom.data.types[i] != "OVERRIDE_STREAMFLOW"){
             

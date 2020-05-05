@@ -6,29 +6,31 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 ## Read in the same XXX_codes.csv files used to develop the RVH file. **at the moment, vegetation codes is not used in the 
 ## RVH file generation as LAND_USE_CLASS AND VEG_CLASS are the same for now. However, it's built in here to allow these
 ## to be differentiated in future iterations of this code.
 
-# RVP.template.base <- read.csv("C:/Users/birdl/Downloads/RVP-Template_Test_NoGroups.csv", na.strings = c(""))
-# RVP.template.base <- read.csv("C:/Users/birdl/Downloads/RVP-template (5).csv", na.strings = c(""))
-RVP.template.base <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
-
+RVP.template.base <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVP.template.in.file), na.strings = c(""))
+  
 # soil.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/soil_profile_codes.csv")
 
-soil.profiles <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table.csv")
-
-soil.classes <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-class-table.csv")
-
-landcover.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/landcover_codes.csv")
-
-vegetation.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/vegetation_codes.csv")
-
-annual.runoff <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/annual_runoff.csv")
-
-seasonal.LAI <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/lai/seasonal-lai.csv")
-
-max.LAI <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/lai/manual-max-lai.csv")
+soil.profiles <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.profile.table.in.file))
+  
+soil.classes <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.class.table.in.file))
+  
+landcover.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, LC.in.file))
+  
+vegetation.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, Veg.in.file))
+  
+annual.runoff <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, AR.in.file))
+  
+seasonal.LAI <- read.csv(file.path(global.input.dir, processed.spatial.dir, seasonal.lai.processed.file))
+  
+max.LAI <- read.csv(file.path(global.input.dir, processed.spatial.dir, max.lai.processed.file))
+  
 
 ############################################################################################################################
 ##
@@ -263,7 +265,7 @@ surveypoints <- channel[channel$PARAMETER == "SurveyPoints", c("DEFINITION", "VA
 ##
 ############################################################################################################################
 
-RVPoutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvp", sep = ""))
+RVPoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvp", sep = ""))
 
 
 cat(file = RVPoutFile, append = F, sep = "",
@@ -758,9 +760,9 @@ if(run.ostrich == TRUE){
     
     for(i in 1:length(include.watersheds)){
     
-    soil.profiles.calibrate <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table-calibration.csv")
-    
-    soil.classes.calibrate <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv")
+    soil.profiles.calibrate <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.profile.table.calibration.file))
+      
+    soil.classes.calibrate <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.thickness.range.calibration.file))
     
     included.soils <- soil.profiles.calibrate[which(soil.profiles.calibrate[,1] %like% include.watersheds[i]), ]
     
@@ -813,7 +815,7 @@ if(run.ostrich == TRUE){
   ##
   #############################################################################################
   
-  OstrichRVPTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvp.tpl", sep = ""))
+  OstrichRVPTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvp.tpl", sep = ""))
   
   
   cat(file = OstrichRVPTemplateFile, append = F, sep = "",

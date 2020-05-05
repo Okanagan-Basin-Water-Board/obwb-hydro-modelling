@@ -6,8 +6,11 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 ## Read in the RVI template and identify the start and end dates. Generate a sequence of dates which will be used to extract relevant data only
-RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
+RVI.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVI.template.in.file))
 
 start.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.template$PARAMETER == "StartDate", "DEFINITION"], format = "%m/%d/%Y")
 
@@ -23,8 +26,8 @@ model.period <- seq(start.date, end.date, by = "days")
 #######################################################
 
 ## Read in all snow course and snow pillow locations within the model domain
-snow.course.locations <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-course-locations-model-domain.csv")
-
+snow.course.locations <- read.csv(file.path(global.input.dir, processed.spatial.dir, snow.course.locations.processed.file))
+  
 ## Add container for all snow courses included in all model watersheds. This is used in custom.appendages
 all.snow.courses.included <- c()
 
@@ -34,8 +37,8 @@ for(j in 1:length(include.watersheds)){
   watershed.snow.courses <- snow.course.locations$LCTN_ID[gsub( " .*$", "", snow.course.locations$GNIS_NAME) %in% include.watersheds[j]]
   
   ## Read in snow course and snow pillow data.
-  snow.course.data <- read.csv("/var/obwb-hydro-modelling/input-data/raw/snow-data/archive-manual-snow-survey-data.csv")
-  
+  snow.course.data <- read.csv(file.path(global.input.dir, raw.snow.in.dir, manual.snow.data.in.file))
+    
   ## Extract SWE data for the stations within the watershed(s) of interest
   snow.course.SWE <- snow.course.data[snow.course.data$Number %in% watershed.snow.courses, c("Number", "Date.of.Survey", "Water.Equiv..mm")]
   
@@ -56,7 +59,7 @@ for(j in 1:length(include.watersheds)){
     ## Write snow course rvt files to file
     for(i in 1:length(snow.courses.included)){
       
-      SnowRVToutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("SC_", snow.courses.included[i], ".rvt", sep = ""))
+      SnowRVToutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste("SC_", snow.courses.included[i], ".rvt", sep = ""))
       
       HRU_ID <- snow.course.locations$HRU[snow.course.locations$LCTN_ID %in% snow.courses.included[i]]
       
@@ -107,7 +110,7 @@ for(j in 1:length(include.watersheds)){
       )
       
       ## Append :RedirectToFile command to end of main *.rvt file
-      main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvt", sep = ""))  
+      main.RVT.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvt", sep = ""))  
       
       if(i == 1){
         cat(file = main.RVT.file, append = T, sep = "",
@@ -127,10 +130,10 @@ for(j in 1:length(include.watersheds)){
       ## If run.ostrich == TRUE, add redircts to the template file too
       ##----------------------------------------------------------------
       
-      if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+      if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
         
       ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
-      OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+      OstrichRVTTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
       
       if(i == 1){
         cat(file = OstrichRVTTemplateFile, append = T, sep = "",
@@ -162,8 +165,8 @@ for(j in 1:length(include.watersheds)){
 ##
 #######################################################
 
-snow.pillow.locations <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-pillow-locations-model-domain.csv")
-
+snow.pillow.locations <- read.csv(file.path(global.input.dir, processed.spatial.dir, snow.pillow.locations.processed.file))
+  
 ## Add container for all snow pillows included in all model watersheds. This is used in custom.appendages
 all.snow.pillows.included <- c()
 
@@ -173,8 +176,8 @@ for(j in 1:length(include.watersheds)){
   
   if(length(watershed.snow.pillows) > 0){
   
-    snow.pillow.data <- read.csv("/var/obwb-hydro-modelling/input-data/raw/snow-data/archive-swe-automated-snow-pillows.csv")
-    
+    snow.pillow.data <- read.csv(file.path(global.input.dir, raw.snow.in.dir, automated.snow.data.in.file))
+      
     ## Reasign column names in snow pillow data to be only the station ID
     snow.pillow.data.columns <- strsplit(colnames(snow.pillow.data), ".", fixed = T)
     
@@ -212,7 +215,7 @@ for(j in 1:length(include.watersheds)){
         
         snow.pillow$DATE <- as.POSIXct(snow.pillow$DATE, format = "%Y-%m-%d %H:%M")
         
-        SnowRVToutFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste("SP_", station.name, ".rvt", sep = ""))
+        SnowRVToutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste("SP_", station.name, ".rvt", sep = ""))
         
         HRU_ID <- snow.pillow.locations$HRU[snow.pillow.locations$LCTN_ID %in% station.name]
         
@@ -259,7 +262,7 @@ for(j in 1:length(include.watersheds)){
         
         
         ## Append :RedirectToFile command to end of main *.rvt file
-        main.RVT.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvt", sep = ""))  
+        main.RVT.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvt", sep = ""))  
         
         if(i == 1){
           cat(file = main.RVT.file, append = T, sep = "",
@@ -278,10 +281,10 @@ for(j in 1:length(include.watersheds)){
         ## If run.ostrich == TRUE, add redircts to the template file too
         ##----------------------------------------------------------------
         
-        if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
+        if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = "")))){
           
           
-        OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+        OstrichRVTTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
           
         ## Add :RedirectToFile commands to the end of the rvt.tpl file to match the structure of the master *.rvt file.
         if(i == 1){

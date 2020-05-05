@@ -6,9 +6,12 @@
 ##
 ############################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 source("/var/obwb-hydro-modelling/src/functions.R")
 
-Climate.Version.Tag <- "V1.0.1"
+# Climate.Version.Tag <- "V1.0.1"
 
 # Download the lastest HYDAT database from WSC and save in specified location
 # download_hydat(dl_hydat_here = "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/")
@@ -25,8 +28,8 @@ library(ncdf4)
 ## -----------------------------------------------------
 
 ## Read in RVP.template to identify required correction factor for Precipitation
-RVP.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
-
+RVP.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVP.template.in.file), na.strings = c(""))
+  
 ## Make all columns characters
 RVP.template[,] <- lapply(RVP.template[, ], as.character)
 
@@ -41,22 +44,23 @@ pr.correction <- RVP.template[RVP.template$GROUP == "ClimateParameter" & RVP.tem
 
 
 ## Specify the location where the HYDAT database is saved
-hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
-
+hydat_here <- file.path(global.input.dir, raw.hydat.in.dir, hydat.in.file)
+  
+  
 ## Read in the RVI template and identify the start and end dates. WSC data is then only imported for this period. Start.date and end.date
 ## are formatted as required by hy_daily_flows.
-RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
+RVI.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVI.template.in.file))
 
 start.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.template$PARAMETER == "StartDate", "DEFINITION"], format = "%m/%d/%Y")
 
 end.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.template$PARAMETER == "EndDate", "DEFINITION"], format = "%m/%d/%Y")
 
 ## Specify the location RAVEN *.rvt files should be saved
-output.location <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"))
+output.location <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"))
 
 
 ## Extract corresponding WSC gauges from subbasin_codes.csv
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
 
 ## Extract all WSC station numbers for use in hy_daily_flows to retrieve datasets for all
 station.no <- subbasin.codes[subbasin.codes$GNIS_NAME %in% paste(include.watersheds, " Creek", sep = ''), "Hydrometric_stn"]
@@ -157,17 +161,17 @@ if(length(station.no) > 0) {
 ################################################################################################
 
 ## read in RVH file to compute the number of HRUs
-HRUs <- rvh.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
+HRUs <- rvh.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = "")))
 
-precip.forcing.filename <- paste("pr.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")
+precip.forcing.filename <- precip.processed.file
+  
+tasmax.forcing.filename <- tasmax.processed.file
 
-tasmax.forcing.filename <- paste("tasmax.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")
-
-tasmin.forcing.filename <- paste("tasmin.HRU.timeseries", Climate.Version.Tag, "nc", sep = ".")
+tasmin.forcing.filename <- tasmin.processed.file
 
 
 ## Get dimensions of netcdf file - only uses tasmin since all are the same dimensions
-tasmin.nc.file <- nc_open(file.path("/var/obwb-hydro-modelling/input-data/processed/climate", tasmin.forcing.filename))
+tasmin.nc.file <- nc_open(file.path(global.input.dir, processed.climate.dir, tasmin.forcing.filename))
 
 # tasmin <- ncvar_get(tasmin.nc.file, "tasmin")
 
@@ -293,7 +297,7 @@ if(run.ostrich == TRUE){
     ## ------------------------------------------------------------------------------------------
     
     ## List all files in the current run directory
-    all.files <- list.files(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-")))
+    all.files <- list.files(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-")))
     
     ## Identify which files are rvt files
     add.redirect <- all.files[file_ext(all.files) == "rvt"]
@@ -308,7 +312,7 @@ if(run.ostrich == TRUE){
     ##
     #############################################################################################
     
-    OstrichRVTTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
+    OstrichRVTTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvt.tpl", sep = ""))
     
     ## Add :RedirctToFile commands to beginning of master rvt.tpl file to match the structure of the original *.rvt file. NOTE: The order of the files will be different, but this shouldn't matter
     for(i in 1:length(add.redirect)){

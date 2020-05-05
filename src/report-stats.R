@@ -14,10 +14,10 @@
 
 require(RavenR)
 
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
-HRUs <- rvh.read("/var/obwb-hydro-modelling/simulations/Master_residual.rvh")
-
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
+HRUs <- rvh.read(file.path(global.simulation.dir, master.residual.rvh.file))
+  
 HRUs <- HRUs$HRUtable
 
 watersheds <- unique(subbasin.codes$GNIS_NAME)
@@ -54,9 +54,9 @@ for(i in 1:length(watersheds)){
 
 require(tidyhydat)
 
-hydat_here <- "/var/obwb-hydro-modelling/input-data/raw/wsc-hydat/Hydat.sqlite3"
-
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
+hydat_here <- file.path(global.input.dir, raw.hydat.in.dir, hydat.in.file)
+  
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
 
 stations <- subbasin.codes[subbasin.codes$Hydrometric_stn != "<Null>" , "Hydrometric_stn"]
 

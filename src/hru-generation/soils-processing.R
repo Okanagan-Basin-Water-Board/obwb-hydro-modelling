@@ -12,6 +12,8 @@ library(plyr)
 library(stringr)
 library(raster)
 
+calibrate.all.layers <- FALSE
+
 ## Read in GIS information
 # soils.layers <- st_read(dsn = "/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BC_Soil_Map.gdb", layer = "BCSLF_Soil_Layer_File")
 
@@ -20,11 +22,11 @@ library(raster)
 ## Read in GIS information, clipped to the Okanagan. Reading in the whole BC datasets (above) returned an error when trying to clip to the Okanagan
 bc.albers <- "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
-soils.layers <- read.csv("/var/obwb-hydro-modelling/input-data/raw/spatial/soils/BCSLF_Soil_Layer_File.csv")
-
-soils.poly.base <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/soils/Soil_Clip_final.shp")
-
-model.watersheds <- st_read("/var/obwb-hydro-modelling/input-data/raw/spatial/WS_Boundaries_Final.shp")
+soils.layers <- read.csv(file.path(global.input.dir, raw.spatial.in.dir, soil.bc.layer.in.file))
+  
+soils.poly.base <- st_read(file.path(global.input.dir, raw.spatial.in.dir, soil.polygon.in.file), crs = bc.albers)
+  
+model.watersheds <- st_read(file.path(global.input.dir, raw.spatial.in.dir, WS.shape.in.file), crs = bc.albers)
 
 #############################################################################################
 ##
@@ -249,17 +251,18 @@ print(paste("There are", length(unique(output$soil_type)), "unique soil types id
 
 
 ## Write out master soils CSV for remapping soils tif. This must be imported to ArcGIS, and a raster generated using the new soil_type parameters
-write.csv(output, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soils-output.csv")
-
+write.csv(output, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soils-output.", Sys.Date(), ".csv", sep = "")))
+          
 ##########################################################################
 ## Merge table and polygons & Write Shapefile
+## This shapefile should be provided to Dan Austin to merge the above soils-output.DATE.csv table and the shapefile based on the soil_type tag.
 
 require(rgdal)
 
 Final.Soils <- merge(soils.poly.base, output, by = 'tag', duplicateGeoms = TRUE)
 
 ## Export to shape file
-writeOGR(obj=Final.Soils, dsn="/var/obwb-hydro-modelling/input-data/processed/spatial/soils", layer="Soil_type", driver="ESRI Shapefile") # this is in geographical projection
+writeOGR(obj=Final.Soils, dsn=file.path(global.input.dir, processed.spatial.dir, "soils"), layer=paste("Soil_type.", Sys.Date(), sep = "") , driver="ESRI Shapefile") # this is in geographical projection
 
 ####################################################################################################################################################
 ####################################################################################################################################################
@@ -342,8 +345,8 @@ results <- results[!is.na(results$soil_type),]
 
 results[is.na(results)] <- 0
 
-write.csv(results, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soils-parameters.csv")
-
+write.csv(results, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soils-parameters.", Sys.Date(), ".csv", sep = "")))
+          
 #########################################################################################################
 ##
 ## Overwrite custom soil types
@@ -408,7 +411,7 @@ soil_profiles <- do.call("rbind", list(soil_profiles, lake, rock))
 
 
 ## Write soil_profiles to csv to be read-in to rvp-filegenertor.R. The format is as required by Raven
-write.csv(soil_profiles, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table.csv",
+write.csv(soil_profiles, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soil-profile-table.", Sys.Date(), ".csv", sep = "")), 
           na = "", row.names = FALSE)
 
 
@@ -438,20 +441,20 @@ classes$mean_organic <- 0
 
 
 ## Write classes to csv to be read-in to rvp-filegenerator.R. The format is as required by Raven
-write.csv(classes, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-class-table.csv",
+write.csv(classes, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soil-class-table.", Sys.Date(), ".csv", sep = "")),
           na = "", row.names = FALSE)
 
 
-
-save.image("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/post-process-image.RData")
+save.image(file.path(global.input.dir, processed.spatial.dir, "soils", paste("soil-post-process-image.", Sys.Date(), ".RData", sep = "")))
+  
 ############################################################################################################################################################
 ##
 ## Tidy and write out soil thickness ranges for thickness calibrations
 ##
 ############################################################################################################################################################
 
-load("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/post-process-image.RData")
-
+load(file.path(global.input.dir, processed.spatial.dir, processed.soil.image))
+  
 results.range <- results.range[!is.na(results.range$soil_type),]
 
 results.range[is.na(results.range)] <- 0
@@ -518,36 +521,39 @@ soil.thickness.range <- results.range[,c("Parameter_Name", "min_thickness", "max
 
 ########################
 ##
-## If desired only to calibrate the thickness of the top layer, and fix B and C layers at 10m, run the following 6 lines of code. If not, write csv's now
+## If desired only to calibrate the thickness of the top layer, and fix B and C layers at 100m, run the following 6 lines of code. If not, write csv's now
+if(calibrate.all.layers == FALSE){
+  
+  soil_profiles_ranges[,6] <- 100
+  
+  soil_profiles_ranges[,8] <- 100
+  
+  soil_profiles_ranges[soil_profiles_ranges[,1] == "LAKE", 3:8] <- ""
+  
+  soil_profiles_ranges[soil_profiles_ranges[,1] == "ROCK", 3:8] <- ""
+  
+  # soil.thickness.range <- soil.thickness.range
+  
+  soil.thickness.range <- soil.thickness.range[which(endsWith(soil.thickness.range$Parameter_Name, "A_THICK")), ]
 
-soil_profiles_ranges[,6] <- 100
-
-soil_profiles_ranges[,8] <- 100
-
-soil_profiles_ranges[soil_profiles_ranges[,1] == "LAKE", 3:8] <- ""
-
-soil_profiles_ranges[soil_profiles_ranges[,1] == "ROCK", 3:8] <- ""
-
-# soil.thickness.range <- soil.thickness.range
-
-soil.thickness.range <- soil.thickness.range[which(endsWith(soil.thickness.range$Parameter_Name, "A_THICK")), ]
-
+}
 ########################
 ##
 ## Write csvs
 
 ## Write soil_profiles to csv to be read-in to rvp-filegenertor.R. The format is as required by Raven
-write.csv(soil_profiles_ranges, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-profile-table-calibration.csv",
+write.csv(soil_profiles_ranges, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soil-profile-table-calibration.", Sys.Date(), ".csv", sep = "")),
           na = "", row.names = FALSE)
 
-write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv",
+write.csv(soil.thickness.range, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soil-thickness-ranges-calibration.", Sys.Date(), ".csv", sep = "")),
           na = "", row.names = FALSE)
 
 #####################################
 ##
 ## Overwrite min and max soil range thicknesses for calibration purposes.
 
-soil.thickness.range <- read.csv("/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv")
+soil.thickness.range <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.thickness.range.calibration.file))
+  
 
 min.thickness <- 0
 
@@ -570,11 +576,11 @@ soil.thickness.range[which(endsWith(as.character(soil.thickness.range$Parameter_
 # 
 # soil.thickness.range$max_thickness <- 1
 # 
-write.csv(soil.thickness.range, "/var/obwb-hydro-modelling/input-data/processed/spatial/soils/soil-thickness-ranges-calibration.csv",
+write.csv(soil.thickness.range, file.path(global.input.dir, processed.spatial.dir, "soils", paste("soil-thickness-ranges-calibration.", Sys.Date(), ".csv", sep = "")),
           na = "", row.names = FALSE)
 
 
 
 
 ## Calculate the total thickness of each soil type (i.e., sum of max across all horizons)
-total.thickness <- plyr::ddply(results.range, .(soil_type), summarize, total = sum(max_thickness))
+#total.thickness <- plyr::ddply(results.range, .(soil_type), summarize, total = sum(max_thickness))

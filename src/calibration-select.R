@@ -1,7 +1,10 @@
+
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 require(stringr)
 
-
-ost.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/OST-Template.csv")
+ost.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, OST.template.in.file))
 
 available.response.vars <- as.character(ost.template[ost.template$VARIABLE == "Response", "DEFINITION"])
 

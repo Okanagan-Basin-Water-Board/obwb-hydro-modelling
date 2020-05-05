@@ -4,10 +4,13 @@
 ##
 ############################################################################################################
 
-load("/var/obwb-hydro-modelling/input-data/processed/spatial/okanagan_hru.RData")
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
 
-subbasins <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+load(file.path(global.input.dir, processed.spatial.dir, okanagan.hru.table.file))
+  
+subbasins <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 reservoirs <- subbasins[subbasins$Reservoir_name != "<Null>", "Subbasin_ID"]
 
 watersheds <- unique(subbasins$GNIS_NAME)

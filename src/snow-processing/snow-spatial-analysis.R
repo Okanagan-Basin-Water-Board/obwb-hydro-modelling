@@ -7,20 +7,23 @@
 ##
 #####################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 require(raster)
 
 
 ## Read in require Tidy HRU raster, subbasin raster, and subbasin codes (accompanying attribute table)
-Tidy.hru <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/tidy-HRU-id.tif")
-
-subbasin.raster <- raster("/var/obwb-hydro-modelling/input-data/processed/spatial/subbasin.tif")
-
-subbasin.codes <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+Tidy.hru <- raster(file.path(global.input.dir, processed.spatial.dir, tidy.hru.processed.file))
+  
+subbasin.raster <- raster(file.path(global.input.dir, processed.spatial.dir, subbasin.processed.file))
+  
+subbasin.codes <- read.csv(file.path(global.input.dir, processed.spatial.dir, SB.in.file))
+  
 ## Read in snow course and snow pillow location csv files directly downloaded from dataBC
-snow.course.locations <- read.csv("/var/obwb-hydro-modelling/input-data/raw/snow-data/snow-course-locations.csv")
-
-snow.pillow.locations <- read.csv("/var/obwb-hydro-modelling/input-data/raw/snow-data/snow-pillow-locations.csv")
+snow.course.locations <- read.csv(file.path(global.input.dir, raw.snow.in.dir, snow.course.locations.in.file))
+  
+snow.pillow.locations <- read.csv(file.path(global.input.dir, raw.snow.in.dir, snow.pillow.locations.in.file))
 
 
 ## Extract the corresponding SUBBASIN ID for all snow course locations
@@ -48,6 +51,6 @@ snow.pillow.locations <- merge(subbasin.codes, snow.pillow.locations, by = "Subb
 
 
 ## Write out condensed csv file which include the HRU and Subbasin_ID for relevant snow locations
-write.csv(snow.course.locations, "/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-course-locations-model-domain.csv")
-
-write.csv(snow.pillow.locations, "/var/obwb-hydro-modelling/input-data/processed/spatial/snow/snow-pillow-locations-model-domain.csv")
+write.csv(snow.course.locations, file.path(global.input.dir, processed.spatial.dir, "snow", paste("snow-course-locations-model-domain.", Sys.Date(), ".csv", sep = "")))
+          
+write.csv(snow.pillow.locations, file.path(global.input.dir, processed.spatial.dir, "snow", paste("snow-pillow-locations-model-domain.", Sys.Date(), ".csv", sep = "")))

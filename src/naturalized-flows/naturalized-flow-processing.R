@@ -6,6 +6,8 @@
 ##
 ###################################################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
 
 # require(xlsx)
 require(openxlsx)
@@ -23,10 +25,13 @@ require(data.table)
 ###################################################################################################################################################
 
 ## Read in master Naturalized flows map file
-nat.flows.summary <- read.csv("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/naturalized-flows-summary.csv")
-
+nat.flows.summary <- read.csv(file.path(global.input.dir, raw.nat.flows.in.dir, nat.flow.summary.in.file))
+  
 ## List all files (all Associated Naturalized Streamflow files)
-filenames <- list.files("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows/")
+filenames <- c(coldstream.nat.flow.in.file, equesis.nat.flow.in.file, inkaneep.nat.flow.in.file, mcdougall.nat.flow.in.file, mclean.nat.flow.in.file,
+               mill.nat.flow.in.file, mission.nat.flow.in.file, naramata.nat.flow.in.file, naswhito.nat.flow.in.file, penticton.nat.flow.in.file,
+               powers.nat.flow.in.file, shingle.nat.flow.in.file, shorts.nat.flow.in.file, shuttleworth.nat.flow.in.file, trepanier.nat.flow.in.file,
+               trout.nat.flow.in.file, vaseux.nat.flow.in.file, vernon.nat.flow.in.file, whiteman.nat.flow.in.file)
 
 ## Identify which file is required to be read in based on the "include.watersheds" variable
 required.files <- filenames[gsub( " .*$", "", filenames) %in% include.watersheds]
@@ -100,8 +105,8 @@ Times$date <- Days
 ###################################################################################################################################################
 
 ## Read-in the subbasin table to allow subbasins at apex of fan of creek to be identified
-subbasins <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/subbasin_codes.csv")
-
+subbasins <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
+  
 for(i in 1:length(required.files)){
   
   current.file <- required.files[i]
@@ -118,12 +123,12 @@ for(i in 1:length(required.files)){
   if(run.ostrich == TRUE){
     
     ## Read-in the model results (hydrographs)
-    raven.output <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    raven.output <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
                              
     } else {
   
     ## Read-in the model results (hydrographs)
-    raven.output <- read.csv(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    raven.output <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
   
   }
   
@@ -220,7 +225,7 @@ for(i in 1:length(required.files)){
   required.tab <- paste(current.watershed, "Nat Q_EFN-POI")
 
   ## Read in the required tab, from the required file.
-  nat.stream.flow <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows", current.file),
+  nat.stream.flow <- read.xlsx(file.path(global.input.dir, raw.nat.flows.in.dir, current.file),
                                sheet = required.tab)
 
   ## Identify the column which contains "UNADJUSTED" - this is within the "UNADJUSTED FOR LONG-TERM CONDITIONS" statement. This flag is used to identify the correct dataset to use for comparison to 1996-2010 dataset
@@ -295,7 +300,7 @@ for(i in 1:length(required.files)){
     ##---------------------------------------------------------------------------------------------------------------
     
     ## Read in the OWDM Model Summary tab, from the required file.
-    owdm.summary <- read.xlsx(file.path("/var/obwb-hydro-modelling/input-data/raw/naturalized-flows", current.file),
+    owdm.summary <- read.xlsx(file.path(global.input.dir, raw.nat.flows.in.dir, current.file),
                               sheet = "OWDM Model Summary")
     
     ## Identify the column which contains "Abv Fan" - this is within the "Abv Fan - OWDM Water Use" statement. This flag is used to identify the correct dataset to use for comparison to 1996-2010 dataset

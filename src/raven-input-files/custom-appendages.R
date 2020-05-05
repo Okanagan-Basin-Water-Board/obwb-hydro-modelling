@@ -9,6 +9,8 @@
 ##
 #############################################################################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
 
 ## **************************************************************************************************************************************************************************
 ##
@@ -23,7 +25,7 @@
 ##
 #########################################################
 
-RVP.template.base <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVP-Template.csv", na.strings = c(""))
+RVP.template.base <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVP.template.in.file), na.strings = c(""))
 
 ## Isolate only CalibrationGroups and SubbasinProperties
 RVP.template.base <- RVP.template.base[RVP.template.base$GROUP == "CalibrationGroups" | RVP.template.base$GROUP == "SubbasinProperties", ]
@@ -113,7 +115,7 @@ if(nrow(subbasin.properties) >0 & !all(is.na(subbasin.properties$VALUE))){
   ##-------------------------------------------------------
   
   ## Identify the rvh file to append SubbasinProperties to
-  main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
+  main.RVH.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))  
   
   
   cat(file = main.RVH.file, append = T, sep = "",
@@ -280,15 +282,26 @@ if(run.ostrich == TRUE){
   
   if(subbasins.calibrate == TRUE){
   
-    ## Re-copy the master *.rvh files to the templates folder. This will be adjusted to operate as an OSTRICH template.
-    file.copy(from = file.path("/var/obwb-hydro-modelling/simulations/Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates"))
+    ## Re-copy the master RESIDUAL *.rvh files to the templates folder. This will be adjusted to operate as an OSTRICH template.
+    if(include.water.demand == TRUE){
+      
+      file.copy(from = file.path(global.simulation.dir, master.residual.rvh.file), to = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates"))
+      
+      ## Renames the above file to be *.rvh.tpl
+      file.rename(from = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", master.residual.rvh.file), to = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))
+      
+    } else {
+      
+      ## Re-copy the master NATURAL *.rvh files to the templates folder. This will be adjusted to operate as an OSTRICH template.
+      file.copy(from = file.path(global.simulation.dir, master.natural.rvh.file), to = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates"))
+      
+      ## Renames the above file to be *.rvh.tpl
+      file.rename(from = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", master.natural.rvh.file), to = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))
+      
+      
+    }
     
-    ## Renames the above file to be *.rvh.tpl
-    file.rename(from = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", "Master.rvh"), to = file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))
-  
-    
-  
-    OstrichRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
+    OstrichRVHTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
     
     
     cat(file = OstrichRVHTemplateFile, append = T, sep = "",
@@ -326,10 +339,10 @@ if(run.ostrich == TRUE){
 
 
 ## Identify the main RVI file to define the snow groups
-main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+main.RVI.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
 
 ## Identify the main RVH file to create the snow groups
-main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
+main.RVH.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
 
 
 ## ---------------------------------
@@ -422,10 +435,10 @@ if(length(all.snow.pillows.included) > 0){
 
 
 ## If an rvh.tpl file has been generated to allow subbasin calibrations to take place, also append the Snow groups to this file.
-if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))){
+if(run.ostrich == TRUE & file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = "")))){
   
   
-  OstrichRVHTemplateFile <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
+  OstrichRVHTemplateFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "templates", paste(ws.interest, "-", run.number, ".rvh.tpl", sep = ""))
   
   ## ---------------------------------
   ## If snow courses are included in the modelled watershed(s), define and create groups in rvi and rvh files
@@ -503,8 +516,8 @@ if(run.ostrich == TRUE & file.exists(file.path("/var/obwb-hydro-modelling/simula
 ## This code block defines and populates an "AllHRUs" HRUGroup which contains all HRUs within the current model run. This is defined in the *.rvi file and populated in the *.rvh file.
 
 ## Append the :AggregatedVariable command if it is present in the RVI-Template.csv
-RVI.template <- read.csv("/var/obwb-hydro-modelling/input-data/raw/parameter-codes/RVI-Template.csv")
-
+RVI.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, RVI.template.in.file))
+  
 ## Add colon to all parameter calls - this is required by Raven
 RVI.template$PARAMETER <- paste(":", RVI.template$PARAMETER, sep = '')
 
@@ -521,9 +534,9 @@ subbasins.present <- subbasins.present[!subbasins.present$Subbasin_ID %in% disab
 
 if(nrow(aggregated.variable) >0){
   
-  main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
+  main.RVH.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
   
-  main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+  main.RVI.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
   
   ## Grab the HRU table from the main.RVH.file
   HRU.table <- rvh.read(main.RVH.file)
@@ -583,9 +596,9 @@ if(length(disable.subbasins) > 0){
   ## Check to see if the custom disable subbasins (disable.subbasins) are included in the current model run. If not, they're already disabled and no custom group is needed
   if(any(disable.subbasins %in% subbasins.present$Subbasin_ID)){
   
-    main.RVH.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
+    main.RVH.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvh", sep = ""))
     
-    main.RVI.file <- file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
+    main.RVI.file <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, ".rvi", sep = ""))
     
     ## Grab the HRU table from the main.RVH.file
     HRU.table <- rvh.read(main.RVH.file)

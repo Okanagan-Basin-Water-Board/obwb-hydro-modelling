@@ -11,6 +11,9 @@ global.src.dir <- "/var/obwb-hydro-modelling/src"
 ## Input Data Directory
 global.input.dir <- "/var/obwb-hydro-modelling/input-data"
 
+## Simulation/Results Directory
+global.simulation.dir <- "/var/obwb-hydro-modelling/simulations"
+
 
 #####################################
 #####################################
@@ -26,10 +29,9 @@ global.input.dir <- "/var/obwb-hydro-modelling/input-data"
 
 raw.climate.in.dir <- "raw/climate"
 
+## NOTE: In Climate processing script, the variable name is defined independantly, and remaining filename is hardcorded as ".downscaled.nc"
 precip.raw.in.file <- "pr.downscaled.nc"
-
 tasmax.raw.in.file <- "tasmax.downscaled.nc"
-
 tasmin.raw.in.file <- "tasmin.downscaled.nc"
 
 ##-----------------------------------
@@ -68,7 +70,7 @@ trepanier.nat.flow.in.file <- "Trepanier Creek_OK Tennant Streamflows_Associated
 trout.nat.flow.in.file <- "Trout Creek_OK Tennant Streamflow Datasets_Associated_FINAL_15042019.xlsx"
 vaseux.nat.flow.in.file <- "Vaseux Creek_OK Tennant Streamflow Datasets_Associated_FINAL_21032019_VERSION 2.xlsx"
 vernon.nat.flow.in.file <- "Vernon Creek Outlet of Kal Lake-1996-2006_OWSDP (Phase 2) Naturalized Streamflow.xlsx"
-vernon.nat.flow.in.file <- "Whiteman Creek_OK Tennant Streamflow Datasets_Associated_FINAL_10122018.xlsx"
+whiteman.nat.flow.in.file <- "Whiteman Creek_OK Tennant Streamflow Datasets_Associated_FINAL_10122018.xlsx"
 nat.flow.read.me.file <- "README.txt"
 nat.flow.summary.in.file <- "naturalized-flows-summary.csv"  
 
@@ -132,7 +134,7 @@ WS.raster.in.file <- "WS_Raster_Final_ID.tif"
 WS.shape.in.file <- "WS_Boundaries_Final.shp"
 
 soil.polygon.in.file <- "soils/Soil_Clip_final.shp"
-soil.attribute.in.file <- "soils/BCSLF_Soil_Layer_File.csv"
+soil.bc.layer.in.file<- "soils/BCSLF_Soil_Layer_File.csv"
 
 LAI.in.dir <- "GEE-LAI"
 
@@ -173,13 +175,32 @@ climate.processed.read.me.file <- "README.txt"
 processed.spatial.dir <- "processed/spatial"
 
 okanagan.hru.table.file <- "okanagan_hru.RData"
-aspect.bin.processed.file <- "aspect-bin.tif"
-elevation.bin.processed.file <- "elevation-bin.tif"
-landcover.bin.processed.file <- "landcover-bin.tif"
-raw.hru.processed.file <- "raw-HRU-id.tif"
-soils.processed.file <- "soils.tif"
+
+
+aspect.bin.processed.file <- "aspect-bin.tif" # NOT INPUT FILE
+elevation.bin.processed.file <- "elevation-bin.tif" # NOT INPUT FILE
+landcover.bin.processed.file <- "landcover-bin.tif" # NOT INPUT FILE
+raw.hru.processed.file <- "raw-HRU-id.tif" # NOT INPUT FILE
 subbasin.processed.file <- "subbasin.tif"
 tidy.hru.processed.file <- "tidy-HRU-id.tif"
+
+## SOIL
+soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
+soil.attribute.in.file <- "soils/soil_attributes.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
+soil.profile.table.in.file <- "soils/soil-profile-table.csv" # This will be date stamped when soils are re-processed.
+soil.class.table.in.file <- "soils/soil-class-table.csv" # This will be date stamped when soils are re-processed.
+processed.soil.image <- "soils/post-process-image.RData" ## TODO: renames to soil-post-process-image.DATE.RData
+
+soil.thickness.range.calibration.file <- "soils/soil-thickness-ranges-calibration.csv"
+soil.profile.table.calibration.file <- "soils/soil-profile-table-calibration.csv"
+
+## SNOW
+snow.course.locations.processed.file <- "snow/snow-course-locations-model-domain.csv"
+snow.pillow.locations.processed.file <- "snow/snow-pillow-locations-model-domain.csv"
+
+## LAI
+seasonal.lai.processed.file <- "lai/seasonal-lai.csv"
+max.lai.processed.file <- "lai/manual-max-lai.csv"
 
 #####################################
 #####################################
@@ -189,16 +210,28 @@ tidy.hru.processed.file <- "tidy-HRU-id.tif"
 #####################################
 #####################################
 
-raven.executable.directory <- "src/raven_src/src"
+raven.executable.directory <- "raven_src/src"
 
 raven.executable.name <- "Raven.exe"
 
 
-ostrich.executable.directory <- "src/ostrich_src/Linux/openmpi/2.0.2"
+ostrich.executable.directory <- "ostrich_src/Linux/openmpi/2.0.2"
 
 ostrich.executable.name <- "Ostrich"
 
 ostrich.parallel.executable.name <- "OstrichMPI"
 
+mpirun.dir <- "/usr/bin/mpirun"
 
 
+#####################################
+#####################################
+##
+## RAVEN *.RVH FILES
+##
+#####################################
+#####################################
+
+master.natural.rvh.file <- "Master_natural.rvh"
+
+master.residual.rvh.file <- "Master_residual.rvh"
