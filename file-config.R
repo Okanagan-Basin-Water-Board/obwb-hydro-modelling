@@ -30,9 +30,9 @@ global.simulation.dir <- "/var/obwb-hydro-modelling/simulations"
 raw.climate.in.dir <- "raw/climate"
 
 ## NOTE: In Climate processing script, the variable name is defined independantly, and remaining filename is hardcorded as ".downscaled.nc"
-precip.raw.in.file <- "pr.downscaled.nc"
-tasmax.raw.in.file <- "tasmax.downscaled.nc"
-tasmin.raw.in.file <- "tasmin.downscaled.nc"
+precip.raw.in.file <- "pr.downscaled_05052020.nc"
+tasmax.raw.in.file <- "tasmax.downscaled_05052020.nc"
+tasmin.raw.in.file <- "tasmin.downscaled_05052020.nc"
 
 ##-----------------------------------
 ## CUSTOM TIMESERIES DATA
@@ -40,11 +40,11 @@ tasmin.raw.in.file <- "tasmin.downscaled.nc"
 
 raw.custom.timeseries.in.dir <- "raw/custom-timeseries"
 
-custom.timeseres.in.file <- "custom_timeseries.xlsx"
+custom.timeseres.in.file <- "custom_timeseries_05052020.xlsx"
 
-diversion.rules.in.file <- "diversion_rules_summary.csv"
+diversion.rules.in.file <- "diversion_rules_summary_05052020.csv"
 
-stirling.creek.flows.in.file <- "stirling_ck_mean_monthly_flows.csv"
+stirling.creek.flows.in.file <- "stirling_ck_mean_monthly_flows_05052020.csv"
 
 ##-----------------------------------
 ## NATURALIZED FLOWS DATA
@@ -80,7 +80,7 @@ nat.flow.summary.in.file <- "naturalized-flows-summary.csv"
 
 raw.owdm.in.dir <- "raw/owdm"
 
-owdm.water.demand.in.file <- "OWDM_water_demands_timeseries.csv"
+owdm.water.demand.in.file <- "OWDM_water_demands_timeseries_05052020.csv"
 
 ##-----------------------------------
 ## PARAMETER CODES & PRIMARY TEMPLATES
@@ -89,16 +89,16 @@ owdm.water.demand.in.file <- "OWDM_water_demands_timeseries.csv"
 
 raw.parameter.codes.in.dir <- "raw/parameter-codes"
 
-RVP.template.in.file <- "RVP-Template.csv"
-RVI.template.in.file <- "RVI-Template.csv"
-OST.template.in.file <- "OST-Template.csv"
+RVP.template.in.file <- "RVP-Template_05052020.csv"
+RVI.template.in.file <- "RVI-Template_05052020.csv"
+OST.template.in.file <- "OST-Template_05052020.csv"
 
 ## Additional Template files
-AR.in.file <- "annual_runoff.csv"
-AQ.in.file <- "aquifer_codes.csv"
-LC.in.file <- "landcover_codes.csv"
-SB.in.file <- "subbasin_codes.csv"
-Veg.in.file <- "vegetation_codes.csv"
+AR.in.file <- "annual_runoff_05052020.csv"
+AQ.in.file <- "aquifer_codes_05052020.csv"
+LC.in.file <- "landcover_codes_05052020.csv"
+SB.in.file <- "subbasin_codes_05052020.csv"
+Veg.in.file <- "vegetation_codes_05052020.csv"
 
 ##-----------------------------------
 ## RESERVOIR DATA
@@ -106,7 +106,7 @@ Veg.in.file <- "vegetation_codes.csv"
 
 raw.reservoir.in.dir <- "raw/reservoirs"
 
-reservoir.in.file <- "raven-reservoirs.xlsx"
+reservoir.in.file <- "raven-reservoirs_05052020.xlsx"
 reservoir.read.me.file <- "README.txt"
 
 ##-----------------------------------
@@ -115,10 +115,10 @@ reservoir.read.me.file <- "README.txt"
 
 raw.snow.in.dir <- "raw/snow-data"
 
-manual.snow.data.in.file <- "archive-manual-snow-survey-data.csv"
-automated.snow.data.in.file <- "archive-swe-automated-snow-pillows.csv"
-snow.course.locations.in.file <- "snow-course-locations.csv"
-snow.pillow.locations.in.file <- "snow-pillow-locations.csv"
+manual.snow.data.in.file <- "archive-manual-snow-survey-data_05052020.csv"
+automated.snow.data.in.file <- "archive-swe-automated-snow-pillows_05052020.csv"
+snow.course.locations.in.file <- "snow-course-locations_05052020.csv"
+snow.pillow.locations.in.file <- "snow-pillow-locations_05052020.csv"
 snow.read.me.file <- "README.txt"
 
 ##-----------------------------------
@@ -127,14 +127,14 @@ snow.read.me.file <- "README.txt"
 
 raw.spatial.in.dir <- "raw/spatial"
 
-dem.in.file <- "DEM_Fix2.tif"
-landcover.in.file <- "eosd_urban41.tif"
-aquifer.in.file <- "OBWB_Aquifer.tif"
-WS.raster.in.file <- "WS_Raster_Final_ID.tif"
-WS.shape.in.file <- "WS_Boundaries_Final.shp"
+dem.in.file <- "OHMP_DEM_05052020.tif"
+landcover.in.file <- "OHMP_LANDCOVER_05052020.tif"
+aquifer.in.file <- "OHMP_AQUIFER_05052020.tif"
+WS.raster.in.file <- "OHMP_SUBBASINS_05052020.tif"
+WS.shape.in.file <- "OHMP_SUBBASIN_BOUNDARIES_05052020.shp"
 
-soil.polygon.in.file <- "soils/Soil_Clip_final.shp"
-soil.bc.layer.in.file<- "soils/BCSLF_Soil_Layer_File.csv"
+soil.polygon.in.file <- "soils/OHMP_SOILS_CLIP_05052020.shp"
+soil.bc.layer.in.file<- "soils/BCSLF_Soil_Layer_File_05052020.csv"
 
 LAI.in.dir <- "GEE-LAI"
 
@@ -144,7 +144,7 @@ LAI.in.dir <- "GEE-LAI"
 
 raw.hydat.in.dir <- "raw/wsc-hydat"
 
-hydat.in.file <- "Hydat.sqlite3"
+hydat.in.file <- "Hydat_05052020.sqlite3"
 hydat.read.me.file <- "README.txt"
 
 
@@ -232,6 +232,6 @@ mpirun.dir <- "/usr/bin/mpirun"
 #####################################
 #####################################
 
-master.natural.rvh.file <- "Master_natural.rvh"
+master.natural.rvh.file <- "Master_natural_05052020.rvh"
 
-master.residual.rvh.file <- "Master_residual.rvh"
+master.residual.rvh.file <- "Master_residual_05052020.rvh"
