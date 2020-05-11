@@ -186,7 +186,7 @@ tidy.hru.processed.file <- "tidy-HRU-id.tif"
 
 ## SOIL
 soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
-soil.attribute.in.file <- "soils/soil_attributes.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
+soil.attribute.in.file <- "soils/soil_attributes_05052020.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
 soil.profile.table.in.file <- "soils/soil-profile-table.csv" # This will be date stamped when soils are re-processed.
 soil.class.table.in.file <- "soils/soil-class-table.csv" # This will be date stamped when soils are re-processed.
 processed.soil.image <- "soils/post-process-image.RData" ## TODO: renames to soil-post-process-image.DATE.RData
