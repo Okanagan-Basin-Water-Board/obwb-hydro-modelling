@@ -174,7 +174,7 @@ climate.processed.read.me.file <- "README.txt"
 
 processed.spatial.dir <- "processed/spatial"
 
-okanagan.hru.table.file <- "okanagan_hru.RData"
+okanagan.hru.table.file <- "okanagan_hru.2020-05-11.RData"
 
 
 aspect.bin.processed.file <- "aspect-bin.tif" # NOT INPUT FILE
