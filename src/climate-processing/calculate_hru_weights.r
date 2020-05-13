@@ -82,7 +82,9 @@ print("...loading climate data grid point time/lat/lon...")
 
 input.dir <- file.path(global.input.dir, raw.climate.in.dir)
   
-input.file <- paste(Var, ".downscaled.nc", sep ="")
+if(Var == "tasmax"){input.file <- tasmax.raw.in.file}
+if(Var == "tasmin"){input.file <- tasmin.raw.in.file}
+if(Var == "pr"){input.file <- precip.raw.in.file}
 
 f <- nc_open(file.path(input.dir,input.file))
 

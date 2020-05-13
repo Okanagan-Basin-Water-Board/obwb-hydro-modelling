@@ -162,10 +162,10 @@ hydat.read.me.file <- "README.txt"
 
 processed.climate.dir <- "processed/climate"
 
-precip.processed.file <- "pr.HRU.timeseries.V1.0.1.nc"
-tasmax.processed.file <- "tasmax.HRU.timeseries.V1.0.1.nc"
-tasmin.processed.file <- "tasmin.HRU.timeseries.V1.0.1.nc"
-spatial.grid.data.processed.file <- "spatial.grid.data.V1.0.1.RData"
+precip.processed.file <- "pr.HRU.timeseries.2020-05-12.nc"
+tasmax.processed.file <- "tasmax.HRU.timeseries.2020-05-12.nc"
+tasmin.processed.file <- "tasmin.HRU.timeseries.2020-05-12.nc"
+spatial.grid.data.processed.file <- "spatial.grid.data.2020-05-12.RData"
 climate.processed.read.me.file <- "README.txt"
 
 ##-----------------------------------
@@ -174,19 +174,19 @@ climate.processed.read.me.file <- "README.txt"
 
 processed.spatial.dir <- "processed/spatial"
 
-okanagan.hru.table.file <- "okanagan_hru.RData"
+okanagan.hru.table.file <- "okanagan_hru.2020-05-11.RData"
 
 
-aspect.bin.processed.file <- "aspect-bin.tif" # NOT INPUT FILE
-elevation.bin.processed.file <- "elevation-bin.tif" # NOT INPUT FILE
-landcover.bin.processed.file <- "landcover-bin.tif" # NOT INPUT FILE
-raw.hru.processed.file <- "raw-HRU-id.tif" # NOT INPUT FILE
-subbasin.processed.file <- "subbasin.tif"
-tidy.hru.processed.file <- "tidy-HRU-id.tif"
+aspect.bin.processed.file <- "aspect-bin.2020-05-11.tif" # NOT INPUT FILE
+elevation.bin.processed.file <- "elevation-bin.2020-05-11.tif" # NOT INPUT FILE
+landcover.bin.processed.file <- "landcover-bin.2020-05-11.tif" # NOT INPUT FILE
+raw.hru.processed.file <- "raw-HRU-id.2020-05-11.tif" # NOT INPUT FILE
+subbasin.processed.file <- "subbasin.2020-05-11.tif"
+tidy.hru.processed.file <- "tidy-HRU-id.2020-05-11.tif"
 
 ## SOIL
 soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
-soil.attribute.in.file <- "soils/soil_attributes.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
+soil.attribute.in.file <- "soils/soil_attributes_05052020.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
 soil.profile.table.in.file <- "soils/soil-profile-table.csv" # This will be date stamped when soils are re-processed.
 soil.class.table.in.file <- "soils/soil-class-table.csv" # This will be date stamped when soils are re-processed.
 processed.soil.image <- "soils/post-process-image.RData" ## TODO: renames to soil-post-process-image.DATE.RData
@@ -195,8 +195,8 @@ soil.thickness.range.calibration.file <- "soils/soil-thickness-ranges-calibratio
 soil.profile.table.calibration.file <- "soils/soil-profile-table-calibration.csv"
 
 ## SNOW
-snow.course.locations.processed.file <- "snow/snow-course-locations-model-domain.csv"
-snow.pillow.locations.processed.file <- "snow/snow-pillow-locations-model-domain.csv"
+snow.course.locations.processed.file <- "snow/snow-course-locations-model-domain.2020-05-13.csv"
+snow.pillow.locations.processed.file <- "snow/snow-pillow-locations-model-domain.2020-05-13.csv"
 
 ## LAI
 seasonal.lai.processed.file <- "lai/seasonal-lai.csv"
@@ -232,6 +232,6 @@ mpirun.dir <- "/usr/bin/mpirun"
 #####################################
 #####################################
 
-master.natural.rvh.file <- "Master_natural_05052020.rvh"
+master.natural.rvh.file <- "Master_natural.2020-05-12.rvh"
 
-master.residual.rvh.file <- "Master_residual_05052020.rvh"
+master.residual.rvh.file <- "Master_residual.2020-05-12.rvh"

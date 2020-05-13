@@ -18,7 +18,7 @@ Tidy.hru <- raster(file.path(global.input.dir, processed.spatial.dir, tidy.hru.p
   
 subbasin.raster <- raster(file.path(global.input.dir, processed.spatial.dir, subbasin.processed.file))
   
-subbasin.codes <- read.csv(file.path(global.input.dir, processed.spatial.dir, SB.in.file))
+subbasin.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
   
 ## Read in snow course and snow pillow location csv files directly downloaded from dataBC
 snow.course.locations <- read.csv(file.path(global.input.dir, raw.snow.in.dir, snow.course.locations.in.file))
@@ -27,10 +27,10 @@ snow.pillow.locations <- read.csv(file.path(global.input.dir, raw.snow.in.dir, s
 
 
 ## Extract the corresponding SUBBASIN ID for all snow course locations
-snow.course.locations$Subbasin_ID <- extract(subbasin.raster, snow.course.locations[,c("X", "Y")])
+snow.course.locations$Subbasin_ID <- raster::extract(subbasin.raster, snow.course.locations[,c("X", "Y")])
 
 ## Extract the corresponding HRU ID for all snow course locations
-snow.course.locations$HRU <- extract(Tidy.hru, snow.course.locations[,c("X", "Y")])
+snow.course.locations$HRU <- raster::extract(Tidy.hru, snow.course.locations[,c("X", "Y")])
 
 ## Remove values which fall outside the model domain spatial extent
 snow.course.locations <- snow.course.locations[!is.na(snow.course.locations$HRU), ]
@@ -41,9 +41,9 @@ snow.course.locations <- merge(subbasin.codes, snow.course.locations, by = "Subb
 
 
 ## Repeat all above steps for snow pillow locations
-snow.pillow.locations$Subbasin_ID <- extract(subbasin.raster, snow.pillow.locations[,c("X", "Y")])
+snow.pillow.locations$Subbasin_ID <- raster::extract(subbasin.raster, snow.pillow.locations[,c("X", "Y")])
 
-snow.pillow.locations$HRU <- extract(Tidy.hru, snow.pillow.locations[,c("X", "Y")])
+snow.pillow.locations$HRU <- raster::extract(Tidy.hru, snow.pillow.locations[,c("X", "Y")])
 
 snow.pillow.locations <- snow.pillow.locations[!is.na(snow.pillow.locations$HRU), ]
 

@@ -86,11 +86,15 @@ print("done reading in all data...")
 print("calculating slope and aspect...")
 
 ## Calculate slope and aspect for all of BC, and seperate to individual objects
-slope.aspect <- terrain(dem, opt = c('slope','aspect'), unit = 'degrees')
+## Default method (neighbors = 8) used here as recommended for rough (vs. smooth) terrain. Methodology follows Horn (1981)..
+## The terrain indices are according to Wilson et al. (2007), as in gdaldem (https://gdal.org/programs/gdaldem.html) - i.e., azimuth 0 = north, east = 90, south = 180, west = 270.
+
+slope.aspect <- terrain(dem, opt = c('slope','aspect'), unit = 'degrees', neighbors = 8)
 
 slope <- subset(slope.aspect, subset = 'slope')
 
 aspect <- subset(slope.aspect, subset = 'aspect')
+
 
 print("cropping extents to the Okanagan...")
 
@@ -115,6 +119,7 @@ subbasin.ok <- mask(crop(subbasin, model.watersheds.shape), model.watersheds.sha
 ##
 ###########################################################################################
 
+## Coordinates are extracted row-wise from the top-left to the bottom-right. This is the same extraction order as values() and getValues().
 coords <- coordinates(dem.ok)
 
 ## ----------------------------------------
@@ -141,7 +146,7 @@ if(base::all.equal(coords, coords.slope) != TRUE |
    base::all.equal(coords, coords.soils) != TRUE |
    base::all.equal(coords, coords.aquifers) != TRUE |
    base::all.equal(coords, coords.subbasin) != TRUE){
-  stop("Coordinates do not match. Ensure all input datasets are reprojected and snapped to the same grid. Use DEM_fix2.tif as the base grid.")
+  stop(paste("Coordinates do not match. Ensure all input datasets are reprojected and snapped to the same grid. Use",  dem.in.file, "as the base grid."))
 } else{
   print("Coordinates match...continue mapping HRUs")
   rm(coords.slope, coords.aspect, coords.landcover, coords.soils, coords.aquifers, coords.subbasin)
@@ -154,29 +159,36 @@ if(base::all.equal(coords, coords.slope) != TRUE |
 ## Extract values for all required components
 ##
 ## ----------------------------------------
-## TODO: Change values() to getValues() to allow reading from file if rasters become too large to load to memory in future
-## TODO: Could update process to use rasterToPoints() rather than values() and then coordinates().
-slope.values <- values(slope.ok)
+## #TD6: 08052020 - process changed from values() to getValues() to allow values to be pulled from file if/when rasters become larger.
+## getValues() and coordinates() both pull values row-wise, from the top-left, to the bottom-right corner of a matrix.
 
-aspect.values <- values(aspect.ok)
+slope.values <- getValues(slope.ok)
 
-elevation.values <- values(dem.ok)
+aspect.values <- getValues(aspect.ok)
 
-landcover.values <- values(landcover.ok)
+elevation.values <- getValues(dem.ok)
 
-subbasin.values <- values(subbasin.ok)
+landcover.values <- getValues(landcover.ok)
 
-soils.values <- values(soils.ok)
+subbasin.values <- getValues(subbasin.ok)
 
-aquifer.values <- values(aquifers.ok)
+soils.values <- getValues(soils.ok)
+
+aquifer.values <- getValues(aquifers.ok)
 
 
-## TODO : BUG 8 - Feb 24-2020 - Raven expects aspect values calculated as positive COUNTERCLOCKWISE from north.
+## #B3: 08052020 - Raven expects aspect values calculated as positive COUNTERCLOCKWISE from north.
 ## Standard convention computes aspect as positive CLOCKWISE from north. Therefore, an adjustment is needed.
-## aspect.values.adjusted <- 360 - aspect.values
+## To convert CLOCKWISE to COUNTERCLOCKWISE, subtract from 360.
 
-## TEMP SAVE #1
-# save.image(file = file.path(tmp.loc, paste("temp1.", Sys.Date(), ".RData", sep = "")))
+aspect.values.adjusted <- 360 - aspect.values
+
+## NOTE: By default,R assigns an aspect of 90-degrees to areas with a slope of 0. Flat areas cannont be assigned a value other than 0-360 (Raven requires 0-360); therefore, the default
+## value is left. Therefore, followint this correction, all flat areas are assigned a value of 270-degrees (i.e., east facing).
+
+
+## TEMP SAVE #1 - allows intermediate state to be grabbed if necessary
+save.image(file = file.path(tmp.loc, paste("temp1.", Sys.Date(), ".RData", sep = "")))
 
 ## Remove unneeded items from workspace
 rm(aquifers, aquifers.ok, dem, dem.ok, landcover, landcover.ok, slope.aspect, slope, aspect, slope.ok, aspect.ok, soils, soils.ok, subbasin.ok, model.watersheds, model.watersheds.shape)
@@ -186,24 +198,15 @@ gc()
 ## Put together data table
 DT <- data.table(
   coords = coords,
-  # coords.subbasin = coords.subbasin,
+  # coords.subbasin = coords.subbasin, # This isn't needed anymore as coordinate matches are confirmed above.
   slope = slope.values,
-  aspect = aspect.values,
-## TODO : BUG 8 - Feb-24-2020 - Replace aspect values here with aspect.values.adjusted
-## aspect = aspect.values.adjusted,
+  aspect = aspect.values.adjusted, # #B3: 08052020 - use adjusted aspect values, rather than raw values.
   elevation = elevation.values,
   landcover = landcover.values,
   soils = soils.values,
   aquifer = aquifer.values,
   subbasin = subbasin.values
 )
-
-## By default, R assigns an aspect of 90-deg to areas with a slope of 0. Herein, we reassign a value of -999 to areas with 0 slope.
-## NOTE: RAVEN ONLY ACCEPTS ASPECT BETWEEN 0-360. LEAVE ASPECT AS DEFAULT BEHAVIOUR (I.E., FLAT = 90-DEGREES)
-# DT[DT$slope == 0]$aspect <- -999
-
-## Reassign aspect.values based on this new subset
-# aspect.values <- DT$aspect
 
 ###########################################################################################
 ##
@@ -254,31 +257,19 @@ DT$landcover.bin <- ifelse(landcover.values <= 11, 300, # No data / Unclassified
                     ifelse(landcover.values == 1033, 310, 300)))))))))))  # URBAN
 ## Determine aspect bins
 
-DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
-                       ifelse(aspect.values >= 0 & aspect.values < 45, 400, # North
-                       ifelse(aspect.values >= 45 & aspect.values < 135, 401, # East
-                       ifelse(aspect.values >= 135 & aspect.values < 225, 402, # South
-                       ifelse(aspect.values >= 225 & aspect.values < 315, 403, 999))))) #West (999 = something went wrong)
+DT$aspect.bin <- ifelse(aspect.values.adjusted >= 315, 400, # North
+                 ifelse(aspect.values.adjusted >= 0 & aspect.values.adjusted < 45, 400, # North
+                 ifelse(aspect.values.adjusted >= 45 & aspect.values.adjusted < 135, 401, # West #B3: 08052020 - EAST is now WEST as aspect direction changed
+                 ifelse(aspect.values.adjusted >= 135 & aspect.values.adjusted < 225, 402, # South
+                 ifelse(aspect.values.adjusted >= 225 & aspect.values.adjusted < 315, 403, 999))))) # East #B3: 08052020 - WEST is now EAST as aspect direction changed (999 = something went wrong)
 
-# DT$aspect.bin <- ifelse(aspect.values >= 270, 400, # north
-#                  ifelse(aspect.values >= 0 & aspect.values < 90, 400, # north
-#                  ifelse(aspect.values >= 90 & aspect.values < 270, 401, 999))) # south (999 = something went wrong)
+## Check to make sure none are assigned 999.
+if(nrow(DT[DT$elevation.bin == 999, ]) > 0 | nrow(DT[DT$landcover.bin == 999, ]) > 0  | nrow(DT[DT$aspect.bin == 999, ]) >0 ){
+  stop("One or more of the binning processes did not complete correctly. Review binned values in DT.")
+}
 
-## TODO : BUG 8 - Feb-24-2020 - Replace aspect.values in ifelse() with aspect.values.adjusted. In addition, note difference in bins (east = west; west = east)
-## DT$aspect.bin <- ifelse(aspect.values.adjusted >= 315, 400, # North
-##                        ifelse(aspect.values.adjusted >= 0 & aspect.values.adjusted < 45, 400, # North
-##                        ifelse(aspect.values.adjusted >= 45 & aspect.values.adjusted < 135, 401, # West
-##                        ifelse(aspect.values.adjusted >= 135 & aspect.values.adjusted < 225, 402, # South
-##                        ifelse(aspect.values.adjusted >= 225 & aspect.values.adjusted < 315, 403, 999))))) # East (999 = something went wrong)
-
-## Determine slope bins
-
-# DT$slope.bin <- ifelse(slope.values <= 5, 1,
-#                       ifelse(slope.values > 5 & slope.values <= 20, 2,
-#                       ifelse(slope.values > 20 & slope.values <= 40, 3,
-#                       ifelse(slope.values > 40 & slope.values <= 60, 4,
-#                       ifelse(slope.values > 60, 5, 0)))))
-
+## TEMP SAVE #2 - allows intermediate state to be grabbed if necessary
+save.image(file = file.path(tmp.loc, paste("temp2.", Sys.Date(), ".RData", sep = "")))
 
 ########################################
 ##
@@ -286,32 +277,28 @@ DT$aspect.bin <- ifelse(aspect.values >= 315, 400, # North
 ## NOTE: Cannot use complete.cases as aquifers as empty under lakes, so it removed HRUs from Kal & Wood lakes
 ########################################
 
-## TEMP SAVE #2
-# save.image(file = file.path(tmp.loc, paste("temp2.", Sys.Date(), ".RData", sep = "")))
+## Create a backup
+DT.revert <- DT
 
+
+## Read in soil.codes and aquifer codes to assign values to pixels with blank/missing information
 soil.codes <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.attribute.in.file), 
                        col.names = c("OID", "Value", "Count", "soil_type"))
 
+aquifer.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, AQ.in.file))
 
-DT.revert <- DT
-
-## Assign cells with no aquifer information (i.e., under lakes) with 0 so that they're not removed
-DT[is.na(DT$aquifer), "aquifer"] <- 0
-
-# ## Assign the most common soil type to all cells with missing soils information - this fills a couple of areas that had no soil polygon available with the most common for the Okanagan
-# DT[is.na(DT$soils), "soils"] <- getmode(DT[!is.na(DT$soils), "soils"])
+## Fill missing aquifer and soil pixels with a value other than NA.
+## Assign cells with no aquifer information (i.e., under lakes, or a few random pixels missing aquifer information) with values relating to "NONE" aquifer type so that they're not removed.
+DT[is.na(DT$aquifer), "aquifer"] <- aquifer.codes[aquifer.codes$Aquifer_ty == "[NONE]", "Value"]
 
 ## For pixels with missing soil information, assign them the "blank" soil profile value - this will be replaced with the most common soil type for each subbasin in the rvh file
+## This requires the correct string for "missing" soils to be entered here, matching that included in the soil.attribute.in.file - see check below
 DT[is.na(DT$soils), "soils"] <- soil.codes[soil.codes$soil_type == " ", "Value"]
+
+warning("Ensure that the string hardcoded for missing Soil Profiles and Aquifer types is correct.")
 
 ## Remove areas outside the model watershed (i.e., subbasin = NA)
 DT <- DT[!is.na(DT$subbasin), ]
-
-## Remove incomplete cases (i.e., dead area outside of the model watersheds)
-# DT <- DT[complete.cases(DT),]
-
-# NOTE: Remove all cells with empty elevation data
-# DT <- DT[!is.na(DT$slope)]
 
 ########################################
 ##
@@ -430,17 +417,18 @@ print("Done writing spatial layers...")
 ########################################
 print("Tidying HRU IDs...")
 
+## Udentify all of the unique IDs/HRUs
 unique.ID <- unique(raw.ID)
+
+## Generate a sequence from 1 to the number of HRUs
 replace.ID <- 1:length(unique(raw.ID))
 
-
-
+## Loop over each unique HRU, find all of it's occurrences, and replace all of those values with the "tidy" value.
 for(i in 1:length(unique.ID)){
   place <- which(raw.ID == unique.ID[i])  
   raw.ID[place] <- replace.ID[i]
   print(i)
 }
-
 
 ## Add tidy IDs to DT
 DT$Tidy.ID <- raw.ID
@@ -467,8 +455,8 @@ print("Saving all spatial plots to file...")
 # ## Plot tidy ID
 pdf(file.path(global.input.dir, processed.spatial.dir, paste("HRU-output.", Sys.Date(), ".pdf", sep = "")), height = 17, width = 11)
 
-ncolors=length(unique.ID)
-colpalette<-rgb(runif(ncolors),runif(ncolors ),runif(ncolors ))
+ncolors <- length(unique.ID)
+colpalette <- rgb(runif(ncolors), runif(ncolors), runif(ncolors))
 
 plot(raw.r.ID, col = colpalette, main = "Raw HRUs")
 
@@ -494,10 +482,9 @@ dev.off()
 ########################################
 print("reprojecting coordinates to lat/lon...")
 
-## create new coords object drom the reduced DT (i.e., excluding NAs)
-## QAQC: Replace this with cbind(x, y) since they were extracted from DT above to create the series of raster
-coords.reduced <- matrix(nrow = nrow(DT), ncol = 2, data = c(x = DT$coords.x,
-                                                     y = DT$coords.y))
+## create new coords object from the reduced DT (i.e., excluding NAs)
+## Use "x" and "y" objects since they were extracted from reduced DT above
+coords.reduced <- cbind(x, y)
 
 HRUlatlon <- project(coords.reduced, bc.albers, inverse = T, degrees = T)
 
@@ -507,14 +494,24 @@ DT$Y <- HRUlatlon[,2]
 
 ########################################
 ##
-## Remove unneeded items from workspace and save results to RData object and csv file
+## Remove unneeded items from workspace and save results to RData object
 ##
 ########################################
 print("Saving output to file...")
 
-# rm(list = ls()[! ls() %in% c("DT", "DT.revert")])
-rm(list = ls()[! ls() %in% c("DT", "DT.revert")])
+
+rm(list = ls()[! ls() %in% c("DT", "DT.revert", "tmp.loc")])
+
+## Source file configuration again for output paths
+source("/var/obwb-hydro-modelling/file-config.R")
 
 save.image(file = file.path(global.input.dir, processed.spatial.dir, paste("okanagan_hru.", Sys.Date(), ".RData", sep = "")))
+
+## Delete Temporary Files
+file.remove(file.path(tmp.loc, paste("temp1.", Sys.Date(), ".RData", sep = "")))
+file.remove(file.path(tmp.loc, paste("temp2.", Sys.Date(), ".RData", sep = "")))
+
  
 print("Done!")
+
+
