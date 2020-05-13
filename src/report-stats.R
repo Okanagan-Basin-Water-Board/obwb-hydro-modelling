@@ -6,6 +6,9 @@
 ##
 #########################################################################################################################################
 
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
+
 ## ----------------------------------------------------------------------------------------
 ##
 ## Determine number of HRUs/Subbasins/Reservoirs in each watershed
