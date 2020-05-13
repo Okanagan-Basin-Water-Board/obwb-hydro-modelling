@@ -315,6 +315,7 @@ double CModel::EstimatePET(const force_struct &F,
   case(PET_FROMMONTHLY):
   {
     double peRatio=1.0+HBV_PET_TEMP_CORR*(F.temp_ave_unc-F.temp_month_ave);
+    //double peRatio=1.0+0.687*(F.temp_ave_unc-F.temp_month_ave);//TMP DEBUG - HYPR comparison
     peRatio=max(0.0,min(2.0,peRatio));
     PET=F.PET_month_ave*peRatio;
     break;
@@ -440,7 +441,7 @@ double CModel::EstimatePET(const force_struct &F,
   }
   case(PET_OUDIN) :
   {
-    PET=max(F.ET_radia/DENSITY_WATER/LH_VAPOR*(F.temp_daily_ave+5.0)/100.0,0.0);
+    PET=max(F.ET_radia/DENSITY_WATER/LH_VAPOR*MM_PER_METER*(F.temp_daily_ave+5.0)/100.0,0.0);
     break;
   }
   case(PET_LINACRE):

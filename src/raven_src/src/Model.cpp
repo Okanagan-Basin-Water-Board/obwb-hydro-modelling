@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2019 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
   ----------------------------------------------------------------*/
 #include "Model.h"
 
@@ -360,7 +360,7 @@ CHydroUnit *CModel::GetHRUByID(const int HRUID) const
   static int last_k=0;
   //smart find
   int k;
-  for (int i=0;i<_nHydroUnits;i++){ //could be very slow
+  for (int i=0;i<_nHydroUnits;i++){ 
     k=NearSearchIndex(i,last_k,_nHydroUnits);
     if (HRUID==_pHydroUnits[k]->GetID()){ last_k=k; return _pHydroUnits[k];}
   }
@@ -490,7 +490,7 @@ const CSubBasin **CModel::GetUpstreamSubbasins(const int SBID,int &nUpstream) co
 
   int p=GetSubBasinIndex(SBID);
   if((p==DOESNT_EXIST) || (p==INDEX_NOT_FOUND)) {
-    string warn="CModel::GetUpstreamSubbasins: invalid subbasin ID "+to_string(SBID)+" (:ReservoirDownstreamDemand command??)";
+    string warn="CModel::GetUpstreamSubbasins: invalid subbasin ID "+to_string(SBID)+" (:ReservoirDownstreamDemand command ? )";
     ExitGracefully(warn.c_str(),BAD_DATA);return NULL;
   }
   isUpstr[p]=true;
@@ -931,6 +931,7 @@ force_struct CModel::GetAverageForcings() const
       Fave.potential_melt +=area_wt*pF_hru->potential_melt;
 
       Fave.recharge       +=area_wt*pF_hru->recharge;
+      Fave.precip_temp    +=area_wt*pF_hru->precip_temp;
 
       Fave.subdaily_corr  +=area_wt*pF_hru->subdaily_corr;
     }
@@ -1527,7 +1528,8 @@ void CModel::IncrementCumOutflow(const optStruct &Options)
       {
         _CumulOutput+=_pSubBasins[p]->GetIntegratedOutflow(Options.timestep)/area*MM_PER_METER;//converted to [mm] over entire watershed
       }
-      _CumulOutput+=_pSubBasins[p]->GetReservoirLosses(Options.timestep)/area*MM_PER_METER;
+      _CumulOutput+=_pSubBasins[p]->GetReservoirLosses (Options.timestep)/area*MM_PER_METER;
+      _CumulOutput+=_pSubBasins[p]->GetIrrigationLosses(Options.timestep)/area*MM_PER_METER;
     }
   }
   _pTransModel->IncrementCumulOutput(Options);
@@ -1559,7 +1561,7 @@ void CModel::UpdateTransientParams(const optStruct   &Options,
   for (int j = 0; j<_nClassChanges; j++)
   {
     if((_pClassChanges[j]->modeltime > tt.model_time - TIME_CORRECTION) &&
-      (_pClassChanges[j]->modeltime < tt.model_time + Options.timestep))
+       (_pClassChanges[j]->modeltime < tt.model_time + Options.timestep))
     {//change happens this time step
 
       int kk   =_pClassChanges[j]->HRU_groupID;
@@ -1567,20 +1569,25 @@ void CModel::UpdateTransientParams(const optStruct   &Options,
       {
         k=_pHRUGroups[kk]->GetHRU(k_loc)->GetGlobalIndex();
 
-        if(_pClassChanges[j]->tclass == CLASS_LANDUSE)
+        if      (_pClassChanges[j]->tclass == CLASS_LANDUSE)
         {
           CLandUseClass *lult_class= CLandUseClass::StringToLUClass(_pClassChanges[j]->newclass);
           _pHydroUnits[k]->ChangeLandUse(lult_class);
         }
-        else if(_pClassChanges[j]->tclass == CLASS_VEGETATION)
+        else if (_pClassChanges[j]->tclass == CLASS_VEGETATION)
         {
           CVegetationClass *veg_class= CVegetationClass::StringToVegClass(_pClassChanges[j]->newclass);
           _pHydroUnits[k]->ChangeVegetation(veg_class);
         }
-        else if(_pClassChanges[j]->tclass == CLASS_HRUTYPE)
+        else if (_pClassChanges[j]->tclass == CLASS_HRUTYPE)
         {
           HRU_type typ=StringToHRUType(_pClassChanges[j]->newclass);
           _pHydroUnits[k]->ChangeHRUType(typ);
+        }
+
+        for(int j=0; j<_nProcesses;j++)// kt
+        {
+          _aShouldApplyProcess[j][k] = _pProcesses[j]->ShouldApply(_pHydroUnits[k]);
         }
       }
     }

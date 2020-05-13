@@ -52,3 +52,6 @@ input-data/raw/parameter-codes/RVP-Template-15012020.csv
 input-data/raw/parameter-codes/RVP-Template_old.csv
 input-data/raw/parameter-codes/RVP-Template-base.csv
 input-data/raw/parameter-codes/RVP-Template_Naramata.csv
+src/raven_src/src/*.o
+src/raven_src/src/*.exe
+src/raven_src/.svn/

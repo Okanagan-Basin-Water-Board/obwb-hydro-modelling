@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2019 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
   ----------------------------------------------------------------*/
 #include <time.h>
 #include "RavenInclude.h"
@@ -15,11 +15,13 @@ bool ParseInputFiles  (CModel      *&pModel,
 void MassEnergyBalance(CModel            *pModel,
                        const optStruct   &Options,
                        const time_struct &tt);        
+void ParseLiveFile             (CModel *&pModel,const optStruct &Options,const time_struct &tt);
 
 //Local functions defined below main()
 void ProcessExecutableArguments(int argc, char* argv[], optStruct   &Options);
 void CheckForErrorWarnings     (bool quiet);
 bool CheckForStopfile          (const int step, const time_struct &tt);
+void CallExternalScript        (const optStruct &Options, const time_struct &tt);
 
 // Main Driver Variables------------------------------------------
 static optStruct   Options;
@@ -54,7 +56,7 @@ int main(int argc, char* argv[])
   PrepareOutputdirectory(Options);
 
   Options.pause=true;
-  Options.version="2.9.2";
+  Options.version="2.9.9";
 #ifdef _NETCDF_ 
   Options.version=Options.version+" w/ netCDF";
 #endif
@@ -74,7 +76,8 @@ int main(int argc, char* argv[])
     cout <<"============================================================"<<endl;
   }
 
-  ofstream WARNINGS((Options.main_output_dir+"Raven_errors.txt").c_str());
+  ofstream WARNINGS;
+  WARNINGS.open((Options.main_output_dir+"Raven_errors.txt").c_str());
   if (WARNINGS.fail()){
     ExitGracefully("Main::Unable to open Raven_errors.txt. Bad output directory specified?",RAVEN_OPEN_ERR);
   }
@@ -131,6 +134,8 @@ int main(int argc, char* argv[])
         pModel->RecalculateHRUDerivedParams(Options,tt);
         pModel->UpdateHRUForcingFunctions  (Options,tt);
         pModel->UpdateDiagnostics          (Options,tt);
+        CallExternalScript                 (Options,tt);
+        ParseLiveFile                      (pModel,Options,tt);
 
         MassEnergyBalance(pModel,Options,tt); //where the magic happens!
 
@@ -145,7 +150,7 @@ int main(int argc, char* argv[])
         pModel->WriteProgressOutput        (Options,clock()-t1,step,(int)ceil(Options.duration/Options.timestep));
         //pModel->WriteProgressOutput      (Options,clock()-t0,step+e*nsteps,nEnsembleMembers*nsteps); //TMP DEBUG - for ensemble support
 
-        if(CheckForStopfile(step,tt)) { break; }
+        if ((Options.use_stopfile) && (CheckForStopfile(step,tt))) { break; }
         step++;
       }
 
@@ -201,6 +206,7 @@ void ProcessExecutableArguments(int argc, char* argv[], optStruct   &Options)
   Options.rvv_filename=""; //GWMIGRATE - TO REMOVE
   Options.rvs_filename=""; //GWMIGRATE - TO REMOVE
   Options.rve_filename="";
+  Options.rvl_filename="";
   Options.output_dir  ="";
   Options.main_output_dir="";
   Options.silent=false;
@@ -224,7 +230,8 @@ void ProcessExecutableArguments(int argc, char* argv[], optStruct   &Options)
         Options.rvd_filename=argument+".rvd"; //GWMIGRATE - TO REMOVE
         Options.rvv_filename=argument+".rvv"; //GWMIGRATE - TO REMOVE
         Options.rvs_filename=argument+".rvs"; //GWMIGRATE - TO REMOVE
-        Options.rve_filename=argument+",rve";
+        Options.rve_filename=argument+".rve";
+        Options.rvl_filename=argument+".rvl";
         argument="";
         mode=10;
       }
@@ -234,19 +241,20 @@ void ProcessExecutableArguments(int argc, char* argv[], optStruct   &Options)
       else if (mode==4){Options.rvc_filename=argument; argument="";}
       else if (mode==5){Options.output_dir  =argument; argument="";}
       else if (mode==6){Options.run_name    =argument; argument="";}
-      else if (mode==7){Options.rve_filename=argument; argument=""; }
+      else if (mode==7){Options.rve_filename=argument; argument="";}
       else if (mode==8){Options.rvg_filename=argument; argument="";}
-
-      if      (word=="-p"){mode=1;}
-      else if (word=="-h"){mode=2;}
-      else if (word=="-t"){mode=3;}
-      else if (word=="-c"){mode=4;}
-      else if (word=="-o"){mode=5;}
+      else if (mode==9){Options.rvl_filename=argument; argument="";}
+      if      (word=="-p"){mode=1; }
+      else if (word=="-h"){mode=2; }
+      else if (word=="-t"){mode=3; }
+      else if (word=="-c"){mode=4; }
+      else if (word=="-o"){mode=5; }
       else if (word=="-s"){Options.silent=true; mode=10;}
       else if (word=="-n"){Options.noisy=true;  mode=10;}
-      else if (word=="-r"){mode=6;}
+      else if (word=="-r"){mode=6; }
       else if (word=="-e"){mode=7; }
       else if (word=="-g"){mode=8; }	  
+      else if (word=="-l"){mode=9; }
     }
     else{
       if (argument==""){argument+=word;}
@@ -263,8 +271,9 @@ void ProcessExecutableArguments(int argc, char* argv[], optStruct   &Options)
     Options.rvg_filename="nomodel.rvg";
     Options.rvd_filename="nomodel.rvd"; //GWMIGRATE - TO REMOVE
     Options.rvv_filename="nomodel.rvv"; //GWMIGRATE - TO REMOVE
-    Options.rve_filename="nomodel.rvs"; //GWMIGRATE - TO REMOVE
+    Options.rvs_filename="nomodel.rvs"; //GWMIGRATE - TO REMOVE
     Options.rve_filename="nomodel.rve";
+    Options.rvl_filename="nomodel.rvl";
   }
 
   // make sure that output dir has trailing '/' if not empty
@@ -308,6 +317,7 @@ void ExitGracefully(const char *statement,exitcode code)
     ofstream WARNINGS;
     WARNINGS.open((Options.main_output_dir+"Raven_errors.txt").c_str(),ios::app);
     if (WARNINGS.fail()){
+      WARNINGS.close();
       string message="Unable to open errors file ("+Options.main_output_dir+"Raven_errors.txt)";
       ExitGracefully(message.c_str(),RAVEN_OPEN_ERR);
     }
@@ -380,7 +390,7 @@ bool CheckForStopfile(const int step, const time_struct &tt)
   if(step%100!=0){ return false; } //only check every 100th timestep 
   ifstream STOP;
   STOP.open("stop");
-  if (!STOP.is_open()){return false;}
+  if (STOP.fail()){STOP.close(); return false;}
   else //Stopfile found
   {
     STOP.close();
@@ -390,4 +400,18 @@ bool CheckForStopfile(const int step, const time_struct &tt)
     return true;
   }
 }
-
+/////////////////////////////////////////////////////////////////
+/// \brief Calls external script to be run 
+/// idea/code from Kai Tsuruta, PCIC
+//
+void CallExternalScript(const optStruct &Options,const time_struct &tt) 
+{
+  if(Options.external_script!="") {
+    string script=Options.external_script;
+    SubstringReplace(script,"<model_time>",to_string(tt.model_time));
+    SubstringReplace(script,"<date>"      ,tt.date_string);
+    SubstringReplace(script,"<version>"   ,Options.version);
+    SubstringReplace(script,"<output_dir>",Options.output_dir);
+    system(script.c_str()); //Calls script
+  }
+}

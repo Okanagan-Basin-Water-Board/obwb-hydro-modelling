@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2019 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
 
   Includes declaration of global constants, enumerated types, and
   shared common & hydrological functions
@@ -93,6 +93,7 @@ extern bool   g_suppress_zeros;   ///< converts all output numbers less than REA
 // Global Constants
 //*****************************************************************
 const double  ALMOST_INF              =1e99;                                    ///< Largest possible double value to be used
+const double  PRETTY_SMALL            =1e-8;                                    ///< useful small tolerance for zero tests
 const double  REAL_SMALL              =1e-12;                                   ///< Smallest possible double value to be used
 const double  PI                      =3.1415926535898;                         ///< Double approximation of pi
 
@@ -164,6 +165,8 @@ const double  TC_ORGANIC              =0.25;                                    
 const double  TC_DRYS                 =0.275;                                   ///< [W/m/K] Thermal conductivity of dry soil
 const double  TC_AIR                  =0.023;                                   ///< [W/m/K] Thermal conductivity of air
 
+const double  COM_WATER		          =4.58e-10;                                ///< [Pa^-1] Compressiblity of Water
+const double  COM_ICE                 =4.58e-10;                                ///< [Pa^-1] Compressiblity of Ice
 const double  HCP_WATER               =4.187;                                   ///< [MJ/m3/K] Volumetric Heat Capacity of Water
 const double  HCP_ICE                 =1.938;                                   ///< [MJ/m3/K] Volumetric Heat Capacity of Ice
 const double  HCP_CLAY                =2.380;                                   ///< [MJ/m3/K] Volumetric Heat Capacity of Clay
@@ -238,6 +241,7 @@ const double  NOT_NEEDED              =-66666.6;                                
 const double  NOT_NEEDED_AUTO         =-77777.7;                                ///< arbitrary value indicating that a autogeneratable parameter is not needed for the current model configuration
 const double  NETCDF_BLANK_VALUE      =-9999.0;
 const double  RAV_BLANK_DATA          =-1.2345;
+const double  DIRICHLET_AIR_TEMP      =-9999;                                   ///< dirichlet concentration flag corresponding to fixed air temperature   
 
 //Decision constants
 const double  HUGE_RESIST             =1e20;                                    ///< [d/mm] essentially infinite resistance
@@ -770,7 +774,8 @@ enum res_constraint {
   RC_MIN_FLOW,
   RC_MAX_FLOW,
   RC_OVERRIDE_FLOW,
-  RC_DRY_RESERVOIR
+  RC_DRY_RESERVOIR,
+  RC_DZTR
 };
 ////////////////////////////////////////////////////////////////////
 /// \brief reservoir overflow handling options - how discharge is estimated once max reservoir stage is met
@@ -852,10 +857,10 @@ enum sv_type
   CROP_HEAT_UNITS,         ///< [-] cumulative crop heat units
 
   //Transport variables
-  CONSTITUENT,             ///< [mg/m2] chemical species or tracer
-  CONSTITUENT_SRC,         ///< [mg/m2] chemical species or tracer cumulative source
-  CONSTITUENT_SW,          ///< [mg/m2] chemical species dumped to surface water
-  CONSTITUENT_SINK,        ///< [mg/m2] chemical species or tracer cumulative sink (e.g., decay)
+  CONSTITUENT,             ///< chemical species [mg/m2], enthalpy [MJ/m2], or tracer [-]
+  CONSTITUENT_SRC,         ///< chemical species [mg/m2], enthalpy [MJ/m2], or tracer [-] cumulative source
+  CONSTITUENT_SW,          ///< chemical species [mg/m2], enthalpy [MJ/m2], or tracer [-] dumped to surface water
+  CONSTITUENT_SINK,        ///< chemical species [mg/m2], enthalpy [MJ/m2], or tracer [-] cumulative sink (e.g., decay)
 
   //Lateral exchange
   LATERAL_EXCHANGE,        ///< [mm] water storage in transit from HRU awaiting lateral transfer to other HRUs
@@ -874,6 +879,9 @@ enum sv_type
 //
 enum process_type
 {
+  //In RichardsEquation.h
+  RICHARDS,
+
   //In Precipitation.h:
   PRECIPITATION,
 
@@ -917,6 +925,9 @@ enum process_type
   //in Decay.h
   DECAY, TRANSFORMATION,
 
+  //in HeatConduction.h
+  HEATCONDUCTION,
+
   //in ProcessGroup.h
   PROCESS_GROUP,
   //..
@@ -954,6 +965,9 @@ struct optStruct
   double           timestep;                  ///< numerical method timestep (in days)
   double           output_interval;           ///< write to output file every x number of timesteps
   ensemble_type    ensemble;                  ///< ensemble type (or ENSEMBLE_NONE if single model)
+  string           external_script;           ///< call to external script/.exe once per timestep (or "" if none)
+  double           rvl_read_frequency;        ///< frequency to read rvl file (in d, or 0.0 if not to be read)
+  bool             use_stopfile;              ///< true if Raven should look for stopfile
   
   model_type       modeltype;                 ///< type of model being simulated
   gw_nonlinear_num_method gw_solver_outer;    ///< nonlinear numerical solution method for groundwater GWMIGRATe - rename shorter
@@ -973,6 +987,7 @@ struct optStruct
   string           rvt_filename;              ///< fully qualified filename of rvt (time series) file
   string           rvc_filename;              ///< fully qualified filename of rvc (initial conditions) file
   string           rve_filename;              ///< fully qualified filename of rve (ensemble) file
+  string           rvl_filename;              ///< fully qualified filename of rvl (live communications) file
   string           rvg_filename;              ///< fully qualified filename of rvg (groundwater properties) file
   string           rvd_filename;              ///< fully qualified filename of rvd (groundwater discretization) file GWMIGRATE - TO REMOVE!!
   string           rvv_filename;              ///< fully qualified filename of rvv (groundwater-surface water overlap) file GWMIGRATE - TO REMOVE!!
@@ -1019,6 +1034,7 @@ struct optStruct
 
   bool               keepUBCWMbugs;           ///< true if peculiar UBCWM bugs are retained (only really for BC Hydro use)
   bool               suppressCompetitiveET;   ///< true if competitive ET should be suppressed (for backward compatibility)
+  bool               snow_suppressPET;        ///< true if presence of snow should set PET to zero
 
   //Soil model information
   soil_model         soil_modeltype;          ///< soil model (e.g., one-layer, two-layer, lumped, etc.)
@@ -1033,6 +1049,7 @@ struct optStruct
   //                                          ///< (such as simulation status JSON file) (default: FALSE)
   bool             deltaresFEWS;              ///< true if input is generated by Deltares FEWS
   out_format       output_format;             ///< output format (default: OUTPUT_STANDARD)
+  double           custom_interval;           ///< custom output interval (i.e., for generating 10-day interval outputs) 
   bool             write_forcings;            ///< true if ForcingFunctions.csv is written
   bool             write_mass_bal;            ///< true if WatershedMassEnergyBalance.csv is written
   bool             write_energy;              ///< true if WatershedEneryStorage.csv is written
@@ -1048,6 +1065,7 @@ struct optStruct
   bool             write_constitmass;         ///< true if constituent mass [mg/m2] is written instead of concentration [mg/L] in output files
   bool             write_basinfile;           ///< true if subbasins params are written to SubbasinParams.csv
   bool             write_interp_wts;          ///< true if interpolation weights are written to InterpolationWeights.csv
+  bool             write_demandfile;          ///< true if demands.csv file is written
   bool             benchmarking;              ///< true if benchmarking output - removes version/timestamps in output   
   bool             suppressICs;               ///< true if initial conditions are suppressed when writing output time series
   bool             period_ending;             ///< true if period ending convention should be used for reading/writing Ensim files
@@ -1056,6 +1074,7 @@ struct optStruct
   string           working_dir;               ///< working directory
   int              wateryr_mo;                ///< starting month of water year (typically 10=October)
   bool             create_rvp_template;       ///< create an rvp template file after reading the .rvi
+
   //                                          ///< diagnostic options
   double           diag_start_time;           ///< Model time to start diagnostics
   double           diag_end_time;             ///< Model time to start diagnostics
@@ -1127,6 +1146,7 @@ enum forcing_type
   F_PET,F_OW_PET,   F_PET_MONTH_AVE,
   F_SUBDAILY_CORR,  F_POTENTIAL_MELT,
   F_RECHARGE,
+  F_PRECIP_TEMP,
   F_UNRECOGNIZED
 };
 ////////////////////////////////////////////////////////////////////
@@ -1138,6 +1158,7 @@ struct force_struct
   double precip_daily_ave;    ///< average precipitaiton over day (0:00-24:00) [mm/d]
   double precip_5day;         ///< 5-day precipitation total [mm] (needed for SCS)
   double snow_frac;           ///< fraction of precip that is snow [0..1]
+  double precip_temp;         ///< precipitation temperature [C]
 
   double temp_ave;            ///< average air temp over time step [C]
   double temp_daily_min;      ///< minimum air temperature over day (0:00-24:00)[C]
@@ -1229,6 +1250,7 @@ string      GetCurrentTime(              void);
 double      FixTimestep(                 double      tstep);
 bool        IsValidDateString     (const string      sDate);
 bool       IsValidNetCDFTimeString(const string unit_t_str);
+bool        IsInDateRange(const double &julian_day, const int &julian_start, const int &julian_end);
 
 //Conversion Functions-------------------------------------------
 double CelsiusToFarenheit       (const double &T);
@@ -1468,6 +1490,7 @@ void   WriteAdvisory           (const string warn, bool noisy);
 HRU_type StringToHRUType       (const string s);
 double fast_s_to_d             (const char *s);
 double FormatDouble            (const double &d);
+void SubstringReplace          (string& str,const string& from,const string& to);
 
 //I/O Functions-----------------------------------------------
 //defined in StandardOutput.cpp
@@ -1535,6 +1558,8 @@ double CalcAtmosphericConductance(const double &wind_vel,     //[m/d]
                                   const double &vap_rough_ht); //[m]
 double GetDewPointTemp          (const double &Ta,const double &rel_hum);
 double GetDewPointTemp          (const double &E);
+double ConvertVolumetricEnthalpyToTemperature(const double &hv);
+double ConvertTemperatureToVolumetricEnthalpy(const double &T, const double &pctfroz);
 
 //Snow Functions---------------------------------------------------
 //defined in SnowParams.cpp and PotentialMelt.cpp

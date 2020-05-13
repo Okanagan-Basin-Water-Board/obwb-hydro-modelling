@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2019 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
   ----------------------------------------------------------------*/
 #include "Reservoir.h"
 
@@ -44,6 +44,11 @@ void CReservoir::BaseConstructor(const string Name,const long SubID)
   _pQdownSB=NULL;
   _nDemands=0;
   _aDemands=NULL;
+  _demand_mult=1.0;
+
+  _pDZTR=NULL;
+
+  _minStageDominant=false;
 
   _crest_ht=0.0;
   _max_capacity=0.0;
@@ -570,7 +575,8 @@ void    CReservoir::AddMaxQTimeSeries(CTimeSeries *pQmax) {
 /// \param SBIDdown downstream target flow basin ID
 /// \param Qrange downstream target flow range [m3/s]
 //
-void    CReservoir::AddDownstreamTargetQ(CTimeSeries *pQ,const CSubBasin *pSB, const double &Qrange) {
+void    CReservoir::AddDownstreamTargetQ(CTimeSeries *pQ,const CSubBasin *pSB, const double &Qrange) 
+{
   ExitGracefullyIf(_pQdownTS!=NULL,
     "CReservoir::AddDownstreamTargetQ: only one downstream flow time series may be specified per reservoir",BAD_DATA_WARN);
   _pQdownTS=pQ;
@@ -582,11 +588,14 @@ void    CReservoir::AddDownstreamTargetQ(CTimeSeries *pQ,const CSubBasin *pSB, c
 /// \param SBID subbasin ID of demand location or AUTO_COMPUTE_LONG
 /// \param pct percentage of flow demand to be satisfied by reservoir as fraction [0..1] or AUTO_COMPUTE
 //
-void  CReservoir::AddDownstreamDemand(const CSubBasin *pSB,const double pct) {
+void  CReservoir::AddDownstreamDemand(const CSubBasin *pSB,const double pct, const int julian_start, const int julian_end) 
+{
   down_demand *pDemand;
   pDemand=new down_demand;
-  pDemand->pDownSB=pSB;
-  pDemand->percent=pct;
+  pDemand->pDownSB     =pSB;
+  pDemand->percent     =pct;
+  pDemand->julian_start=julian_start;
+  pDemand->julian_end  =julian_end;
   if(!DynArrayAppend((void**&)(_aDemands),(void*)(pDemand),_nDemands)) {
     ExitGracefully("CReservoir::AddDownstreamDemand: adding NULL source",RUNTIME_ERR);
   }
@@ -615,6 +624,14 @@ void  CReservoir::SetMaxCapacity(const double &max_cap)
 double  CReservoir::GetMaxCapacity() const
 {
   return _max_capacity;
+}
+//////////////////////////////////////////////////////////////////
+/// \brief gets demand multiplier
+/// \returns reservoir demand multiplier
+//
+double CReservoir::GetDemandMultiplier() const
+{
+  return _demand_mult;
 }
 //////////////////////////////////////////////////////////////////
 /// \brief gets current constraint name
@@ -653,6 +670,65 @@ void CReservoir::SetVolumeStageCurve(const double *a_ht,const double *a_V,const 
       ExitGracefully(warn.c_str(),BAD_DATA_WARN);
     }
   }
+}
+//////////////////////////////////////////////////////////////////
+/// \brief sets minmum stage constraint to dominant  
+//
+void CReservoir::SetMinStageDominant() 
+{ 
+  _minStageDominant=true; 
+}
+//////////////////////////////////////////////////////////////////
+/// \brief sets minmum stage constraint to dominant  
+//
+void CReservoir::SetDemandMultiplier(const double &value)
+{
+  _demand_mult=value;
+}
+//////////////////////////////////////////////////////////////////
+/// \brief sets parameters for Dynamically zoned target release model  
+//
+void CReservoir::SetDZTRModel(const double Qmc,const double Smax,
+                              const double Sci[12],const double Sni[12],const double Smi[12],
+                              const double Qci[12],const double Qni[12],const double Qmi[12])
+{
+  _pDZTR=new DZTRmodel();
+  _pDZTR->Qmc=Qmc;
+  _pDZTR->Vmax=Smax;
+  
+  for(int i=0;i<12;i++)
+  {
+    _pDZTR->Vci[i]=Sci[i];     _pDZTR->Vni[i]=Sni[i];     _pDZTR->Vmi[i]=Smi[i];
+    _pDZTR->Qci[i]=Qci[i];     _pDZTR->Qni[i]=Qni[i];     _pDZTR->Qmi[i]=Qmi[i];
+
+    if((Sci[i]>Sni[i]) || (Sni[i]>Smi[i]) || (Smi[i]>Smax)) {
+      WriteWarning("CReservoir::SetDZTRModel: storage ordering is off. Vci<Vni<Vmi<Vmax",false);
+    }
+  }
+}
+//////////////////////////////////////////////////////////////////
+/// \brief gets flows from DZTR model of Yassin et al., 2019
+/// Yassin et al., Representation and improved parameterization of reservoir operation in hydrological and land-surface models
+/// Hydrol. Earth Syst. Sci., 23, 3735–3764, 2019 https://doi.org/10.5194/hess-23-3735-2019
+//
+double CReservoir::GetDZTROutflow(const double &V, const double &Qin, const time_struct &tt, const optStruct &Options) const
+{
+  double Vci=InterpolateMo(_pDZTR->Vci,tt,Options);
+  double Vni=InterpolateMo(_pDZTR->Vni,tt,Options);
+  double Vmi=InterpolateMo(_pDZTR->Vmi,tt,Options);
+  double Qci=InterpolateMo(_pDZTR->Qci,tt,Options);
+  double Qni=InterpolateMo(_pDZTR->Qni,tt,Options);
+  double Qmi=InterpolateMo(_pDZTR->Qmi,tt,Options);
+  double Vmin=0.1*_pDZTR->Vmax;
+  double Qmc=_pDZTR->Qmc;
+  double tstep=Options.timestep*SEC_PER_DAY;
+  
+  if      (V<Vmin){return 0.0;}
+  else if (V<Vci ){return min(Qci,(V-Vmin)/tstep); }
+  else if (V<Vni ){return Qci+(Qni-Qci)*(V-Vci)/(Vni-Vci);}
+  else if (V<Vmi ){return Qni+max((Qin-Qni),(Qmi-Qni))*(V-Vni)/(Vmi-Vni); }
+  else            {return min(Qmc,max(Qmi,(V-Vmi)/tstep));}
+
 }
 //////////////////////////////////////////////////////////////////
 /// \brief sets reservoir groundwater parameters
@@ -760,8 +836,15 @@ void  CReservoir::SetInitialFlow(const double &initQ,const double &initQlast,con
   double Q,dQdh;
   do //Newton's method with discrete approximation of dQ/dh
   {
-    Q   = GetOutflow(h_guess   ,weir_adj);
-    dQdh=(GetOutflow(h_guess+dh,weir_adj)-Q)/dh;
+    //if(_pDZTR==NULL) {
+      Q    =GetWeirOutflow(h_guess,   weir_adj);//[m3/s]
+      dQdh=(GetWeirOutflow(h_guess+dh,weir_adj)-Q)/dh;
+    //}
+    //else if(_pDZTR!=NULL) {
+    //  Q =GetDZTROutflow(GetVolume(h_guess),initQ,tt,Options);
+    //  dQdh=(GetDZTROutflow(GetVolume(h_guess+dh),initQ,tt,Options)-Q)/dh;
+    //}
+
     change=-(Q-initQ)/dQdh;//[m]
     if (dh==0.0){change=1e-7;}
     h_guess+=change;
@@ -776,7 +859,14 @@ void  CReservoir::SetInitialFlow(const double &initQ,const double &initQlast,con
   }
 
   _stage=h_guess;
-  _Qout=GetOutflow(_stage,weir_adj);
+  _Qout=GetWeirOutflow(_stage,weir_adj);
+
+  //if(_pDZTR==NULL) {
+  //  _Qout=GetWeirOutflow(_stage,weir_adj);
+  //}
+  //else if(_pDZTR!=NULL) {
+  //  _Qout=GetDZTROutflow(GetVolume(_stage),initQ,tt,Options);
+  //}
 
   _stage_last=_stage;
   _Qout_last =_Qout;
@@ -855,7 +945,10 @@ double  CReservoir::RouteWater(const double &Qin_old, const double &Qin_new, con
 
   // Downstream irrigation demand 
   for(int i=0;i<_nDemands;i++) {
-    Qmin+=(_aDemands[i]->pDownSB->GetIrrigationDemand(tt.model_time)*_aDemands[i]->percent);
+    if(IsInDateRange(tt.julian_day,_aDemands[i]->julian_start,_aDemands[i]->julian_end)){
+      Qmin+=(_aDemands[i]->pDownSB->GetIrrigationDemand(tt.model_time)*_aDemands[i]->percent);
+      Qmin+= _aDemands[i]->pDownSB->GetEnviroMinFlow   (tt.model_time)*1.0; //assume 100% of environmental min flow must be met 
+    }
   }
 
 
@@ -907,8 +1000,16 @@ double  CReservoir::RouteWater(const double &Qin_old, const double &Qin_new, con
   double relax=1.0;
   do //Newton's method with discrete approximation of df/dh
   {
-    out =GetOutflow(h_guess,   weir_adj)+ET*GetArea(h_guess   )+_seepage_const*(h_guess   -_local_GW_head);//[m3/s]
-    out2=GetOutflow(h_guess+dh,weir_adj)+ET*GetArea(h_guess+dh)+_seepage_const*(h_guess+dh-_local_GW_head);//[m3/s]
+    if     (_pDZTR==NULL) {
+      out =GetWeirOutflow(h_guess,   weir_adj);//[m3/s]
+      out2=GetWeirOutflow(h_guess+dh,weir_adj);//[m3/s]
+    }
+    else if(_pDZTR!=NULL) {
+      out =GetDZTROutflow(GetVolume(h_guess   ),Qin_old,tt,Options);
+      out2=GetDZTROutflow(GetVolume(h_guess+dh),Qin_old,tt,Options);
+    }
+    out +=ET*GetArea(h_guess   )+_seepage_const*(h_guess   -_local_GW_head);//[m3/s]
+    out2+=ET*GetArea(h_guess+dh)+_seepage_const*(h_guess+dh-_local_GW_head);//[m3/s]
 
     f   = (GetVolume(h_guess   )+out /2.0*(tstep*SEC_PER_DAY)); //[m3]
     dfdh=((GetVolume(h_guess+dh)+out2/2.0*(tstep*SEC_PER_DAY))-f)/dh; //[m3/m]
@@ -936,8 +1037,15 @@ double  CReservoir::RouteWater(const double &Qin_old, const double &Qin_new, con
 
   //standard case - outflow determined through stage-discharge curve
   //---------------------------------------------------------------------------------------------
-  res_outflow=GetOutflow(stage_new,weir_adj);
-  constraint =RC_NATURAL;
+  if(_pDZTR==NULL) {
+    res_outflow=GetWeirOutflow(stage_new,weir_adj);
+    constraint =RC_NATURAL;
+  }
+  else if(_pDZTR!=NULL) {
+    res_outflow=GetDZTROutflow(GetVolume(stage_new),Qin_old,tt,Options);
+    constraint =RC_DZTR;
+  }
+
   outflow_nat=res_outflow; //saved for special max stage constraint
   stage_nat  =stage_new;
 
@@ -989,36 +1097,42 @@ double  CReservoir::RouteWater(const double &Qin_old, const double &Qin_new, con
   {         
     if(Qoverride!=RAV_BLANK_DATA) {
       if((constraint!=RC_MAX_FLOW_INCREASE) && 
-          (constraint!=RC_MAX_FLOW_DECREASE) && 
-          (constraint!=RC_MIN_STAGE)) { constraint=RC_OVERRIDE_FLOW; } //Specified override flow
+         (constraint!=RC_MAX_FLOW_DECREASE) && 
+         (constraint!=RC_MIN_STAGE)) { constraint=RC_OVERRIDE_FLOW; } //Specified override flow
       res_outflow=max(2*Qoverride-_Qout,Qminstage); //Qoverride is avg over dt, res_outflow is end of dt
     }
-      
-    if (res_outflow<Qmin){ //overwrites any other specified or target flow
-      res_outflow=Qmin;
-      constraint=RC_MIN_FLOW; //minimum flow
-    }
-      
-    if(res_outflow>Qmax) { //overwrites any other specified or target flow
-      res_outflow=Qmax;
-      constraint=RC_MAX_FLOW; //maximum flow
-    }
 
-    double A_guess=A_old;
-    double A_last,V_new;
-    double seep_guess = seep_old;
-    do {
-      V_new= V_old+((Qin_old+Qin_new)-(_Qout+res_outflow)-ET*(A_old+A_guess)-(seep_old+seep_guess)-(ext_old+ext_new))/2.0*(tstep*SEC_PER_DAY); 
-      if(V_new<0) {
-        V_new=0;
-        constraint=RC_DRY_RESERVOIR; //drying out reservoir
-        res_outflow = -2 * (V_new - V_old) / (tstep*SEC_PER_DAY) + (-_Qout + (Qin_old + Qin_new) - ET*(A_old + 0.0) - (ext_old + ext_new));//[m3/s] //dry it out
+    if((constraint==RC_MIN_STAGE) && (_minStageDominant)) { 
+      //In this case, min stage constraint overrides min flow constraint; nothing done 
+    }
+    else
+    {
+      if (res_outflow<Qmin){ //overwrites any other specified or target flow
+        res_outflow=Qmin;
+        constraint=RC_MIN_FLOW; //minimum flow
       }
-      stage_new=Interpolate2(V_new,_aVolume,_aStage,_Np,false);
-      A_last     = A_guess;
-      A_guess    = GetArea(stage_new);
-      seep_guess = _seepage_const*(stage_new-_local_GW_head);
-    } while(fabs(1.0-A_guess/A_last)>0.00001); //0.1% area error - done in one iter for constant area case
+      
+      if(res_outflow>Qmax) { //overwrites any other specified or target flow
+        res_outflow=Qmax;
+        constraint=RC_MAX_FLOW; //maximum flow
+      }
+
+      double A_guess=A_old;
+      double A_last,V_new;
+      double seep_guess = seep_old;
+      do {
+        V_new= V_old+((Qin_old+Qin_new)-(_Qout+res_outflow)-ET*(A_old+A_guess)-(seep_old+seep_guess)-(ext_old+ext_new))/2.0*(tstep*SEC_PER_DAY); 
+        if(V_new<0) {
+          V_new=0;
+          constraint=RC_DRY_RESERVOIR; //drying out reservoir
+          res_outflow = -2 * (V_new - V_old) / (tstep*SEC_PER_DAY) + (-_Qout + (Qin_old + Qin_new) - ET*(A_old + 0.0) - (ext_old + ext_new));//[m3/s] //dry it out
+        }
+        stage_new=Interpolate2(V_new,_aVolume,_aStage,_Np,false);
+        A_last     = A_guess;
+        A_guess    = GetArea(stage_new);
+        seep_guess = _seepage_const*(stage_new-_local_GW_head);
+      } while(fabs(1.0-A_guess/A_last)>0.00001); //0.1% area error - done in one iter for constant area case
+    }
   }
 
 
@@ -1108,7 +1222,7 @@ double     CReservoir::GetArea  (const double &ht) const
 /// \returns reservoir outflow [m3/s] corresponding to stage ht
 /// \note assumes regular spacing between min and max stage
 //
-double     CReservoir::GetOutflow(const double &ht, const double &adj) const
+double     CReservoir::GetWeirOutflow(const double &ht, const double &adj) const
 {
   double underflow=Interpolate2(ht,_aStage,_aQunder,_Np,false); //no adjustments
   return Interpolate2(ht-adj,_aStage,_aQ,_Np,false)+underflow;

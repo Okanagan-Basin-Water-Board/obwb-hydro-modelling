@@ -22,10 +22,22 @@ enum curve_function{
   CURVE_VARYING,     ///< y=interp(xi,yi,t)
   CURVE_LAKE         ///< y=interp(xi,yi) (curve from weir)
 };
-
+struct DZTRmodel //Dynamically zoned target release model structure
+{
+  double Qmc;        ///< maximum channel capacity [m3/s]
+  double Vmax;       ///< maximum reservoir storage [m3] 
+  double Qci[12];    ///< critical release target [m3/s]
+  double Qni[12];    ///< normal release target [m3/s]
+  double Qmi[12];    ///< maximum release target [m3/s]
+  double Vci[12];    ///< critical release storage [m3]    
+  double Vni[12];    ///< normal release storage [m3]
+  double Vmi[12];    ///< critical release storage [m3]  
+};
 struct down_demand {
   const CSubBasin *pDownSB;   ///< pointer to subbasin of downstream demand location
   double percent;             ///< percentage of demand met by reservoir
+  int    julian_start;        ///< julian start day for commencement of demand (beginning @ 0)
+  int    julian_end;          ///< julian end day of demand (wraps, such that if julian_end < julian_start, demand in winter)
 };
 class CSubBasin;
 /*****************************************************************
@@ -62,6 +74,12 @@ private:/*-------------------------------------------------------*/
 
   down_demand**_aDemands;            ///< array of pointers to downstream demand information used to determine Qmin [size:_nDemands]
   int          _nDemands;            ///< size of downstream demand location array  
+
+  DZTRmodel    *_pDZTR;              ///< pointer to DZTR model, if used (default=NULL)
+
+  bool          _minStageDominant;   ///< true if minimum stage dominates minflow/overrideflow constraints (false by default)
+  double        _demand_mult;        ///< reservoir demand multiplier that indicates percentage of requested downstream irrigation demand 
+                                     ///< satisfied from this reservoir. 
 
   //state variables :
   double       _stage;               ///< current stage [m] (actual state variable)
@@ -100,7 +118,9 @@ private:/*-------------------------------------------------------*/
 
   double     GetVolume (const double &ht) const;
   double     GetArea   (const double &ht) const;
-  double     GetOutflow(const double &ht, const double &adj) const;
+  double     GetWeirOutflow(const double &ht, const double &adj) const;
+
+  double     GetDZTROutflow(const double &V,const double &Qin,const time_struct &tt,const optStruct &Options) const;
 
 public:/*-------------------------------------------------------*/
   //Constructors:
@@ -135,6 +155,7 @@ public:/*-------------------------------------------------------*/
   int               GetHRUIndex              () const;
   double            GetMaxCapacity           () const; //[m3]
   string            GetCurrentConstraint     () const;
+  double            GetDemandMultiplier      () const;
 
   //Manipulators
   void              SetMinStage              (const double &min_z);
@@ -159,7 +180,13 @@ public:/*-------------------------------------------------------*/
   void              AddMaxQTimeSeries        (CTimeSeries *pQmax);
   void              AddDownstreamTargetQ     (CTimeSeries *pQ, const CSubBasin *pSB, const double &range);
 
-  void              AddDownstreamDemand      (const CSubBasin *pSB,const double pct);
+  void              AddDownstreamDemand      (const CSubBasin *pSB,const double pct, const int julian_start, const int julian_end);
+
+  void              SetDZTRModel             (const double Qmc, const double Smax, 
+                                              const double Sci[12], const double Sni[12],const double Smi[12],
+                                              const double Qci[12], const double Qni[12],const double Qmi[12]);
+  void              SetMinStageDominant      ();
+  void              SetDemandMultiplier      (const double &value);
 
   void              SetHRU                   (const CHydroUnit *pHRU);
   void              DisableOutflow           ();

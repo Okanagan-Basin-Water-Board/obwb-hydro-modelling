@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2018 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
   ----------------------------------------------------------------
   class definitions:
   CmvBaseflow
@@ -39,7 +39,8 @@ enum baseflow_type
   BASE_SACRAMENTO,      ///< Sacramento Baseflow method
   BASE_POWER_LAW,       ///< Power Law saturation
   BASE_GR4J,            ///< GR4J Baseflow method
-  BASE_THRESH_POWER     ///< power law saturation above threshold
+  BASE_THRESH_POWER,    ///< power law saturation above threshold
+  BASE_THRESH_STOR      ///< linear storage above threshold (HBV-Lite)
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -89,7 +90,7 @@ enum soilevap_type
   SOILEVAP_ROOT,          ///< Root weighting soil evaporation method for FUSE emulation - VIC ONLY
   SOILEVAP_ROOT_CONSTRAIN,///< same as ROOT, but top layer constrained to be above sat_wilt
   SOILEVAP_HBV,           ///< Simple HBV model -linear relation between ET and tension storage, with snow correction
-  SOILEVAP_HBVPDM,        ///< HBV model with ponded area correction
+  SOILEVAP_HYPR,          ///< HYPR model with ponded area correction
   SOILEVAP_UBC,           ///< UBCWM Model
   SOILEVAP_CHU,           ///< Crop Heat Unit method
   SOILEVAP_GR4J,          ///< GR4J model approach

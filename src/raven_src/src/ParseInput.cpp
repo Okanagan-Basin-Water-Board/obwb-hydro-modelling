@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2018 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
   ----------------------------------------------------------------*/
 
 #include "RavenInclude.h"
@@ -26,6 +26,7 @@
 #include "LatAdvection.h"
 #include "PrairieSnow.h"
 #include "ProcessGroup.h"
+#include "HeatConduction.h"
 
 bool ParseMainInputFile        (CModel *&pModel, optStruct &Options);
 bool ParseClassPropertiesFile  (CModel *&pModel, const optStruct &Options);
@@ -146,6 +147,7 @@ bool ParseMainInputFile (CModel     *&pModel,
   CHydroProcessABC *pMover;
   CmvPrecipitation *pPrecip=NULL;
   CProcessGroup    *pProcGroup=NULL;
+  CProcessGroup    *pProcGroupOuter=NULL; //for nested processgroups
   bool              transprepared(false);
   bool              runname_overridden(false);
   int               num_ensemble_members=1;
@@ -185,6 +187,7 @@ bool ParseMainInputFile (CModel     *&pModel,
   Options.convergence_crit        =0.01;
   Options.max_iterations          =30;
   Options.ensemble                =ENSEMBLE_NONE; 
+  Options.external_script         ="";
 
   Options.routing                 =ROUTE_STORAGECOEFF;
   Options.catchment_routing       =ROUTE_DUMP;
@@ -225,6 +228,7 @@ bool ParseMainInputFile (CModel     *&pModel,
   Options.direct_evap             =false;
   Options.keepUBCWMbugs           =false;
   Options.suppressCompetitiveET   =false;
+  Options.snow_suppressPET        =false;
   Options.pavics                  =false;
   Options.deltaresFEWS            =false;
   Options.res_overflowmode        =OVERFLOW_ALL;
@@ -258,6 +262,7 @@ bool ParseMainInputFile (CModel     *&pModel,
   Options.write_reservoirMB   =false;
   Options.write_basinfile     =false;
   Options.write_interp_wts    =false;
+  Options.write_demandfile    =false;
   Options.suppressICs         =false;
   Options.period_ending       =false;
   Options.period_starting     =false;//true;
@@ -272,6 +277,9 @@ bool ParseMainInputFile (CModel     *&pModel,
   Options.assimilation_on     =false;
   Options.assimilation_start  =0;
   Options.time_zone           =0;
+  Options.rvl_read_frequency  =0.0; //do not read at all
+  Options.custom_interval     =1.0; //daily
+  Options.use_stopfile        =false;
 
   pModel=NULL;
   pMover=NULL;
@@ -350,6 +358,7 @@ bool ParseMainInputFile (CModel     *&pModel,
     else if  (!strcmp(s[0],":SnowCoverDepletion"        )){code=46; }
     else if  (!strcmp(s[0],":EnsembleMode"              )){code=47; }
     else if  (!strcmp(s[0],":SuppressCompetitiveET"     )){code=48; }
+    else if  (!strcmp(s[0],":SnowSuppressesPET"         )){code=49; }
 	//---I/O------------------------------------------------------
     else if  (!strcmp(s[0],":DebugMode"                 )){code=50; }
     else if  (!strcmp(s[0],":WriteMassBalanceFile"      )){code=51; }
@@ -397,10 +406,16 @@ bool ParseMainInputFile (CModel     *&pModel,
     else if  (!strcmp(s[0],":DontWriteWatershedStorage" )){code=96; }//avoid writing WatershedStorage.csv
     else if  (!strcmp(s[0],":TimeZone"                  )){code=97; }
     else if  (!strcmp(s[0],":WriteInterpolationWeights" )){code=101;}
-  
-    else if  (!strcmp(s[0],":WriteGroundwaterHeads"     )){code=510; }
-    else if  (!strcmp(s[0],":WriteGroundwaterFlows"     )){code=511; }
-    else if  (!strcmp(s[0],":rvg_Filename"              )){code=512; }
+    else if  (!strcmp(s[0],":CallExternalScript"        )){code=102;}
+    else if  (!strcmp(s[0],":rvl_Filename"              )){code=103;}
+    else if  (!strcmp(s[0],":ReadLiveFile"              )){code=104;}
+    else if  (!strcmp(s[0],":CustomOutputInterval"      )){code=105;}
+    else if  (!strcmp(s[0],":UseStopFile"               )){code=106;}
+    else if  (!strcmp(s[0],":WriteDemandFile"           )){code=107;}
+
+    else if  (!strcmp(s[0],":WriteGroundwaterHeads"     )){code=510;}
+    else if  (!strcmp(s[0],":WriteGroundwaterFlows"     )){code=511;}
+    else if  (!strcmp(s[0],":rvg_Filename"              )){code=512;}
     //-----------------------------------------------------------
     else if  (!strcmp(s[0],":DefineHRUGroup"            )){code=80; }//After :SoilModel command
     else if  (!strcmp(s[0],":DefineHRUGroups"           )){code=81; }//After :SoilModel command
@@ -456,6 +471,7 @@ bool ParseMainInputFile (CModel     *&pModel,
     else if  (!strcmp(s[0],":Recharge"                  )){code=234;}
     else if  (!strcmp(s[0],":BlowingSnow"               )){code=235;}
     else if  (!strcmp(s[0],":LakeRelease"               )){code=236;}
+    else if  (!strcmp(s[0],":-->RedirectFlow"           )){code=237;}
     else if  (!strcmp(s[0],":Drain"                     )){code=252;}
   
     //...
@@ -475,6 +491,7 @@ bool ParseMainInputFile (CModel     *&pModel,
     else if  (!strcmp(s[0],":Advection"                 )){code=306;}
     else if  (!strcmp(s[0],":Transformation"            )){code=307;}
     else if  (!strcmp(s[0],":Mineralization"            )){code=308;}
+    else if  (!strcmp(s[0],":HeatConduction"            )){code=309;}
     //...
     //-------------------WATER MANAGEMENT---------------------
     else if  (!strcmp(s[0],":ReservoirDemandAllocation" )){code=400; }
@@ -925,7 +942,7 @@ bool ParseMainInputFile (CModel     *&pModel,
       break;
     }
     case(25):  //--------------------------------------------
-    {/*MonthlyInterpolationMethod */
+    {/*:MonthlyInterpolationMethod */
       if (Options.noisy) {cout <<"Monthly Interpolation"<<endl;}
       if (Len<2){ImproperFormatWarning(":MonthlyInterpolationMethod",p,Options.noisy); break;}
       if      (!strcmp(s[1],"UNIFORM"                )){Options.month_interp=MONTHINT_UNIFORM;}
@@ -1194,6 +1211,12 @@ bool ParseMainInputFile (CModel     *&pModel,
       Options.suppressCompetitiveET =true;
       break;
     }
+    case(49): //---------------------------------------------
+    {/*:SnowSuppressesPET */
+      if(Options.noisy) { cout <<"Suppressing PET if snow on ground"<<endl; }
+      Options.snow_suppressPET =true;
+      break;
+    }
     case(50):  //--------------------------------------------
     {/*:DebugMode */
       if (Options.noisy){cout <<"Debug Mode ON"<<endl;}
@@ -1299,6 +1322,12 @@ bool ParseMainInputFile (CModel     *&pModel,
     {/*:rve_Filename */
       if(Options.noisy) { cout <<"rve filename: "<<s[1]<<endl; }
       Options.rve_filename=CorrectForRelativePath(s[1],Options.rvi_filename);//with .rve extension!
+      break;
+    }
+    case(103):  //--------------------------------------------
+    {/*:rvl_Filename */
+      if(Options.noisy) { cout <<"rvl filename: "<<s[1]<<endl; }
+      Options.rvl_filename=CorrectForRelativePath(s[1],Options.rvi_filename);//with .rve extension!
       break;
     }
     case(63):  //--------------------------------------------
@@ -1407,6 +1436,7 @@ bool ParseMainInputFile (CModel     *&pModel,
         else if (!strcmp(s[i],"NASH_SUTCLIFFE_DER" )){pDiag=new CDiagnostic(DIAG_NASH_SUTCLIFFE_DER);}
         else if (!strcmp(s[i],"RMSE_DER"           )){pDiag=new CDiagnostic(DIAG_RMSE_DER);}
         else if (!strcmp(s[i],"KLING_GUPTA_DER"    )){pDiag=new CDiagnostic(DIAG_KLING_GUPTA_DER);}
+        else if (!strcmp(s[i],"MBF"                )){pDiag=new CDiagnostic(DIAG_MBF); }
         else if (!tmp.compare("NASH_SUTCLIFFE_RUN")) {pDiag=new CDiagnostic(DIAG_NASH_SUTCLIFFE_RUN, width); }
         else   {invalid=true;}
         if (!invalid){
@@ -1548,7 +1578,8 @@ bool ParseMainInputFile (CModel     *&pModel,
     {/*:PavicsMode */
       if(Options.noisy) { cout<<endl; }
       Options.pavics=true;
-      ofstream PROGRESS((Options.main_output_dir+"Raven_progress.txt").c_str());
+      ofstream PROGRESS;
+      PROGRESS.open((Options.main_output_dir+"Raven_progress.txt").c_str());
       if(PROGRESS.fail()) {
         ExitGracefully("ParseInput:: Unable to open Raven_progress.txt. Bad output directory specified?",RUNTIME_ERR);
       }
@@ -1639,10 +1670,14 @@ bool ParseMainInputFile (CModel     *&pModel,
       else if (!strcmp(s[1],"YEARLY"         )){ta=YEARLY;}
       else if (!strcmp(s[1],"ANNUAL"         )){ta=YEARLY;}
       else if (!strcmp(s[1],"WATER_YEARLY"   )){ta=WATER_YEARLY;}
+      else if (!strcmp(s[1],"EVERY_NDAYS"    )){ta=EVERY_NDAYS; }
       else if (!strcmp(s[1],"CONTINUOUS"     )){ta=EVERY_TSTEP;}
       else{
         ta=DAILY;
         ExitGracefully("ParseMainInputFile: Unrecognized custom output temporal aggregation method",BAD_DATA);
+      }
+      if((ta==EVERY_NDAYS) && (Options.custom_interval==1.0)) {
+        WriteWarning(":CustomOutput - EVERY_NDAYS option should only be used with :CustomInterval > 1, otherwise use of DAILY command preferred",Options.noisy);
       }
 
       //these statistics are always in time
@@ -1787,6 +1822,63 @@ bool ParseMainInputFile (CModel     *&pModel,
       Options.write_interp_wts=true;
       break;
     }
+    case(102):  //--------------------------------------------
+    {/*:CallExternalScript*/
+      if(Options.noisy) { cout << "Call External Script" << endl; }
+      for(int i=1;i<Len;i++) {
+        Options.external_script+=s[i];
+        if(i!=Len-1) { Options.external_script+=" "; } //assumes space delimiter - commas will cause issues
+      }
+      if(!system(NULL)) {
+        WriteWarning("Unable to call external script on this machine - :CallExternalScript command will be ignored.",Options.noisy);
+        Options.external_script="";
+      }
+      break;
+    }
+    case(104): //----------------------------------------------
+    {/*:ReadLiveFile {optional frequency, d or hh:mm:ss}*/
+      if(Options.noisy) { cout <<"Read Live File "<<endl; }
+      Options.rvl_read_frequency=Options.timestep; //default if not overrun - read every timestep
+      if(Len>=2) {
+        string tString=s[1];
+        if((tString.length()>=2) && 
+          ((tString.substr(2,1)==":") || 
+           (tString.substr(1,1)==":"))) //support for hh:mm:ss.00 format
+        {
+          time_struct tt=DateStringToTimeStruct("0000-01-01",tString,Options.calendar);
+          Options.rvl_read_frequency=FixTimestep(tt.julian_day);
+        }
+        else {
+          Options.rvl_read_frequency = s_to_d(s[1]);
+        }
+      }
+      break;
+    }
+    case(105):
+    {/*:CustomOutputInterval [interval, in days]*/
+      if(Options.noisy) { cout <<"Custom output interval "<<endl; }
+      if(Len<2) { ImproperFormatWarning(":CustomOutputInterval",p,Options.noisy); break; }
+      Options.custom_interval=s_to_d(s[1]);
+      if(Options.custom_interval==1.0) {
+        WriteWarning("CustomOutputInterval: using interval of 1 day is equivalent to use the DAILY aggregation of custom output, which is preferred",Options.noisy);
+      }
+      if((Options.custom_interval<1.0) || (floor(Options.custom_interval)!=Options.custom_interval)) {
+        ExitGracefully(":CustomOutputInterval: improper interval specified. Must be >0 and integer",BAD_DATA_WARN);
+      }
+      break;
+    }
+    case(106):
+    {/*:UseStopFile*/
+      if(Options.noisy) { cout <<"Use stopfile "<<endl; }
+      Options.use_stopfile=true;
+      break;
+    }
+    case(107):  //--------------------------------------------
+    {/*:WriteDemandFile*/
+      if(Options.noisy) { cout << "Write Irrigation Demand file" << endl; }
+      Options.write_demandfile=true;
+      break;
+    }
     case(150):  //--------------------------------------------
     {/*:AggregatedVariable
        ":AggregatedVariable" [SV_TAG] {optional HRU_Group}
@@ -1812,15 +1904,16 @@ bool ParseMainInputFile (CModel     *&pModel,
       baseflow_type btype=BASE_LINEAR;
       if (Len<4){ImproperFormatWarning(":Baseflow",p,Options.noisy); break;}
 
-      if      (!strcmp(s[1],"BASE_VIC"            )){btype=BASE_VIC;}
-      else if (!strcmp(s[1],"BASE_TOPMODEL"       )){btype=BASE_TOPMODEL;}
-      else if (!strcmp(s[1],"BASE_LINEAR"         )){btype=BASE_LINEAR;}
+      if      (!strcmp(s[1],"BASE_VIC"             )){btype=BASE_VIC;}
+      else if (!strcmp(s[1],"BASE_TOPMODEL"        )){btype=BASE_TOPMODEL;}
+      else if (!strcmp(s[1],"BASE_LINEAR"          )){btype=BASE_LINEAR;}
       else if (!strcmp(s[1],"BASE_LINEAR_CONSTRAIN")){btype=BASE_LINEAR_CONSTRAIN;}
-      else if (!strcmp(s[1],"BASE_LINEAR_ANALYTIC")){btype=BASE_LINEAR_ANALYTIC;}
-      else if (!strcmp(s[1],"BASE_POWER_LAW"      )){btype=BASE_POWER_LAW;}
-      else if (!strcmp(s[1],"BASE_CONSTANT"       )){btype=BASE_CONSTANT;}
-      else if (!strcmp(s[1],"BASE_THRESH_POWER"   )){btype=BASE_THRESH_POWER;}
-      else if (!strcmp(s[1],"BASE_GR4J"           )){btype=BASE_GR4J;}
+      else if (!strcmp(s[1],"BASE_LINEAR_ANALYTIC" )){btype=BASE_LINEAR_ANALYTIC;}
+      else if (!strcmp(s[1],"BASE_POWER_LAW"       )){btype=BASE_POWER_LAW;}
+      else if (!strcmp(s[1],"BASE_CONSTANT"        )){btype=BASE_CONSTANT;}
+      else if (!strcmp(s[1],"BASE_THRESH_POWER"    )){btype=BASE_THRESH_POWER;}
+      else if (!strcmp(s[1],"BASE_THRESH_STOR"     )){btype=BASE_THRESH_STOR;}
+      else if (!strcmp(s[1],"BASE_GR4J"            )){btype=BASE_GR4J;}
       else {
         ExitGracefully("ParseMainInputFile: Unrecognized baseflow process representation",BAD_DATA_WARN); break;
       }
@@ -1976,7 +2069,7 @@ bool ParseMainInputFile (CModel     *&pModel,
       else if (!strcmp(s[1],"SOILEVAP_ROOT"         )){se_type=SOILEVAP_ROOT;}
       else if (!strcmp(s[1],"SOILEVAP_ROOT_CONSTRAIN")){se_type=SOILEVAP_ROOT_CONSTRAIN;}
       else if (!strcmp(s[1],"SOILEVAP_HBV"          )){se_type=SOILEVAP_HBV;}
-      else if (!strcmp(s[1],"SOILEVAP_HBVPDM"       )){se_type=SOILEVAP_HBVPDM;}
+      else if (!strcmp(s[1],"SOILEVAP_HYPR"         )){se_type=SOILEVAP_HYPR;}
       else if (!strcmp(s[1],"SOILEVAP_UBC"          )){se_type=SOILEVAP_UBC;}
       else if (!strcmp(s[1],"SOILEVAP_CHU"          )){se_type=SOILEVAP_CHU;}
       else if (!strcmp(s[1],"SOILEVAP_GR4J"         )){se_type=SOILEVAP_GR4J;}
@@ -2564,6 +2657,21 @@ bool ParseMainInputFile (CModel     *&pModel,
       AddProcess(pModel,pMover,pProcGroup);
       break;
     }
+    case(237):  //----------------------------------------------
+    {/*:-->RedirectFlow
+     :-->RedirectFlow  [old 'To' SV] [new 'To' SV]*/
+      if(Options.noisy) { cout <<"Redirecting Flow"<<endl; }
+      if(Len<3) { ImproperFormatWarning(":-->RedirectFlow",p,Options.noisy); break; }
+
+      tmpS[0]=CStateVariable::StringToSVType(s[2],tmpLev[0],true);
+      pModel->AddStateVariables(tmpS,tmpLev,1);
+
+      // \todo [QA\QC]: check if this is a process that can support this (infiltration can support runoff redirects)
+
+      pMover->Redirect(ParseSVTypeIndex(s[1],pModel),ParseSVTypeIndex(s[2],pModel));
+
+      break;
+    }
     case(252):  //----------------------------------------------
     {/*:Drain
       string ":Drain" string method */
@@ -2588,13 +2696,16 @@ bool ParseMainInputFile (CModel     *&pModel,
       if(Options.noisy) { cout <<"Process Group Start"<<endl; }
       if(Len<1) { ImproperFormatWarning(":ProcessGroup",p,Options.noisy); break; }
       else {
+        pProcGroupOuter=pProcGroup;
         pProcGroup=new CProcessGroup(s[1]);
       }
       break;
     }
     case (296)://----------------------------------------------
     {/*End ProcessGroup
-       string ":EndProcessGroup {wt1 wt2 wt3 ... wtN}" */
+       string ":EndProcessGroup {wt1 wt2 wt3 ... wtN}"
+       or
+       string ":EndProcessGroup CALCULATE_WTS {r1 r2 r3 ... rN-1}"*/
       if (Options.noisy){cout <<"Process Group End"<<endl;}
       
       int N=pProcGroup->GetGroupSize();
@@ -2615,6 +2726,10 @@ bool ParseMainInputFile (CModel     *&pModel,
       }
       pModel->AddProcess(pProcGroup);
       pProcGroup=NULL;
+      if(pProcGroupOuter!=NULL) {
+        pProcGroup=pProcGroupOuter;
+        pProcGroupOuter=NULL;
+      }
       break;
     }
     case (297)://----------------------------------------------
@@ -2701,7 +2816,11 @@ bool ParseMainInputFile (CModel     *&pModel,
         if(!strcmp(s[3],"PASSIVE")) { is_passive=true; }
         if(!strcmp(s[3],"TRACER" )) { is_tracer =true; }
       }
-      pModel->GetTransportModel()->AddConstituent(s[1],is_tracer,is_passive);
+      constit_type ctype;
+      if (is_tracer){ctype=TRACER;}
+      else          {ctype=AQUEOUS;}
+      if(!strcmp(s[2],"TEMPERATURE")) { ctype=ENTHALPY; }
+      pModel->GetTransportModel()->AddConstituent(s[1],ctype,is_passive);
 
       pMover=new CmvAdvection(s[1],pModel->GetTransportModel());
       AddProcess(pModel,pMover,pProcGroup);
@@ -2709,6 +2828,10 @@ bool ParseMainInputFile (CModel     *&pModel,
       pMover=new CmvLatAdvection(s[1],pModel->GetTransportModel());
       AddProcess(pModel,pMover,pProcGroup);
 
+      if(ctype==ENTHALPY) {//add precipitation source condition, by default - Tprecip=Tair
+        int iAtmPrecip=pModel->GetStateVarIndex(ATMOS_PRECIP);
+        pModel->GetTransportModel()->AddDirichletCompartment(s[1],iAtmPrecip,DOESNT_EXIST,DIRICHLET_AIR_TEMP);
+      }
       break;
     }
 
@@ -2843,6 +2966,22 @@ bool ParseMainInputFile (CModel     *&pModel,
       }
       pMover=new CmvTransformation(s[2],s[3],t_type,pModel->GetTransportModel());
       AddProcess(pModel,pMover,pProcGroup);
+      break;
+    }
+    case(309):  //----------------------------------------------
+    {/*Heat Conduction
+     :HeatConduction RAVEN_DEFAULT MULTIPLE MULTIPLE */
+      if(Options.noisy) { cout <<"Heat Conduction Process"<<endl; }
+      if(Len<4) { ImproperFormatWarning(":HeatConduction",p,Options.noisy); break; }
+
+      if(!strcmp(s[1],"RAVEN_DEFAULT")) {  }
+      else {
+        ExitGracefully("ParseMainInputFile: Unrecognized heat conduction process representation",BAD_DATA_WARN); break;
+      }
+
+      pMover=new CmvHeatConduction(pModel->GetTransportModel());
+      AddProcess(pModel,pMover,pProcGroup);
+
       break;
     }
     case(400):  //----------------------------------------------

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2017 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
   ----------------------------------------------------------------*/
 #include "Model.h"
 
@@ -379,4 +379,17 @@ void CModel::CorrectPET(const optStruct &Options,
 
   //sub-daily correction
   F.PET*=F.subdaily_corr;
+
+  //Snow cover
+  if(Options.snow_suppressPET) 
+  {
+    double SWE     =0.0;
+    double snow_cov=1.0;
+    int iSnow=GetStateVarIndex(SNOW);
+    int iSC  =GetStateVarIndex(SNOW_COVER);
+    if(iSnow!=DOESNT_EXIST) { SWE     =pHRU->GetStateVarValue(iSnow); }
+    if(iSC  !=DOESNT_EXIST) { snow_cov=pHRU->GetStateVarValue(iSC); }
+      
+    if(SWE>0.1) { F.PET*=(1.0-snow_cov); }
+  }
 }

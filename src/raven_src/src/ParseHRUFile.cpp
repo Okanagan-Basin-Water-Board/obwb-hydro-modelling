@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
   Raven Library Source Code
-  Copyright (c) 2008-2018 the Raven Development Team
+  Copyright (c) 2008-2020 the Raven Development Team
   ----------------------------------------------------------------*/
 #include "RavenInclude.h"
 #include "Model.h"
@@ -614,58 +614,58 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
   /*Examples:
 
   :Reservoir ExampleReservoir
-  :SubBasinID 23
-  :HRUID 234
-  :Type RESROUTE_STANDARD
-  :VolumeStageRelation POWER_LAW
-  0.1 2.3
-  :EndVolumeStageRelation
-  :OutflowStageRelation POWER_LAW
-  0.1 2.3
-  :EndOutflowStageRelation
-  :AreaStageRelation LINEAR
-  0.33
-  :EndAreaStageRelation
+    :SubBasinID 23
+    :HRUID 234
+    :Type RESROUTE_STANDARD
+    :VolumeStageRelation POWER_LAW
+      0.1 2.3
+    :EndVolumeStageRelation
+    :OutflowStageRelation POWER_LAW
+      0.1 2.3
+    :EndOutflowStageRelation
+    :AreaStageRelation LINEAR
+      0.33
+    :EndAreaStageRelation
   :EndReservoir
 
   :Reservoir ExampleReservoir
-  :SubBasinID 23
-  :HRUID 234
-  :Type RESROUTE_STANDARD
-  :StageRelations
-  21 # number of points
-  0.09 0 0 0.0  (h [m], Q [m3/s], V [m3], A [m2])
-  0.1 2 43 0.2
-  ...
-  3.0 20000 3500 200
-  :EndStageRelations
-  :SeepageParameters coeff[m3/s/d] GW_stage [m]
+    :SubBasinID 23
+    :HRUID 234
+    :Type RESROUTE_STANDARD
+    :StageRelations
+      21 # number of points
+      0.09 0 0 0.0  (h [m], Q [m3/s], V [m3], A [m2])
+      0.1 2 43 0.2
+      ...
+      3.0 20000 3500 200
+    :EndStageRelations
+    :SeepageParameters coeff[m3/s/d] GW_stage [m]
   :EndReservoir
 
   :Reservoir ExampleReservoir
-  :SubBasinID 23
-  :HRUID 234
-  :Type RESROUTE_TIMEVARYING
-  :VaryingStageRelations
-  21 # number of points
-  [jul day1] [jul day2] [jul day3] ...
-  0.09 0 0 0.0 0.0 (h [m], Q [m3/s], A [m2], V [m3])
-  0.1 2 43 0.2 0.3
-  ...
-  3.0 20000 3500 200 25000
-  :EndVaryingStageRelations
-  :MaxCapacity 25000
+    :SubBasinID 23
+    :HRUID 234
+    :Type RESROUTE_TIMEVARYING
+    :VaryingStageRelations
+      21 # number of points
+      [jul day1] [jul day2] [jul day3] ...
+      0.09 0 0 0.0 0.0 (h [m], Q [m3/s], A [m2], V [m3])
+      0.1 2 43 0.2 0.3
+      ...
+      3.0 20000 3500 200 25000
+    :EndVaryingStageRelations
+    :MaxCapacity 25000
   :EndReservoir
 
   :Reservoir ExampleReservoir # 'lake type format'
-  :SubBasinID 23
-  :HRUID 234
-  :Type RESROUTE_STANDARD
-  :WeirCoefficient 0.6
-  :CrestWidth 10
-  :MaxDepth 5.5 # relative to minimum weir crest elevation
-  :LakeArea 10.5
-  :AbsoluteCrestHeight 365 # absolute minimum weir crest height m.a.s.l. (optional)
+    :SubBasinID 23
+    :HRUID 234
+    :Type RESROUTE_STANDARD
+    :WeirCoefficient 0.6
+    :CrestWidth 10
+    :MaxDepth 5.5 # relative to minimum weir crest elevation
+    :LakeArea 10.5
+    :AbsoluteCrestHeight 365 # absolute minimum weir crest height m.a.s.l. (optional)
   :EndReservoir
 
 
@@ -690,6 +690,12 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
   double max_capacity=0;
   double seep_coeff  =RAV_BLANK_DATA;
   double GW_stage    =0;
+  double Smi[12],Sni[12],Sci[12];
+  double Qmi[12],Qni[12],Qci[12];
+  double Qmax,Smax;
+  bool dztr=false;
+  bool minstageDom=false;
+  double demand_mult=1.0;
 
   curve_function type;
   type=CURVE_POWERLAW;
@@ -757,6 +763,16 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
       if(Options.noisy) { cout << ":SeepageParameters" << endl; }
       seep_coeff=s_to_d(s[1]);
       GW_stage  =s_to_d(s[2]);
+    }
+    else if(!strcmp(s[0],":MinStageConstraintDominant"))
+    {
+      if(Options.noisy) { cout << ":MinStageConstraintDominant" << endl; }
+      minstageDom=true;
+    }
+    else if(!strcmp(s[0],":DemandMultiplier"))
+    {
+      if(Options.noisy) { cout << ":DemandMultiplier" << endl; }
+      demand_mult=s_to_d(s[0]);;
     }
     //----------------------------------------------------------------------------------------------
     else if(!strcmp(s[0],":VolumeStageRelation"))
@@ -971,6 +987,59 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
       }
       p->Tokenize(s,Len); //:EndVaryingStageRelations
     }
+
+    else if(!strcmp(s[0],":DZTRResservoirModel"))
+    {/*:DZTRResservoirModel
+       :MaximumStorage           Vmax(m3)
+       :MaximumChannelCapacity   Qmax(m3/s)
+       :MonthlyMaxStorage        J F M A M J J A S N D  {or single constant value} (m3)
+       :MonthlyNormalStorage     J F M A M J J A S N D  {or constant value} (m3)
+       :MonthlyCriticalStorage   J F M A M J J A S N D  {or constant value} (m3)
+       :MonthlyMaxDischarge      J F M A M J J A S N D  {or constant value} (m3/s)
+       :MonthlyNormalDischarge   J F M A M J J A S N D  {or constant value} (m3/s)
+       :MonthlyCriticalDischarge J F M A M J J A S N D  {or constant value} (m3/s)
+     :EndDZTRReservoirModel
+     */
+     //Dynamically zoned target release model
+      if(Options.noisy) { cout <<"DZTR Reservoir Model"<<endl; }
+
+      dztr=true;
+      
+      p->Tokenize(s,Len);
+      Smax=s_to_d(s[1]);
+
+      p->Tokenize(s,Len);
+      Qmax=s_to_d(s[1]);
+
+      p->Tokenize(s,Len);
+      if    (Len>=13) { for(int i=0;i<12;i++) { Smi[i]=s_to_d(s[i+1]); } }
+      else if(Len>=2) { for(int i=0;i<12;i++) { Smi[i]=s_to_d(s[1]); } }
+
+      p->Tokenize(s,Len);
+      if    (Len>=13) { for(int i=0;i<12;i++) { Sni[i]=s_to_d(s[i+1]); } }
+      else if(Len>=2) { for(int i=0;i<12;i++) { Sni[i]=s_to_d(s[1]); } }
+
+      p->Tokenize(s,Len);
+      if    (Len>=13) { for(int i=0;i<12;i++) { Sci[i]=s_to_d(s[i+1]); } }
+      else if(Len>=2) { for(int i=0;i<12;i++) { Sci[i]=s_to_d(s[1]); } }
+
+      p->Tokenize(s,Len);
+      if    (Len>=13) { for(int i=0;i<12;i++) { Qmi[i]=s_to_d(s[i+1]); } }
+      else if(Len>=2) { for(int i=0;i<12;i++) { Qmi[i]=s_to_d(s[1]); } }
+
+      p->Tokenize(s,Len);
+      if    (Len>=13) { for(int i=0;i<12;i++) { Qni[i]=s_to_d(s[i+1]); } }
+      else if(Len>=2) { for(int i=0;i<12;i++) { Qni[i]=s_to_d(s[1]); } }
+
+      p->Tokenize(s,Len);
+      if    (Len>=13) { for(int i=0;i<12;i++) { Qci[i]=s_to_d(s[i+1]); } }
+      else if(Len>=2) { for(int i=0;i<12;i++) { Qci[i]=s_to_d(s[1]); } }
+      
+      p->Tokenize(s,Len); //:EndDZTR
+
+      break;
+    }
+
     //----------------------------------------------------------------------------------------------
     else if(!strcmp(s[0],":EndReservoir")) {
       if(Options.noisy) { cout << ":EndReservoir" << endl; }
@@ -999,19 +1068,37 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
     ExitGracefullyIf(cwidth   ==DOESNT_EXIST,"CReservoir::Parse: :CrestWidth must be specified for lake-type reservoirs",BAD_DATA_WARN);
     ExitGracefullyIf(lakearea ==DOESNT_EXIST,"CReservoir::Parse: :LakeArea  must be specified for lake-type reservoirs",BAD_DATA_WARN);
     ExitGracefullyIf(max_depth==DOESNT_EXIST,"CReservoir::Parse: :LakeDepth must be specified for lake-type reservoirs",BAD_DATA_WARN);
+
     pRes=new CReservoir(name,SBID,weircoeff,cwidth,crestht,lakearea,max_depth);
   }
   else {
     ExitGracefully("CReservoir::Parse: only currently supporting linear, powerlaw, or data reservoir rules",STUB);
   }
 
-  if(max_capacity!=0) { pRes->SetMaxCapacity(max_capacity); }//overrides estimates (which will typically be too large)
-  if(seep_coeff  !=RAV_BLANK_DATA) { pRes->SetGWParameters(seep_coeff,GW_stage); }
-  if((type==CURVE_LAKE) && (aV!=NULL) &&
-    (aV_ht!=NULL)) {
-    pRes->SetVolumeStageCurve(aV_ht,aV,NV);
-  }//allows user to override prismatic reservoir assumption
-
+  if(max_capacity!=0) 
+  { 
+    pRes->SetMaxCapacity(max_capacity); //overrides estimates (which will typically be too large)
+  }
+  if(seep_coeff  !=RAV_BLANK_DATA) 
+  { 
+    pRes->SetGWParameters(seep_coeff,GW_stage); 
+  }
+  if((type==CURVE_LAKE) && (aV!=NULL) && (aV_ht!=NULL)) 
+  {
+    pRes->SetVolumeStageCurve(aV_ht,aV,NV);//allows user to override prismatic lake assumption
+  }
+  if(dztr) 
+  {
+    pRes->SetDZTRModel(Qmax,Smax,Sci,Sni,Smi,Qci,Qni,Qmi);
+  }
+  if(minstageDom) 
+  {
+    pRes->SetMinStageDominant();
+  }
+  if(demand_mult!=1.0) {
+    pRes->SetDemandMultiplier(demand_mult);
+  }
+  
   for(int i = 0; i < nDates; i++) { delete[] aQQ[i]; }delete[] aQQ;
   delete[] aQ;
   delete[] aQ_ht;
