@@ -23,22 +23,22 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "file-config-test"
+ws.interest <- "HRU-Comparison"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- c("Mill", "Mission")
+include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "mill-mission-file-config-test"
+run.number <- "Mission-updated"
 
 ## Add comments to README file.
-run.comments <- "Purpose of the run is confirm that updated global file paths run."
+run.comments <- "Updated HRUs for Mission Creek"
 
-## Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
-# disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
-disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
+# Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
+disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
+# disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
 
 ## Specify whether Ostrich templates and input files should be written for this run
 run.ostrich <- FALSE
@@ -50,13 +50,13 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- TRUE
+include.water.demand <- FALSE
 
 # Should reservoir parameters be included in the calibration?
 calibrate.reservoirs <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
-manage.reservoirs <- TRUE
+manage.reservoirs <- FALSE
 
 ## Should soil thicknesses be calibrated?
 calibrate.soil.thicknesses <- FALSE
