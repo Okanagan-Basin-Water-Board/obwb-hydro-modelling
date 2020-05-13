@@ -1,3 +1,0 @@
-:UniformInitialConditions SOIL[0] 10
-:UniformInitialConditions SOIL[1] 10
-:UniformInitialConditions SOIL[2] 10
