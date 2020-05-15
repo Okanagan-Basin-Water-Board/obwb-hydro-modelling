@@ -90,7 +90,7 @@ owdm.water.demand.in.file <- "OWDM_water_demands_timeseries_05052020.csv"
 raw.parameter.codes.in.dir <- "raw/parameter-codes"
 
 RVP.template.in.file <- "RVP-Template_05052020.csv"
-RVI.template.in.file <- "RVI-Template_05052020.csv"
+RVI.template.in.file <- "RVI-Template_05152020.csv"
 OST.template.in.file <- "OST-Template_05052020.csv"
 
 ## Additional Template files
