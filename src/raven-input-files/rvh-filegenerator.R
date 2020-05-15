@@ -90,17 +90,10 @@ for(i in 1:length(unique.HRU)){
   
   HRU.output[i, "ELEVATION"] <- round(median(HRU.table[index,"elevation"]), 2)
   
-  
-  ## #TD7: 11052020 - Awaiting response from James Craig on suggested approach here. Either update mean to median, or employee this bounding box centre method.
-  # lat.centroid <- ((range(HRU.table[index, "Y"])[2] - range(HRU.table[index, "Y"])[1]) / 2) + range(HRU.table[index, "Y"])[1]
-  
-  # lon.centroid <- ((range(HRU.table[index, "X"])[2] - range(HRU.table[index, "X"])[1]) / 2) + range(HRU.table[index, "X"])[1]
-  
+  ## #TD7: 15052020 - James Craig confirmed that mean is appropriate here as it determines the geometric centre of the hru.
   HRU.output[i, "LATITUDE"] <- round(mean(HRU.table[index, "Y"]), 4)
   
   HRU.output[i, "LONGITUDE"] <- round(mean(HRU.table[index, "X"]), 4)
-  
-  
   
   HRU.output[i, "BASIN_ID"] <- unique(HRU.table[index, "subbasin"])
   
