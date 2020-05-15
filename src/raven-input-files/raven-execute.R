@@ -23,7 +23,7 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "HRU-Comparison"
+ws.interest <- "unmet-demand"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -31,10 +31,10 @@ ws.interest <- "HRU-Comparison"
 include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "Mission-updated"
+run.number <- "Mission-updated-new-exe"
 
 ## Add comments to README file.
-run.comments <- "Updated HRUs for Mission Creek"
+run.comments <- "Testing writing of Demand file from Raven"
 
 # Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
@@ -50,13 +50,13 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- FALSE
+include.water.demand <- TRUE
 
 # Should reservoir parameters be included in the calibration?
 calibrate.reservoirs <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
-manage.reservoirs <- FALSE
+manage.reservoirs <- TRUE
 
 ## Should soil thicknesses be calibrated?
 calibrate.soil.thicknesses <- FALSE
