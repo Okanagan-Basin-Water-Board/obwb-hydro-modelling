@@ -27,6 +27,7 @@ library(data.table)
 library(rgdal)
 library(proj4)
 library(cloudml)
+library(plyr)
 
 # Load base packages for error-free execution using Rscript from the command line
 # require(stats)
@@ -217,6 +218,7 @@ DT <- data.table(
 print("Generating binned values for elevation, landcover, and aspect...")
 
 ## Determine elevation bands
+############################
 
 DT$elevation.bin <- ifelse(elevation.values <= 100, 200,
                     ifelse(elevation.values > 200 & elevation.values <= 300, 201,
@@ -243,29 +245,36 @@ DT$elevation.bin <- ifelse(elevation.values <= 100, 200,
 
 
 ## Determine landcover bins
+############################
+## #TD13 - 22052020 - Update to landcover binning process to reduce error-prone nature. Landcover bins are now read/assigned from LC.in.file, rather than hardcoded.
 
-DT$landcover.bin <- ifelse(landcover.values <= 11, 300, # No data / Unclassified / Cloud 
-                    ifelse(landcover.values == 12, 301, # Shadow
-                    ifelse(landcover.values == 20, 302, # Water
-                    ifelse(landcover.values == 31 , 303, # Snow / Ice
-                    ifelse(landcover.values == 30 | landcover.values >= 32 & landcover.values <= 34, 304, # Non-veg Land / Rock/Rubble / Exposed Barren Land / Developed
-                    ifelse(landcover.values >= 80 & landcover.values <= 83, 305, # Wetland / Wetland Treed / Wetland Shrub / Wetland Herb
-                    ifelse(landcover.values == 40 | landcover.values == 100| landcover.values == 110, 306, # Bryoids / Herbs / Grassland
-                    ifelse(landcover.values >= 120 & landcover.values <= 122, 307, # Agriculture / Agriculture Cropland / Agriculture Pasture Forage
-                    ifelse(landcover.values >=50 & landcover.values <= 52, 308, # Shrubland / Shrub Tall / Shrub Low
-                    ifelse(landcover.values >200 & landcover.values < 1033, 309, # Forest-Trees / Coniferous / Coniferous Dense / Coniferous Open / Coniferous Sparse / Broadleaf / Broadleaf / Broadleaf Dense / Broadleaf Open / Broadleaf Sparse / Mixedwood / Mixedwood Dense / Mixedwood Open / Mixedwood Sparse
-                    ifelse(landcover.values == 1033, 310, 300)))))))))))  # URBAN
+# Read in Landcover codes/bin info ; convert landcover.values to df to facilitate joining
+landcover.codes <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, LC.in.file))
+
+landcover.values.df <- as.data.frame(landcover.values)
+
+colnames(landcover.values.df) <- "Value"
+
+# Join bins to landcover values
+tmp <- plyr::join(landcover.values.df, landcover.codes, by = "Value")
+
+# Integrate landcover bins to DT
+DT$landcover.bin <- tmp$Bin_Value
+
+
 ## Determine aspect bins
-
+############################
 DT$aspect.bin <- ifelse(aspect.values.adjusted >= 315, 400, # North
                  ifelse(aspect.values.adjusted >= 0 & aspect.values.adjusted < 45, 400, # North
                  ifelse(aspect.values.adjusted >= 45 & aspect.values.adjusted < 135, 401, # West #B3: 08052020 - EAST is now WEST as aspect direction changed
                  ifelse(aspect.values.adjusted >= 135 & aspect.values.adjusted < 225, 402, # South
                  ifelse(aspect.values.adjusted >= 225 & aspect.values.adjusted < 315, 403, 999))))) # East #B3: 08052020 - WEST is now EAST as aspect direction changed (999 = something went wrong)
 
-## Check to make sure none are assigned 999.
-if(nrow(DT[DT$elevation.bin == 999, ]) > 0 | nrow(DT[DT$landcover.bin == 999, ]) > 0  | nrow(DT[DT$aspect.bin == 999, ]) >0 ){
-  stop("One or more of the binning processes did not complete correctly. Review binned values in DT.")
+############################
+## Check to make sure elevation/aspect binning is completed correctly..
+## #TD13 - 22052020 - landcover.bin check removed here as no longer relevant.
+if(nrow(DT[DT$elevation.bin == 999, ]) > 0 | nrow(DT[DT$aspect.bin == 999, ]) >0 ){
+  stop("One or more of the binning processes did not complete correctly. Review hardcoded elevation & aspect binning processes in hru-generator.R.")
 }
 
 ## TEMP SAVE #2 - allows intermediate state to be grabbed if necessary
@@ -280,6 +289,7 @@ save.image(file = file.path(tmp.loc, paste("temp2.", Sys.Date(), ".RData", sep =
 ## Create a backup
 DT.revert <- DT
 
+warning("Ensure that the string hardcoded in hru-generator.R for missing Soil Profiles and Aquifer types is correct.")
 
 ## Read in soil.codes and aquifer codes to assign values to pixels with blank/missing information
 soil.codes <- read.csv(file.path(global.input.dir, processed.spatial.dir, soil.attribute.in.file), 
@@ -295,14 +305,20 @@ DT[is.na(DT$aquifer), "aquifer"] <- aquifer.codes[aquifer.codes$Aquifer_ty == "[
 ## This requires the correct string for "missing" soils to be entered here, matching that included in the soil.attribute.in.file - see check below
 DT[is.na(DT$soils), "soils"] <- soil.codes[soil.codes$soil_type == " ", "Value"]
 
-warning("Ensure that the string hardcoded for missing Soil Profiles and Aquifer types is correct.")
-
 ## Remove areas outside the model watershed (i.e., subbasin = NA)
 DT <- DT[!is.na(DT$subbasin), ]
 
+############################
+## Check that Landcover binning completed correctly. This has to be completed here since NA's are retained throughthe joining processes above.
+## #TD13 - 22052020 - Ensure that the landcover bin process completed correctly
+if(anyNA(unique(DT$landcover.bin))){
+  stop(paste("One or more landcover values / bins are missing from the", LC.in.file, "file. Review and re-generate all HRU bins."))
+}
+
 ########################################
 ##
-## Replace binned values for all locations which are lakes / reservoirs
+## Replace binned values for all locations which are lakes / reservoirs to ensure that only one HRU will be defined for these.
+## NOTE: This may be an unnecessary step, since all reservoirs should be one sub-basin anyway (and therefore generate a unique ID). But it helps to isolate from all components of HRU definitions.
 ##
 ########################################
 
@@ -317,7 +333,6 @@ DT[DT$subbasin %in% reservoirs, ]$landcover.bin <- 999
 DT[DT$subbasin %in% reservoirs, ]$aspect.bin <- 999
 
 
-
 ########################################
 ##
 ## Generate unique IDs for all grid cells to be used in HRU development
@@ -330,9 +345,6 @@ DT$ID <- paste(DT$landcover.bin,
                DT$aspect.bin,
                DT$subbasin,
                sep = '')
-
-   
-    
 
 
 print(paste("There are", length(unique(DT$ID)), "unique HRUs within the model domain"))
