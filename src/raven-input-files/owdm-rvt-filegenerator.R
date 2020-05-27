@@ -79,6 +79,8 @@ model.period.end <- base::as.Date(time$DEFINITION[time$PARAMETER == ":EndDate"])
 ## TEMPORARY - set this as 1996-01-01 to allow custom calibration periods to be defined, but the effects of demand seen from 1996 onwards.
 demand.start.date <- "1996-01-01"
 
+print(paste("Water demand is included from", demand.start.date, "onwards. This is defined in the owdm-rvt-filegenerator.R"))
+
 # model.period <- data.frame(Date = seq(as.Date(model.period.start), as.Date(model.period.end), by = "day"))
 
 #####################################################################
@@ -206,7 +208,7 @@ if(nrow(owdm.sub) > 0){
       }
       
       writeLines(':EndIrrigationDemand',fc)
-      
+
       ##-------------------------------------------------------------------
       ##
       ## Add :ReservoirDownstreamDemand command to specify how water demand is supplied to the given subbasin
@@ -217,15 +219,59 @@ if(nrow(owdm.sub) > 0){
         
         ## Only write the reservoir demand tag if the flag is not <Null>
         if(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"] != "<Null>" & subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"] != "<Null>"){
-        
-          cat(file = fc, append = T, sep = "",
-              "\n",
-              "#---------------------------------------------", "\n",
-              paste("# Specify water demand management for subbasin", subs[i]), "\n",
-              paste(":ReservoirDownstreamDemand ", subs[i], as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Upstream_Reservoir"]), as.character(subbasins[subbasins$Subbasin_ID == subs[i], "Pct_Demand_Met"]), sep = " "), "\n"
-          )
           
-        } else {
+          ## #NF2 - 26052020: Code block updated to allow A) multiple reservoirs to be specified to satisfy demand at a given subbasin; b) Temporal constraints to be specified for a given demand.
+          ## Unlist Upstream Reservoirs, Associated Percentage Demands, and Start/End Dates
+          ## Create a dataframe for the current subbasin and make all characters
+          sub_dm <- lapply(subbasins[subbasins$Subbasin_ID == subs[i], c("Upstream_Reservoir", "Pct_Demand_Met", "Demand_julian_start", "Demand_julian_end")], as.character)
+
+          ## Split elements on commas to allow indexing relevant to individual reservoirs
+          res_dm <- sapply(sub_dm, strsplit, ",")
+          
+          ## check that all elements are the same size (i.e., nothing is missing)
+          if(!all(lengths(res_dm)[1] == lengths(res_dm))){
+            stop(paste("Ensure that the same number of elements are included for all Upstream_Reservoirs, Pct_Demand_Met, Demand_julian_start, and Demand_julian_end for Subbasin", subs[i]))
+          } 
+          
+          ## Loop over all reservoirs (and/or _AUTO flag) related to the given subbasin
+          for(res in 1:length(res_dm[[1]])){
+            
+            ## Append a header to the relevant *.rvt file
+            cat(file = fc, append = T, sep = "",
+                if(res == 1){"\n"}, "\n",
+                if(res == 1){paste("#---------------------------------------------", "\n")},
+                if(res == 1){paste("# Specify water demand management for subbasin", subs[i], "\n")}
+                )
+                
+                ## check if start/end dates for demand satisfaction are specified. If so, append the :ReservoirDownstreamDemand command, including reservoir, percentage, and julian day start/end
+                if(res_dm$Demand_julian_start[res] != "<Null>" & res_dm$Demand_julian_end[res] != "<Null>"){
+                  
+                  cat(file = fc, append = T, sep = "",
+                  paste(":ReservoirDownstreamDemand ", subs[i], res_dm$Upstream_Reservoir[res], res_dm$Pct_Demand_Met[res], res_dm$Demand_julian_start[res], res_dm$Demand_julian_end[res], sep = " ")
+                  )
+                  
+                  ## Print a statement specifying how the demand has been managed
+                  print(paste("Reservoir releases from Reservoir", res_dm$Upstream_Reservoir[res], "to satisfy water demand in Subbasin", subs[i], "are constrained between Julian Day",res_dm$Demand_julian_start[res], "and Julain Day", res_dm$Demand_julian_end[res]))
+                  
+                  ## check if BOTH start/end dates are Null (i.e., not constrained temporally). If so, append the :ReservoirDownstreamDemand command, including reservoir and percentage, but no julian day constraints.
+                } else if(res_dm$Demand_julian_start[res] == "<Null>" & res_dm$Demand_julian_end[res] == "<Null>"){
+                  
+                  cat(file = fc, append = T, sep = "",
+                  paste(":ReservoirDownstreamDemand ", subs[i], res_dm$Upstream_Reservoir[res], res_dm$Pct_Demand_Met[res], sep = " ")
+                  )
+                  
+                  print(paste("Reservoir releases from Reservoir", res_dm$Upstream_Reservoir[res], "to satisfy water demand in Subbasin", subs[i], "are not constrained temporally."))
+                  
+                } else{
+                  
+                  ## If one start/end dates are not both defined, or excluded, throw an error.
+                  stop(paste("Please specify BOTH Demand_julian_start AND Demand_julian_end dates for water demand at Subbsasin", subs[i]))
+                  
+                } # End else
+
+          } # End for loop
+          
+        } else {  ## If no upland reservoir support is included, add a statement to this effect.
           
           cat(file = fc, append = T, sep = "",
               "\n",
@@ -233,7 +279,7 @@ if(nrow(owdm.sub) > 0){
               paste("# Subbasin", subs[i], "is NOT supported by upland storage."), "\n"
           )
         
-        } # End if reservoir is managed.
+        } # End if subbasin not supported by upland reservoir storage.
       
       } # End if manage.reservoir
       
@@ -305,11 +351,7 @@ if(nrow(owdm.sub) > 0){
     
   }
   
-  if(manage.reservoirs == TRUE){
-    
-    print("Reservoirs will be managed to satisfy downstream demand.")
-    
-  } else {
+  if(manage.reservoirs != TRUE){
     
     print("Reservoirs are NOT managed to satisfy downstream demand.")
     
