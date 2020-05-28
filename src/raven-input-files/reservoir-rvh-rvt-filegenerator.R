@@ -103,8 +103,8 @@ for(j in 1:length(include.watersheds)){
 
         if("Q1_start_julian" %in% parameters$PARAMETER & include.water.demand == TRUE){
           
-          ##TODO: Confirm how this reservoir should be handled. The discharge curves are intended to represent "real" operations. This reservoir cannot be removed from _AUTO downstream demand supply. But perhaps are more explicit reservoir assignments are included, this will not be an issue.
-          
+          ## TODO: Confirm how this reservoir should be handled. The discharge curves are intended to represent "real" operations. This reservoir cannot be removed from _AUTO downstream demand supply. But perhaps are more explicit reservoir assignments are included, this will not be an issue.
+          ## TODO: Update this to include a stage-area curve, as with lake-type reservoirs
           variable.stage <- TRUE
           
           tmp2$Area_m2 <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000) ## Assume that the area is constant under all stage(s).
@@ -290,7 +290,7 @@ for(j in 1:length(include.watersheds)){
         
         ##-----------------------------------------------------------------------------
         ##
-        ## Generate individual *.rvt files for all reservoirs within the model watershed - this cotains the Minimum Stage timeseries
+        ## Generate individual *.rvt files for all reservoirs within the model watershed - This contains minimum (and maximum) stage timeseries
         ##
         ##-----------------------------------------------------------------------------
         ## UPDATE: Reservoir Minimum Stage Timeseries is now only written under residual conditions. Reservours "could" dry out under natural conditions.
@@ -317,7 +317,70 @@ for(j in 1:length(include.watersheds)){
               cat(file = ReservoirRVToutFile, append = T, sep = "",
                   ":EndReservoirMinStage", "\n"
                   )
-        }
+
+        
+        ##-------------------------------------------------
+        ## GENERATE MAXIMUM STAGE TIMESERIES, IF NECESSARY
+        ##-------------------------------------------------
+        ## #TD3 - 28052020: Maximum timeseries can now be specified for individual reservoirs. Timeseries are currently assumed constant through time, and defined in the reservoir.in.file by adding "MaxStage" to the parameter list.
+        ## If MaxStage is not defined (As it is not for most reservoirs at the moment), no :ReservoirMaxStage timeseries is written. It is expected that this feature will be used more in future. Timeseries can currently be estimated,
+        ## assuming that the MaxStage is 1 m above AbsoluteCrestHeight. Specific estimates can be handled by defining the estimated number in the reservoir.in.file (Rather than including "ESTIMATED").
+        
+          if(!"MaxStage" %in% parameters$PARAMETER){ ## If MaxStage is not defined in any way for the reservoir, no maximum stage timeseries is written.
+            
+            print(paste("MaxStage definition is missing for", reservoirs[i], "Reservoir. No :ReservoirMaxStage will be included."))
+          
+          } else if(parameters$VALUE[parameters$PARAMETER == "MaxStage"] == "NONE"){ ## If "NONE", no maximum stage timeseries is written.
+            
+            print(paste("No :ReservoirMaxStage timeseries is included for", reservoirs[i], "Reservoir."))
+            
+          } else if(parameters$VALUE[parameters$PARAMETER == "MaxStage"] == "ESTIMATED"){ ## If "ESTIMATED", maximum stage timeseries is estimated to be 1 m above the AbsoluteCrestHeight
+            
+            MaxStage <- as.numeric(as.character(parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"])) + 1
+            
+            print(paste(":ReservoirMaxStage timeseries is ESTIMATED for", reservoirs[i], "Reservoir. :ReservoirMaxStage is ESTIMATED to be 1 m above the AbsoluteCrestHeight and will be included as", MaxStage, "."))
+            
+            cat(file=ReservoirRVToutFile, append=T, sep="",
+                "\n",
+                "## Maximum Stage Timeseries.", "\n",
+                "#---------------------------------------------------------", "\n",
+                "\n",
+                ":ReservoirMaxStage ", SubBasinID, "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(start.date)),length(model.period)), "\n"
+            )
+            
+            write.table(paste(rep(MaxStage, length(model.period)), collapse = "\n"), ReservoirRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = ReservoirRVToutFile, append = T, sep = "",
+                ":EndReservoirMaxStage", "\n"
+            )
+            
+          } else { ## If not "NONE" or "ESTIMATED", maximum stage timeseries is written as per value provided.
+            
+            MaxStage <- parameters$VALUE[parameters$PARAMETER == "MaxStage"]
+            
+            print(paste(":ReservoirMaxStage timeseries for", reservoirs[i], "Reservoir is included as", MaxStage, "."))
+            
+            cat(file=ReservoirRVToutFile, append=T, sep="",
+                "\n",
+                "## Maximum Stage Timeseries.", "\n",
+                "#---------------------------------------------------------", "\n",
+                "\n",
+                ":ReservoirMaxStage ", SubBasinID, "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(start.date)),length(model.period)), "\n"
+            )
+            
+            write.table(paste(rep(MaxStage, length(model.period)), collapse = "\n"), ReservoirRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = ReservoirRVToutFile, append = T, sep = "",
+                ":EndReservoirMaxStage", "\n"
+            )
+            
+          } ## End else.
+
+        } # Enf if include.water.demand = TRUE
+        
+        
         
       } else { # End if "Future_Storage_dam3" is in the dataframe (i.e., whether a stage-storage curve is included.)
         
