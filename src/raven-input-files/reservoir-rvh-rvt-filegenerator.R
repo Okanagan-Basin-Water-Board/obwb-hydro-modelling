@@ -5,7 +5,7 @@
 ## Jun-19-2019
 ##
 ############################################################################################################################
-## TODO: Update :MinStageConstraintDominant commands to only be written when manage.reservoirs == TRUE.
+
 ## Source file configuration
 source("/var/obwb-hydro-modelling/file-config.R")
 
@@ -103,7 +103,7 @@ for(j in 1:length(include.watersheds)){
 
         if("Q1_start_julian" %in% parameters$PARAMETER & include.water.demand == TRUE){
           
-          ##TODO: Update this so that this reservoir is NOT available to support downstream demand - this should be captured by the variable resealse rules which represent "real" release rules
+          ##TODO: Confirm how this reservoir should be handled. The discharge curves are intended to represent "real" operations. This reservoir cannot be removed from _AUTO downstream demand supply. But perhaps are more explicit reservoir assignments are included, this will not be an issue.
           
           variable.stage <- TRUE
           
@@ -233,7 +233,7 @@ for(j in 1:length(include.watersheds)){
           
         } else {
           
-          if(include.water.demand == TRUE & i == 1){print("Minimum Stage Constraint has been made dominant to prevent reservoirs to be drawn down below the invert under residual streamflows.")}
+          if(manage.reservoirs == TRUE & i == 1){print("Minimum Stage Constraint has been made dominant to prevent reservoirs to be drawn down below the invert under residual streamflows.")}
           
           cat(file=ReservoirRVHoutFile, append=F, sep="",
               
@@ -254,7 +254,7 @@ for(j in 1:length(include.watersheds)){
               ":LakeArea ", LakeArea, "\n",
               ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
               ":MaxCapacity ", MaxCapacity, "\n",
-              if(include.water.demand == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included under residual conditions
+              if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
               "\n",
               ":VolumeStageRelation LOOKUP_TABLE", "\n",
               npoints, " # number of points in curve", "\n"
@@ -569,7 +569,7 @@ for(j in 1:length(include.watersheds)){
                 ":LakeArea ", LakeArea, "\n",
                 ":AbsoluteCrestHeight ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "AbsoluteCrestHeight"], "\n",
                 ":MaxCapacity ", MaxCapacity, "\n",
-                if(include.water.demand == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included under residual conditions
+                if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven.
                 "\n",
                 ":VolumeStageRelation LOOKUP_TABLE", "\n",
                 npoints, " # number of points in curve", "\n"
