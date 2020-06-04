@@ -214,7 +214,7 @@ initial.all <- initial
 ##------------------------------------------------------------
 
 
-if(calibrate.reservoirs == TRUE){
+if(calibrate.reservoir.parameters == TRUE){
   
   all.reservoirs <- unique(subbasins.present$Reservoir_name)
   
@@ -641,7 +641,7 @@ cat(file = SaveBestFile, append = F, sep = "",
 )
 
 
-if(calibrate.reservoirs == TRUE){
+if(calibrate.reservoir.parameters == TRUE){
   
   cat(file = SaveBestFile, append = T, sep = "",
       "if [ ! -e best/reservoirs ] ; then", "\n",

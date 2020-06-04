@@ -534,7 +534,7 @@ for(j in 1:length(include.watersheds)){
       ############################################################################################################################
       
       
-      if(run.ostrich == TRUE & calibrate.reservoirs == TRUE){
+      if(run.ostrich == TRUE & calibrate.reservoir.parameters == TRUE){
         
         # calibration.parameter.table <- na.omit(tmp[ ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
         

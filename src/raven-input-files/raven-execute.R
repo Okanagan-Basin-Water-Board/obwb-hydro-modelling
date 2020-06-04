@@ -31,10 +31,10 @@ ws.interest <- "reservoir-configuration-28052020"
 include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "Mission-2"
+run.number <- "Mission-5"
 
 ## Add comments to README file.
-run.comments <- "Testing multiple upland reservoirs in custom timeseries"
+run.comments <- "Max stage - NONE"
 
 # Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 # disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
@@ -56,7 +56,7 @@ include.water.demand <- TRUE
 demand.start.date <- "1996-01-01"
 
 # Should reservoir parameters be included in the calibration?
-calibrate.reservoirs <- FALSE
+calibrate.reservoir.parameters <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
 manage.reservoirs <- TRUE
@@ -195,7 +195,7 @@ if(run.ostrich == T){
 #####################################################################
 
 # #RVP ADJUSTMENT SCRIPT HERE
-# if(run.ostrich == TRUE & include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoirs == FALSE & calibrate.soil.thicknesses == FALSE){
+# if(run.ostrich == TRUE & include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoir.parameters == FALSE & calibrate.soil.thicknesses == FALSE){
 #   
 #   source("/var/obwb-hydro-modelling/src/rvp-template-residual-adjustor.R")
 #   
