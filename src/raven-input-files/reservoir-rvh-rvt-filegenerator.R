@@ -254,7 +254,9 @@ for(j in 1:length(include.watersheds)){
               ":LakeArea ", LakeArea, "\n",
               ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
               ":MaxCapacity ", MaxCapacity, "\n",
-              if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
+              if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n") ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
+                if(length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## Is Reservoir Demand Multiple exists, then write it.
+                  paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
               "\n",
               ":VolumeStageRelation LOOKUP_TABLE", "\n",
               npoints, " # number of points in curve", "\n"
@@ -408,7 +410,7 @@ for(j in 1:length(include.watersheds)){
         
         ReservoirRVHoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
         
-        print(paste("No Minimum Stage Constraint can be written for", reservoir[i], "since no stage-storage information is available."))
+        print(paste("No Minimum Stage Constraint can be written for", reservoirs[i], "since no stage-storage information is available."))
         
         cat(file=ReservoirRVHoutFile, append=F, sep="",
             
@@ -428,6 +430,9 @@ for(j in 1:length(include.watersheds)){
             ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
             ":LakeArea ", LakeArea, "\n",
             ":MaxCapacity ", MaxCapacity, "\n",
+            if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n") ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
+              if(length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## Is Reservoir Demand Multiple exists, then write it.
+                paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
             ":EndReservoir", "\n"
             )
         
@@ -535,6 +540,8 @@ for(j in 1:length(include.watersheds)){
       
       
       if(run.ostrich == TRUE & calibrate.reservoir.parameters == TRUE){
+        
+        if(calibrate.reservoir.supply == TRUE){stop("Currently, reservoir parameters cannot be calibrated at the same time as reservoir supply within OHME. Please change either calibrate.reservoir.parameters OR calibrate.reservoir.supply to FALSE.")}
         
         # calibration.parameter.table <- na.omit(tmp[ ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
         
@@ -693,8 +700,7 @@ for(j in 1:length(include.watersheds)){
         if(i == length(reservoirs)){print(paste(length(reservoirs), "required Ostrich template(s) generated for the", include.watersheds[j], " Creek watershed..."))}
       } # End if statement for running Ostrich
       
-      
-    } # end for loop
+    } # end for loop for each reservoir
     
     print(paste(length(reservoirs), "reservoir(s) included within the", include.watersheds[j], "Creek watershed..."))
     
