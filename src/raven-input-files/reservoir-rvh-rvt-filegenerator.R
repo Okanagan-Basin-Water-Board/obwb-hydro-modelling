@@ -641,9 +641,28 @@ for(j in 1:length(include.watersheds)){
             write.table(StageStorage, OstrichReservoirRVHTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
             
             cat(file=OstrichReservoirRVHTemplateFile, append=T, sep="",
-                ":EndVolumeStageRelation", "\n",
+                ":EndVolumeStageRelation", "\n")
+            
+            ## If StageArea was defined above (and therefore exists), write it to the reservoir block.
+            if(include.stage.area == TRUE){
+              cat(file = OstrichReservoirRVHTemplateFile, append = T, sep = "",
+                  "\n",
+                  ":AreaStageRelation LOOKUP_TABLE", "\n",
+                  npoints, " # number of points in curve", "\n"
+              )
+               
+              write.table(StageArea, OstrichReservoirRVHTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
+                
+              cat(file = OstrichReservoirRVHTemplateFile, append = T, sep = "",
+                  ":EndAreaStageRelation", "\n")
+              
+            }
+            
+            ## End the :Reservoir Block
+            cat(file = OstrichReservoirRVHTemplateFile, append = T, sep = "",
                 ":EndReservoir", "\n"
             )
+
             }
           
           } else {
