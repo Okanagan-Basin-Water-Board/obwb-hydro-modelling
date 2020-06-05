@@ -214,7 +214,9 @@ initial.all <- initial
 ##------------------------------------------------------------
 
 
-if(calibrate.reservoir.parameters == TRUE){
+if(calibrate.reservoir.parameters == TRUE | calibrate.reservoir.supply == TRUE){
+  
+  if(calibrate.reservoir.parameters == TRUE & calibrate.reservoir.supply == TRUE){stop("Currently, reservoir parameters cannot be calibrated at the same time as reservoir supply within OHME. Please change either calibrate.reservoir.parameters OR calibrate.reservoir.supply to FALSE.")}
   
   all.reservoirs <- unique(subbasins.present$Reservoir_name)
   
@@ -226,7 +228,31 @@ if(calibrate.reservoir.parameters == TRUE){
       
       tmp <- read_xlsx(file.path(global.input.dir, raw.reservoir.in.dir, reservoir.in.file), sheet = all.reservoirs[i])
       
+      ## Remove any parameters that are already NA and should not be included in calibration
       calibration.parameter.table <- na.omit(tmp[!is.na(tmp$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
+      
+      ## If reservoir supply is not being calibrated, overwrite the  CAL_MIN and CAL_MAX values so that it is not included as a calibrated parameter
+      if(calibrate.reservoir.supply != TRUE){
+        
+        ## If "ReservoirDemandMultiplier" parameter is included in the tmp file, set CAL_MIN and CAL_MAX to NA. If it is not included, no action is required.
+        if(length(calibration.parameter.table$CAL_MIN[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){
+          calibration.parameter.table[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier", c("CAL_MIN", "CAL_MAX")] <- NA
+        }
+        
+      } else { ## If reservoir supply IS being calibration
+        
+        if(manage.reservoirs != TRUE){stop("In order to calibrate reservoir supply, manage.reservoirs must be TRUE.")}
+        
+        ## Overwrite CAL_MIN and CAL_MAX for all paramaters that are not "ReservoirDemandMultiplier" so that they are not included as calibrated parameters
+        calibration.parameter.table[!calibration.parameter.table$PARAMETER %in% "ReservoirDemandMultiplier", c("CAL_MIN", "CAL_MAX")] <- NA
+      }
+      
+      ## Remove additional parameters that were converted to NA above.
+      calibration.parameter.table <- na.omit(calibration.parameter.table[!is.na(calibration.parameter.table$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
+      
+      
+      ## NF4 - Remove the "ReservoirDemandMultiplier" from the calibration.parameter.table here - this ensures that it is not included in the OstIn file when it is not to be calibrated.
+      # calibration.parameter.table <- calibration.parameter.table[!calibration.parameter.table$PARAMETER %in% "ReservoirDemandMultiplier", ]
       
       reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
       
