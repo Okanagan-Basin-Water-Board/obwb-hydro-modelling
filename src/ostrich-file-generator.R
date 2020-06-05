@@ -214,7 +214,7 @@ initial.all <- initial
 ##------------------------------------------------------------
 
 
-if(calibrate.reservoir.parameters == TRUE | calibrate.reservoir.supply == TRUE){
+if(calibrate.reservoir.parameters == TRUE | calibrate.reservoir.supply == TRUE){ ## NF4 - Below code block updated to remove ReservoirDemandMultiplier or all other reservoir parameters, depending on which reservoir calibration option is selected.
   
   if(calibrate.reservoir.parameters == TRUE & calibrate.reservoir.supply == TRUE){stop("Currently, reservoir parameters cannot be calibrated at the same time as reservoir supply within OHME. Please change either calibrate.reservoir.parameters OR calibrate.reservoir.supply to FALSE.")}
   
@@ -250,9 +250,6 @@ if(calibrate.reservoir.parameters == TRUE | calibrate.reservoir.supply == TRUE){
       ## Remove additional parameters that were converted to NA above.
       calibration.parameter.table <- na.omit(calibration.parameter.table[!is.na(calibration.parameter.table$CAL_MIN) ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
       
-      
-      ## NF4 - Remove the "ReservoirDemandMultiplier" from the calibration.parameter.table here - this ensures that it is not included in the OstIn file when it is not to be calibrated.
-      # calibration.parameter.table <- calibration.parameter.table[!calibration.parameter.table$PARAMETER %in% "ReservoirDemandMultiplier", ]
       
       reservoir.parameter.table <- matrix(NA, ncol = 7, nrow = length(calibration.parameter.table$PARAMETER))
       
