@@ -215,7 +215,12 @@ for(j in 1:length(include.watersheds)){
               ":LakeArea ", LakeArea, "\n",
               ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
               ":MaxCapacity ", MaxCapacity, "\n",
-              ":MinStageConstraintDominant", "\n", ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. Variable stage is ONLY included when include.water.demand == TRUE, so no additional IF is needed here.
+              if(manage.reservoirs == TRUE){
+              paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. This is only written when manage.reservoirs == TRUE.
+              
+              if(manage.reservoirs == TRUE & length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
+              
               ":Type RESROUTE_STANDARD", "\n",
               ":VaryingStageRelations", "\n",
               npoints, "\n",
@@ -254,9 +259,10 @@ for(j in 1:length(include.watersheds)){
               ":LakeArea ", LakeArea, "\n",
               ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
               ":MaxCapacity ", MaxCapacity, "\n",
-              if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n") ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
-                if(length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## Is Reservoir Demand Multiple exists, then write it.
-                  paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
+              if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
+              
+              if(manage.reservoirs == TRUE & length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                  paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
               "\n",
               ":VolumeStageRelation LOOKUP_TABLE", "\n",
               npoints, " # number of points in curve", "\n"
@@ -411,6 +417,7 @@ for(j in 1:length(include.watersheds)){
         ReservoirRVHoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
         
         print(paste("No Minimum Stage Constraint can be written for", reservoirs[i], "since no stage-storage information is available."))
+        #NF3 - 22052020 - :MinStageConstraintDominant is not written here becasue no minimum stage time series is present.
         
         cat(file=ReservoirRVHoutFile, append=F, sep="",
             
@@ -430,9 +437,8 @@ for(j in 1:length(include.watersheds)){
             ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
             ":LakeArea ", LakeArea, "\n",
             ":MaxCapacity ", MaxCapacity, "\n",
-            if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n") ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
-              if(length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## Is Reservoir Demand Multiple exists, then write it.
-                paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
+            if(manage.reservoirs == TRUE & length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
             ":EndReservoir", "\n"
             )
         
@@ -539,15 +545,30 @@ for(j in 1:length(include.watersheds)){
       ############################################################################################################################
       
       
-      if(run.ostrich == TRUE & calibrate.reservoir.parameters == TRUE){
+      if(run.ostrich == TRUE & calibrate.reservoir.parameters == TRUE | run.ostrich == TRUE & calibrate.reservoir.supply == TRUE){
         
-        if(calibrate.reservoir.supply == TRUE){stop("Currently, reservoir parameters cannot be calibrated at the same time as reservoir supply within OHME. Please change either calibrate.reservoir.parameters OR calibrate.reservoir.supply to FALSE.")}
+        if(calibrate.reservoir.parameters == TRUE & calibrate.reservoir.supply == TRUE){stop("Currently, reservoir parameters cannot be calibrated at the same time as reservoir supply within OHME. Please change either calibrate.reservoir.parameters OR calibrate.reservoir.supply to FALSE.")}
         
-        # calibration.parameter.table <- na.omit(tmp[ ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
         
         calibration.parameter.table <- tmp[!is.na(tmp$PARAMETER) ,c("PARAMETER", "VALUE", "CAL_MIN", "CAL_MAX")]
         
-    
+        
+        ## If reservoir supply is not being calibrated, overwrite the  CAL_MIN and CAL_MAX values so that it is not included as a calibrated parameter
+        if(calibrate.reservoir.supply != TRUE){
+          
+          ## If "ReservoirDemandMultiplier" parameter is included in the tmp file, set CAL_MIN and CAL_MAX to NA. If it is not included, no action is required.
+          if(length(calibration.parameter.table$CAL_MIN[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){
+          calibration.parameter.table[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier", c("CAL_MIN", "CAL_MAX")] <- NA
+          }
+          
+        } else { ## If reservoir supply IS being calibration
+          
+          if(manage.reservoirs != TRUE){stop("In order to calibrate reservoir supply, manage.reservoirs must be TRUE.")}
+          
+          ## Overwrite CAL_MIN and CAL_MAX for all paramaters that are not "ReservoirDemandMultiplier" so that they are not included as calibrated parameters
+          calibration.parameter.table[!calibration.parameter.table$PARAMETER %in% "ReservoirDemandMultiplier", c("CAL_MIN", "CAL_MAX")] <- NA
+        }
+        
         
         # convert all columns to character
         calibration.parameter.table[,] <- lapply(calibration.parameter.table[, ], as.character)
@@ -603,7 +624,11 @@ for(j in 1:length(include.watersheds)){
                   ":LakeArea ", LakeArea, "\n",
                   ":AbsoluteCrestHeight ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "AbsoluteCrestHeight"], "\n",
                   ":MaxCapacity ", MaxCapacity, "\n",
-                  ":MinStageConstraintDominant", "\n", ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. Variable stage is ONLY included when include.water.demand == TRUE, so no additional IF is needed here.
+                  if(manage.reservoirs == TRUE){
+                    paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. This is only written when manage.reservoirs == TRUE.
+                  
+                  if(manage.reservoirs == TRUE & length(calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                    paste(":DemandMultiplier", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
                   ":Type RESROUTE_STANDARD", "\n",
                   ":VaryingStageRelations", "\n",
                   npoints, "\n",
@@ -639,7 +664,11 @@ for(j in 1:length(include.watersheds)){
                 ":LakeArea ", LakeArea, "\n",
                 ":AbsoluteCrestHeight ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "AbsoluteCrestHeight"], "\n",
                 ":MaxCapacity ", MaxCapacity, "\n",
-                if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven.
+                if(manage.reservoirs == TRUE){
+                  paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven.
+                
+                if(manage.reservoirs == TRUE & length(calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                  paste(":DemandMultiplier", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
                 "\n",
                 ":VolumeStageRelation LOOKUP_TABLE", "\n",
                 npoints, " # number of points in curve", "\n"
@@ -692,6 +721,8 @@ for(j in 1:length(include.watersheds)){
                 ":MaxDepth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "MaxDepth"], "\n",
                 ":LakeArea ", LakeArea, "\n",
                 ":MaxCapacity ", MaxCapacity, "\n",
+                if(manage.reservoirs == TRUE & length(calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                  paste(":DemandMultiplier", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
                 ":EndReservoir", "\n"
             )
             
