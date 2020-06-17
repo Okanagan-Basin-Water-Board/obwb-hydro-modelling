@@ -23,7 +23,7 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "unmet-demand"
+ws.interest <- "reservoir-configuration-05062020"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -31,17 +31,17 @@ ws.interest <- "unmet-demand"
 include.watersheds <- "Mission"
 
 ## Specify a run number to associated with outputs
-run.number <- "Mission-updated-new-exe"
+run.number <- "Mission-11"
 
 ## Add comments to README file.
-run.comments <- "Testing writing of Demand file from Raven"
+run.comments <- "Working on writing of ReservoirDemandMultiplier under difference calibration scenarios"
 
 # Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
 # disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- FALSE
+run.ostrich <- TRUE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -52,8 +52,14 @@ recreate.rvh <- FALSE
 ## Should water demand information be included in the model run?
 include.water.demand <- TRUE
 
+## Define the date that water demand should begin.
+demand.start.date <- "1996-01-01"
+
 # Should reservoir parameters be included in the calibration?
-calibrate.reservoirs <- FALSE
+calibrate.reservoir.parameters <- FALSE
+
+# Should individual reservoir demand multipliers be calibrated?
+calibrate.reservoir.supply <- TRUE
 
 ## Should reservoirs be managed to satisfy downstream demand?
 manage.reservoirs <- TRUE
@@ -65,7 +71,7 @@ calibrate.soil.thicknesses <- FALSE
 calculate.diversions <- FALSE
 
 ## Define the period of calibration / diagnostics
-calibration.start <- "1996-06-01"
+calibration.start <- "1996-01-01"
 
 calibration.end <- "2010-12-31"
 
@@ -80,7 +86,11 @@ validation.end <- "2017-12-31"
 
 if(manage.reservoirs == TRUE & include.water.demand == FALSE){stop("In order to manage reservoirs to satisfy downstream demand, water demand must be included in the model run. Set include.water.demand == TRUE")}
 
+if(manage.reservoirs != TRUE & calibrate.reservoir.supply == TRUE){stop("In order to calibrate reservoir supply, manage.reservoirs must be TRUE.")}
+
 if(length(disable.subbasins) > 0){warning(paste("The following subbasins are disabled: ", paste(disable.subbasins, collapse = ", "), ". Ensure that this is correct.", sep = ""))}
+
+if(include.water.demand == TRUE){print(paste("Water demand is included from", demand.start.date, "onwards."))}
 
 #####################################################################
 ##
@@ -190,7 +200,7 @@ if(run.ostrich == T){
 #####################################################################
 
 # #RVP ADJUSTMENT SCRIPT HERE
-# if(run.ostrich == TRUE & include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoirs == FALSE & calibrate.soil.thicknesses == FALSE){
+# if(run.ostrich == TRUE & include.water.demand == TRUE & manage.reservoirs == TRUE & calibrate.reservoir.parameters == FALSE & calibrate.soil.thicknesses == FALSE){
 #   
 #   source("/var/obwb-hydro-modelling/src/rvp-template-residual-adjustor.R")
 #   

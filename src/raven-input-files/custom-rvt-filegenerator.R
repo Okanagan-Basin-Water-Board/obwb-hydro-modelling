@@ -47,11 +47,6 @@ custom.data.types <- unique(custom.timeseries$Data_Type)
 custom.timeseries$IS_RES <- ifelse(custom.timeseries$Subbasin %in% subbasin.codes[subbasin.codes$Reservoir_name != "<Null>", "Subbasin_ID"], "Y", "N")
 
 
-## Determine the date that diversions should begin (following model startup). Calibration start date is used, regardless of whether or not validation is being run (this just removes the warmup period.)
-## TEMPORARY - set this as 1996-01-01 to allow custom calibration periods to be defined, but the effects of demand seen from 1996 onwards.
-demand.start.date <- "1996-01-01"
-
-
 ## Create empty vector to store timeseries that cannot be included in calibration
 not.available.for.calibration <- c()
 
@@ -353,6 +348,9 @@ if(nrow(custom.timeseries) > 0){
                 ":EndIrrigationDemand", "\n"
             )
             
+            ## Print a warning that OWDM data will be amalgamated.
+            print(paste("Two :IrrigationDemand timeseries cannot be defined for subbasin", as.character(tmp[j, "Subbasin"]), "- therefore, the OWDM will be amalgamated into the custom timeseries *.rvt tile. The :RedirectToFile command will be disabled for the corresponding OWDM *.rvt file."))
+            
             
             ##-------------------------------------------------------------------
             ##
@@ -361,18 +359,62 @@ if(nrow(custom.timeseries) > 0){
             ##-------------------------------------------------------------------
             
             if(manage.reservoirs == TRUE){
-              
+ 
               ## Only write the reservoir demand tag if the flag is not <Null>
               if(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"] != "<Null>" & subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"] != "<Null>"){
                 
-                cat(file = customRVTfile, append = T, sep = "",
-                    "\n",
-                    "#---------------------------------------------", "\n",
-                    paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"])), "\n",
-                    paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"]), sep = " "), "\n"
-                )
+                ## #NF2 - 28052020: Code block updated to allow A) multiple reservoirs to be specified to satisfy demand at a given subbasin; b) Temporal constraints to be specified for a given demand.
+                ## Unlist Upstream Reservoirs, Associated Percentage Demands, and Start/End Dates
+                ## Create a dataframe for the current subbasin and make all characters
+                sub_dm <- lapply(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), c("Upstream_Reservoir", "Pct_Demand_Met", "Demand_julian_start", "Demand_julian_end")], as.character)
                 
-              } else {
+                ## Split elements on commas to allow indexing relevant to individual reservoirs
+                res_dm <- sapply(sub_dm, strsplit, ",")
+                
+                ## check that all elements are the same size (i.e., nothing is missing)
+                if(!all(lengths(res_dm)[1] == lengths(res_dm))){
+                  stop(paste("Ensure that the same number of elements are included for all Upstream_Reservoirs, Pct_Demand_Met, Demand_julian_start, and Demand_julian_end for Subbasin", as.character(tmp[j, "Subbasin"])))
+                } 
+                
+                ## Loop over all reservoirs (and/or _AUTO flag) related to the given subbasin
+                for(res in 1:length(res_dm[[1]])){
+                  
+                  ## Append a header to the relevant *.rvt file
+                  cat(file = customRVTfile, append = T, sep = "",
+                      if(res == 1){"\n"}, "\n",
+                      if(res == 1){paste("#---------------------------------------------", "\n")},
+                      if(res == 1){paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"]), "\n")}
+                  )
+                
+                  
+                  ## check if start/end dates for demand satisfaction are specified. If so, append the :ReservoirDownstreamDemand command, including reservoir, percentage, and julian day start/end
+                  if(res_dm$Demand_julian_start[res] != "<Null>" & res_dm$Demand_julian_end[res] != "<Null>"){
+                    
+                    cat(file = customRVTfile, append = T, sep = "",
+                        paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), res_dm$Upstream_Reservoir[res], res_dm$Pct_Demand_Met[res], res_dm$Demand_julian_start[res], res_dm$Demand_julian_end[res], sep = " ")
+                    )
+                    
+                    ## Print a statement specifying how the demand has been managed
+                    print(paste("Reservoir releases from Reservoir", res_dm$Upstream_Reservoir[res], "to satisfy water demand in Subbasin", as.character(tmp[j, "Subbasin"]), "are constrained between Julian Day",res_dm$Demand_julian_start[res], "and Julain Day", res_dm$Demand_julian_end[res]))
+                    
+                    ## check if BOTH start/end dates are Null (i.e., not constrained temporally). If so, append the :ReservoirDownstreamDemand command, including reservoir and percentage, but no julian day constraints.
+                  } else if(res_dm$Demand_julian_start[res] == "<Null>" & res_dm$Demand_julian_end[res] == "<Null>"){
+                    
+                    cat(file = customRVTfile, append = T, sep = "",
+                        paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), res_dm$Upstream_Reservoir[res], res_dm$Pct_Demand_Met[res], sep = " ")
+                    )
+                    
+                    print(paste("Reservoir releases from Reservoir", res_dm$Upstream_Reservoir[res], "to satisfy water demand in Subbasin", as.character(tmp[j, "Subbasin"]), "are not constrained temporally."))
+                    
+                  } else{
+                    
+                    ## If one start/end dates are not both defined, or excluded, throw an error.
+                    stop(paste("Please specify BOTH Demand_julian_start AND Demand_julian_end dates for water demand at Subbsasin", as.character(tmp[j, "Subbasin"])))
+                    
+                  } # End else
+                } # End for loop
+                
+              } else { ## If no upland reservoir support is included, add a statement to this effect.
                 
                 cat(file = customRVTfile, append = T, sep = "",
                     "\n",
@@ -380,7 +422,7 @@ if(nrow(custom.timeseries) > 0){
                     paste("# Subbasin", as.character(tmp[j, "Subbasin"]), "is NOT supported by upland storage."), "\n"
                 )
                 
-              } # End if reservoir is managed.
+              } # End if subbasin not supported by upland reservoir storage.
               
             } # End if manage.reservoir
             
@@ -394,7 +436,7 @@ if(nrow(custom.timeseries) > 0){
             writeLines(rvt, main.RVT.file)
             
             
-          } else {
+          } else { # If there is NOT already an owdm file existing for this subbasin
             
             cat(file = customRVTfile, sep = "", append = T,
                 "# Custom rvt file for ", as.character(tmp[j, "Sheet_Name"]), "\n",
@@ -414,14 +456,58 @@ if(nrow(custom.timeseries) > 0){
               ## Only write the reservoir demand tag if the flag is not <Null>
               if(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"] != "<Null>" & subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"] != "<Null>"){
                 
-                cat(file = customRVTfile, append = T, sep = "",
-                    "\n",
-                    "#---------------------------------------------", "\n",
-                    paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"])), "\n",
-                    paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Upstream_Reservoir"]), as.character(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), "Pct_Demand_Met"]), sep = " "), "\n"
-                )
+                ## #NF2 - 28052020: Code block updated to allow A) multiple reservoirs to be specified to satisfy demand at a given subbasin; b) Temporal constraints to be specified for a given demand.
+                ## Unlist Upstream Reservoirs, Associated Percentage Demands, and Start/End Dates
+                ## Create a dataframe for the current subbasin and make all characters
+                sub_dm <- lapply(subbasin.codes[subbasin.codes$Subbasin_ID == as.character(tmp[j, "Subbasin"]), c("Upstream_Reservoir", "Pct_Demand_Met", "Demand_julian_start", "Demand_julian_end")], as.character)
                 
-              } else {
+                ## Split elements on commas to allow indexing relevant to individual reservoirs
+                res_dm <- sapply(sub_dm, strsplit, ",")
+                
+                ## check that all elements are the same size (i.e., nothing is missing)
+                if(!all(lengths(res_dm)[1] == lengths(res_dm))){
+                  stop(paste("Ensure that the same number of elements are included for all Upstream_Reservoirs, Pct_Demand_Met, Demand_julian_start, and Demand_julian_end for Subbasin", as.character(tmp[j, "Subbasin"])))
+                } 
+                
+                ## Loop over all reservoirs (and/or _AUTO flag) related to the given subbasin
+                for(res in 1:length(res_dm[[1]])){
+                  
+                  ## Append a header to the relevant *.rvt file
+                  cat(file = customRVTfile, append = T, sep = "",
+                      if(res == 1){"\n"}, "\n",
+                      if(res == 1){paste("#---------------------------------------------", "\n")},
+                      if(res == 1){paste("# Specify water demand management for subbasin", as.character(tmp[j, "Subbasin"]), "\n")}
+                  )
+                  
+                  
+                  ## check if start/end dates for demand satisfaction are specified. If so, append the :ReservoirDownstreamDemand command, including reservoir, percentage, and julian day start/end
+                  if(res_dm$Demand_julian_start[res] != "<Null>" & res_dm$Demand_julian_end[res] != "<Null>"){
+                    
+                    cat(file = customRVTfile, append = T, sep = "",
+                        paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), res_dm$Upstream_Reservoir[res], res_dm$Pct_Demand_Met[res], res_dm$Demand_julian_start[res], res_dm$Demand_julian_end[res], sep = " ")
+                    )
+                    
+                    ## Print a statement specifying how the demand has been managed
+                    print(paste("Reservoir releases from Reservoir", res_dm$Upstream_Reservoir[res], "to satisfy water demand in Subbasin", as.character(tmp[j, "Subbasin"]), "are constrained between Julian Day",res_dm$Demand_julian_start[res], "and Julain Day", res_dm$Demand_julian_end[res]))
+                    
+                    ## check if BOTH start/end dates are Null (i.e., not constrained temporally). If so, append the :ReservoirDownstreamDemand command, including reservoir and percentage, but no julian day constraints.
+                  } else if(res_dm$Demand_julian_start[res] == "<Null>" & res_dm$Demand_julian_end[res] == "<Null>"){
+                    
+                    cat(file = customRVTfile, append = T, sep = "",
+                        paste(":ReservoirDownstreamDemand ", as.character(tmp[j, "Subbasin"]), res_dm$Upstream_Reservoir[res], res_dm$Pct_Demand_Met[res], sep = " ")
+                    )
+                    
+                    print(paste("Reservoir releases from Reservoir", res_dm$Upstream_Reservoir[res], "to satisfy water demand in Subbasin", as.character(tmp[j, "Subbasin"]), "are not constrained temporally."))
+                    
+                  } else{
+                    
+                    ## If one start/end dates are not both defined, or excluded, throw an error.
+                    stop(paste("Please specify BOTH Demand_julian_start AND Demand_julian_end dates for water demand at Subbsasin", as.character(tmp[j, "Subbasin"])))
+                    
+                  } # End else
+                } # End for loop
+                
+              } else {## If no upland reservoir support is included, add a statement to this effect.
                 
                 cat(file = customRVTfile, append = T, sep = "",
                     "\n",
@@ -432,8 +518,6 @@ if(nrow(custom.timeseries) > 0){
               } # End if reservoir is managed.
               
             } # End if manage.reservoir
-            
-            
             
           } # End if not an owdm file too
           

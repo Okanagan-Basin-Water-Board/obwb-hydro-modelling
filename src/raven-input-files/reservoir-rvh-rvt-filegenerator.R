@@ -103,6 +103,8 @@ for(j in 1:length(include.watersheds)){
 
         if("Q1_start_julian" %in% parameters$PARAMETER & include.water.demand == TRUE){
           
+          ## TODO: Confirm how this reservoir should be handled. The discharge curves are intended to represent "real" operations. This reservoir cannot be removed from _AUTO downstream demand supply. But perhaps are more explicit reservoir assignments are included, this will not be an issue.
+          ## TODO: Update this to include a stage-area curve, as with lake-type reservoirs
           variable.stage <- TRUE
           
           tmp2$Area_m2 <- HRUs[HRUs$SBID == SubBasinID, "Area"] * (1000*1000) ## Assume that the area is constant under all stage(s).
@@ -129,6 +131,28 @@ for(j in 1:length(include.watersheds)){
           
           npoints <- nrow(StageStorage)
           
+          ##-----------------------------------------------------------------------------
+          ##
+          ##  Extract the required columns for stage area - if successful, npoints will be the same as above, by definition
+          ##
+          ##-----------------------------------------------------------------------------
+          
+          ## Check if "Area_acres" exists, and it's the same length as stage (i.e., its a complete curve)
+          if("Area_acres" %in% names(tmp2) & length(tmp2$Area_acres) == length(tmp2$Future_Storage_m3) & !anyNA(tmp2$Area_acres)){
+            
+            include.stage.area <- TRUE
+            
+            ## Convert Acres to m2, as required by Raven
+            tmp2$Area_m2 <- tmp2$Area_acres * 4046.86
+            
+            StageArea <- tmp2[, c("Stage_m_GSC", "Area_m2")]
+          
+          } else {
+            
+            include.stage.area <- FALSE
+            
+          }
+          
         }
       
         ##-----------------------------------------------------------------------------
@@ -136,7 +160,7 @@ for(j in 1:length(include.watersheds)){
         ## Determine information required to write reservoir *.rvt file to specify minimum stage
         ##
         ##-----------------------------------------------------------------------------
-        
+
         invert.elevation <- tmp2[tmp2$Storage_Type == "Zero", "Stage_m_GSC"]
         
         start.date <- as.POSIXct(RVI.template[RVI.template$GROUP == "Time" & RVI.template$PARAMETER == "StartDate", "DEFINITION"], format = "%m/%d/%Y")
@@ -171,6 +195,8 @@ for(j in 1:length(include.watersheds)){
         
         if(variable.stage == TRUE){
           
+          if(i == 1){print("Minimum Stage Constraint has been made dominant to prevent reservoirs to be drawn down below the invert under residual streamflows.")}
+          
           cat(file = ReservoirRVHoutFile, append = F, sep = "",
               "#########################################################################","\n",
               "##", "\n",
@@ -189,6 +215,12 @@ for(j in 1:length(include.watersheds)){
               ":LakeArea ", LakeArea, "\n",
               ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
               ":MaxCapacity ", MaxCapacity, "\n",
+              if(manage.reservoirs == TRUE){
+              paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. This is only written when manage.reservoirs == TRUE.
+              
+              if(manage.reservoirs == TRUE & length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
+              
               ":Type RESROUTE_STANDARD", "\n",
               ":VaryingStageRelations", "\n",
               npoints, "\n",
@@ -205,6 +237,8 @@ for(j in 1:length(include.watersheds)){
           
           
         } else {
+          
+          if(manage.reservoirs == TRUE & i == 1){print("Minimum Stage Constraint has been made dominant to prevent reservoirs to be drawn down below the invert under residual streamflows.")}
           
           cat(file=ReservoirRVHoutFile, append=F, sep="",
               
@@ -225,6 +259,10 @@ for(j in 1:length(include.watersheds)){
               ":LakeArea ", LakeArea, "\n",
               ":AbsoluteCrestHeight ", parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"], "\n",
               ":MaxCapacity ", MaxCapacity, "\n",
+              if(manage.reservoirs == TRUE){paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven
+              
+              if(manage.reservoirs == TRUE & length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                  paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
               "\n",
               ":VolumeStageRelation LOOKUP_TABLE", "\n",
               npoints, " # number of points in curve", "\n"
@@ -233,7 +271,26 @@ for(j in 1:length(include.watersheds)){
           write.table(StageStorage, ReservoirRVHoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
           
           cat(file=ReservoirRVHoutFile, append=T, sep="",
-              ":EndVolumeStageRelation", "\n",
+              ":EndVolumeStageRelation", "\n")
+          
+          ## If StageArea was defined above (and therefore exists), write it to the reservoir block.
+          if(include.stage.area == TRUE){
+            cat(file = ReservoirRVHoutFile, append = T, sep = "",
+            "\n",
+            ":AreaStageRelation LOOKUP_TABLE", "\n",
+            npoints, " # number of points in curve", "\n"
+            )
+            
+            
+            write.table(StageArea, ReservoirRVHoutFile, append = T, col.names = F, row.names = F, sep = ",", quote = F)
+            
+            cat(file = ReservoirRVHoutFile, append = T, sep = "",
+                ":EndAreaStageRelation", "\n")
+            
+          }
+          
+          ## End the :Reservoir Block
+          cat(file = ReservoirRVHoutFile, append = T, sep = "",
               ":EndReservoir", "\n"
           )
           
@@ -241,30 +298,99 @@ for(j in 1:length(include.watersheds)){
         
         ##-----------------------------------------------------------------------------
         ##
-        ## Generate individual *.rvt files for all reservoirs within the model watershed - this cotains the Minimum Stage timeseries
+        ## Generate individual *.rvt files for all reservoirs within the model watershed - This contains minimum (and maximum) stage timeseries
         ##
         ##-----------------------------------------------------------------------------
+        ## UPDATE: Reservoir Minimum Stage Timeseries is now only written under residual conditions. Reservours "could" dry out under natural conditions.
         
-        ReservoirRVToutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = ""))
+        if(include.water.demand == TRUE){
+          
+          print(paste("Minimum Stage Contraint timeseries has been written for", reservoirs[i], "Reservoir at an elevation of:", invert.elevation))
         
-        cat(file=ReservoirRVToutFile, append=F, sep="",
+          ReservoirRVToutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvt", sep = ""))
+          
+          cat(file=ReservoirRVToutFile, append=F, sep="",
+              
+              "#########################################################################","\n",
+              "##", "\n",
+              "## Individual Reservoir RVT File. Redirected from main *.rvt file.", "\n",
+              "#---------------------------------------------------------", "\n",
+              "\n",
+              ":ReservoirMinStage ", SubBasinID, "\n",
+              sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(start.date)),length(model.period)), "\n"
+              )
+              
+              write.table(paste(rep(invert.elevation, length(model.period)), collapse = "\n"), ReservoirRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+              
+              cat(file = ReservoirRVToutFile, append = T, sep = "",
+                  ":EndReservoirMinStage", "\n"
+                  )
+
+        
+        ##-------------------------------------------------
+        ## GENERATE MAXIMUM STAGE TIMESERIES, IF NECESSARY
+        ##-------------------------------------------------
+        ## #TD3 - 28052020: Maximum timeseries can now be specified for individual reservoirs. Timeseries are currently assumed constant through time, and defined in the reservoir.in.file by adding "MaxStage" to the parameter list.
+        ## If MaxStage is not defined (As it is not for most reservoirs at the moment), no :ReservoirMaxStage timeseries is written. It is expected that this feature will be used more in future. Timeseries can currently be estimated,
+        ## assuming that the MaxStage is 1 m above AbsoluteCrestHeight. Specific estimates can be handled by defining the estimated number in the reservoir.in.file (Rather than including "ESTIMATED").
+        
+          if(!"MaxStage" %in% parameters$PARAMETER){ ## If MaxStage is not defined in any way for the reservoir, no maximum stage timeseries is written.
             
-            "#########################################################################","\n",
-            "##", "\n",
-            "## Individual Reservoir RVT File. Redirected from main *.rvt file.", "\n",
-            "#---------------------------------------------------------", "\n",
-            "\n",
-            ":ReservoirMinStage ", SubBasinID, "\n",
-            sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(start.date)),length(model.period)), "\n"
+            print(paste("MaxStage definition is missing for", reservoirs[i], "Reservoir. No :ReservoirMaxStage will be included."))
+          
+          } else if(parameters$VALUE[parameters$PARAMETER == "MaxStage"] == "NONE"){ ## If "NONE", no maximum stage timeseries is written.
+            
+            print(paste("No :ReservoirMaxStage timeseries is included for", reservoirs[i], "Reservoir."))
+            
+          } else if(parameters$VALUE[parameters$PARAMETER == "MaxStage"] == "ESTIMATED"){ ## If "ESTIMATED", maximum stage timeseries is estimated to be 1 m above the AbsoluteCrestHeight
+            
+            MaxStage <- as.numeric(as.character(parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"])) + 1
+            
+            print(paste(":ReservoirMaxStage timeseries is ESTIMATED for", reservoirs[i], "Reservoir. :ReservoirMaxStage is ESTIMATED to be 1 m above the AbsoluteCrestHeight and will be included as", MaxStage, "."))
+            
+            cat(file=ReservoirRVToutFile, append=T, sep="",
+                "\n",
+                "## Maximum Stage Timeseries.", "\n",
+                "#---------------------------------------------------------", "\n",
+                "\n",
+                ":ReservoirMaxStage ", SubBasinID, "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(start.date)),length(model.period)), "\n"
             )
             
-            write.table(paste(rep(invert.elevation, length(model.period)), collapse = "\n"), ReservoirRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            write.table(paste(rep(MaxStage, length(model.period)), collapse = "\n"), ReservoirRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
             
             cat(file = ReservoirRVToutFile, append = T, sep = "",
-                ":EndReservoirMinStage", "\n"
-                )
+                ":EndReservoirMaxStage", "\n"
+            )
+            
+          } else { ## If not "NONE" or "ESTIMATED", maximum stage timeseries is written as per value provided.
+            
+            MaxStage <- parameters$VALUE[parameters$PARAMETER == "MaxStage"]
+            
+            print(paste(":ReservoirMaxStage timeseries for", reservoirs[i], "Reservoir is included as", MaxStage, "."))
+            
+            cat(file=ReservoirRVToutFile, append=T, sep="",
+                "\n",
+                "## Maximum Stage Timeseries.", "\n",
+                "#---------------------------------------------------------", "\n",
+                "\n",
+                ":ReservoirMaxStage ", SubBasinID, "\n",
+                sprintf('%s 00:00:00 1.0 %i',as.character(lubridate::date(start.date)),length(model.period)), "\n"
+            )
+            
+            write.table(paste(rep(MaxStage, length(model.period)), collapse = "\n"), ReservoirRVToutFile, append = T, col.names = F, row.names = F, sep = "\t", quote = F)
+            
+            cat(file = ReservoirRVToutFile, append = T, sep = "",
+                ":EndReservoirMaxStage", "\n"
+            )
+            
+          } ## End else.
+
+        } # Enf if include.water.demand = TRUE
         
-      } else {
+        
+        
+      } else { # End if "Future_Storage_dam3" is in the dataframe (i.e., whether a stage-storage curve is included.)
         
         ##-----------------------------------------------------------------------------
         ##
@@ -290,6 +416,9 @@ for(j in 1:length(include.watersheds)){
         
         ReservoirRVHoutFile <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "reservoirs", paste(reservoirs[i], ".rvh", sep = ""))
         
+        print(paste("No Minimum Stage Constraint can be written for", reservoirs[i], "since no stage-storage information is available."))
+        #NF3 - 22052020 - :MinStageConstraintDominant is not written here becasue no minimum stage time series is present.
+        
         cat(file=ReservoirRVHoutFile, append=F, sep="",
             
             "#########################################################################","\n",
@@ -308,6 +437,8 @@ for(j in 1:length(include.watersheds)){
             ":MaxDepth ", parameters$VALUE[parameters$PARAMETER == "MaxDepth"], "\n",
             ":LakeArea ", LakeArea, "\n",
             ":MaxCapacity ", MaxCapacity, "\n",
+            if(manage.reservoirs == TRUE & length(parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                paste(":DemandMultiplier", parameters$VALUE[parameters$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
             ":EndReservoir", "\n"
             )
         
@@ -414,13 +545,30 @@ for(j in 1:length(include.watersheds)){
       ############################################################################################################################
       
       
-      if(run.ostrich == TRUE & calibrate.reservoirs == TRUE){
+      if(run.ostrich == TRUE & calibrate.reservoir.parameters == TRUE | run.ostrich == TRUE & calibrate.reservoir.supply == TRUE){
         
-        # calibration.parameter.table <- na.omit(tmp[ ,c("PARAMETER", "VALUE", 'CAL_MIN', "CAL_MAX")])
+        if(calibrate.reservoir.parameters == TRUE & calibrate.reservoir.supply == TRUE){stop("Currently, reservoir parameters cannot be calibrated at the same time as reservoir supply within OHME. Please change either calibrate.reservoir.parameters OR calibrate.reservoir.supply to FALSE.")}
+        
         
         calibration.parameter.table <- tmp[!is.na(tmp$PARAMETER) ,c("PARAMETER", "VALUE", "CAL_MIN", "CAL_MAX")]
         
-    
+        
+        ## If reservoir supply is not being calibrated, overwrite the  CAL_MIN and CAL_MAX values so that it is not included as a calibrated parameter
+        if(calibrate.reservoir.supply != TRUE){
+          
+          ## If "ReservoirDemandMultiplier" parameter is included in the tmp file, set CAL_MIN and CAL_MAX to NA. If it is not included, no action is required.
+          if(length(calibration.parameter.table$CAL_MIN[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){
+          calibration.parameter.table[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier", c("CAL_MIN", "CAL_MAX")] <- NA
+          }
+          
+        } else { ## If reservoir supply IS being calibration
+          
+          if(manage.reservoirs != TRUE){stop("In order to calibrate reservoir supply, manage.reservoirs must be TRUE.")}
+          
+          ## Overwrite CAL_MIN and CAL_MAX for all paramaters that are not "ReservoirDemandMultiplier" so that they are not included as calibrated parameters
+          calibration.parameter.table[!calibration.parameter.table$PARAMETER %in% "ReservoirDemandMultiplier", c("CAL_MIN", "CAL_MAX")] <- NA
+        }
+        
         
         # convert all columns to character
         calibration.parameter.table[,] <- lapply(calibration.parameter.table[, ], as.character)
@@ -476,6 +624,11 @@ for(j in 1:length(include.watersheds)){
                   ":LakeArea ", LakeArea, "\n",
                   ":AbsoluteCrestHeight ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "AbsoluteCrestHeight"], "\n",
                   ":MaxCapacity ", MaxCapacity, "\n",
+                  if(manage.reservoirs == TRUE){
+                    paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. This is only written when manage.reservoirs == TRUE.
+                  
+                  if(manage.reservoirs == TRUE & length(calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                    paste(":DemandMultiplier", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
                   ":Type RESROUTE_STANDARD", "\n",
                   ":VaryingStageRelations", "\n",
                   npoints, "\n",
@@ -511,6 +664,11 @@ for(j in 1:length(include.watersheds)){
                 ":LakeArea ", LakeArea, "\n",
                 ":AbsoluteCrestHeight ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "AbsoluteCrestHeight"], "\n",
                 ":MaxCapacity ", MaxCapacity, "\n",
+                if(manage.reservoirs == TRUE){
+                  paste(":MinStageConstraintDominant", "\n")}, ## #NF3 - 22052020 - This command forces reservoirs to respect the minimum stage constraint. It is ONLY included when reservoirs are being managed by Raven.
+                
+                if(manage.reservoirs == TRUE & length(calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                  paste(":DemandMultiplier", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
                 "\n",
                 ":VolumeStageRelation LOOKUP_TABLE", "\n",
                 npoints, " # number of points in curve", "\n"
@@ -519,9 +677,28 @@ for(j in 1:length(include.watersheds)){
             write.table(StageStorage, OstrichReservoirRVHTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
             
             cat(file=OstrichReservoirRVHTemplateFile, append=T, sep="",
-                ":EndVolumeStageRelation", "\n",
+                ":EndVolumeStageRelation", "\n")
+            
+            ## If StageArea was defined above (and therefore exists), write it to the reservoir block.
+            if(include.stage.area == TRUE){
+              cat(file = OstrichReservoirRVHTemplateFile, append = T, sep = "",
+                  "\n",
+                  ":AreaStageRelation LOOKUP_TABLE", "\n",
+                  npoints, " # number of points in curve", "\n"
+              )
+               
+              write.table(StageArea, OstrichReservoirRVHTemplateFile, append = T, col.names = F, row.names = F, sep = ",", quote = F) 
+                
+              cat(file = OstrichReservoirRVHTemplateFile, append = T, sep = "",
+                  ":EndAreaStageRelation", "\n")
+              
+            }
+            
+            ## End the :Reservoir Block
+            cat(file = OstrichReservoirRVHTemplateFile, append = T, sep = "",
                 ":EndReservoir", "\n"
             )
+
             }
           
           } else {
@@ -544,6 +721,8 @@ for(j in 1:length(include.watersheds)){
                 ":MaxDepth ", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "MaxDepth"], "\n",
                 ":LakeArea ", LakeArea, "\n",
                 ":MaxCapacity ", MaxCapacity, "\n",
+                if(manage.reservoirs == TRUE & length(calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"]) == 1){ ## If Reservoir Demand Multiple exists, then write it.
+                  paste(":DemandMultiplier", calibration.parameter.table$CAL_VAR[calibration.parameter.table$PARAMETER == "ReservoirDemandMultiplier"], "\n")}, ## NF4 - 04062020 - Demand multiplier written for each reservoir when manage.reservoirs == TRUE
                 ":EndReservoir", "\n"
             )
             
@@ -552,8 +731,7 @@ for(j in 1:length(include.watersheds)){
         if(i == length(reservoirs)){print(paste(length(reservoirs), "required Ostrich template(s) generated for the", include.watersheds[j], " Creek watershed..."))}
       } # End if statement for running Ostrich
       
-      
-    } # end for loop
+    } # end for loop for each reservoir
     
     print(paste(length(reservoirs), "reservoir(s) included within the", include.watersheds[j], "Creek watershed..."))
     

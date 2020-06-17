@@ -40,7 +40,7 @@ tasmin.raw.in.file <- "tasmin.downscaled_05052020.nc"
 
 raw.custom.timeseries.in.dir <- "raw/custom-timeseries"
 
-custom.timeseres.in.file <- "custom_timeseries_05052020.xlsx"
+custom.timeseres.in.file <- "custom_timeseries_mission_res_v1.1.0-cal2.xlsx"
 
 diversion.rules.in.file <- "diversion_rules_summary_05052020.csv"
 
@@ -93,7 +93,7 @@ owdm.node.subbasin.file <- "Water use area source node _ request subbasin.xlsx"
 
 raw.parameter.codes.in.dir <- "raw/parameter-codes"
 
-RVP.template.in.file <- "RVP-Template_05052020.csv"
+RVP.template.in.file <- "mission-nat-v1.1.0-cal2.csv"
 RVI.template.in.file <- "RVI-Template_05152020.csv"
 OST.template.in.file <- "OST-Template_05052020.csv"
 
@@ -101,7 +101,7 @@ OST.template.in.file <- "OST-Template_05052020.csv"
 AR.in.file <- "annual_runoff_05052020.csv"
 AQ.in.file <- "aquifer_codes_05052020.csv"
 LC.in.file <- "landcover_codes_05052020.csv"
-SB.in.file <- "subbasin_codes_05052020.csv"
+SB.in.file <- "subbasin_codes_testing.csv"
 Veg.in.file <- "vegetation_codes_05052020.csv"
 
 ##-----------------------------------
@@ -110,7 +110,7 @@ Veg.in.file <- "vegetation_codes_05052020.csv"
 
 raw.reservoir.in.dir <- "raw/reservoirs"
 
-reservoir.in.file <- "raven-reservoirs_05052020.xlsx"
+reservoir.in.file <- "mission-nat-reservoirs-v1.1.0-cal2.xlsx"
 reservoir.read.me.file <- "README.txt"
 
 ##-----------------------------------
@@ -191,7 +191,7 @@ tidy.hru.processed.file <- "tidy-HRU-id.2020-05-11.tif"
 ## SOIL
 soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
 soil.attribute.in.file <- "soils/soil_attributes_05052020.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
-soil.profile.table.in.file <- "soils/soil-profile-table.csv" # This will be date stamped when soils are re-processed.
+soil.profile.table.in.file <- "soils/mission-nat-soils-v1.1.0-cal2.csv" # This will be date stamped when soils are re-processed.
 soil.class.table.in.file <- "soils/soil-class-table.csv" # This will be date stamped when soils are re-processed.
 processed.soil.image <- "soils/post-process-image.RData" ## TODO: renames to soil-post-process-image.DATE.RData
 
