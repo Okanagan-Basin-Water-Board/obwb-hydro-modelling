@@ -80,11 +80,11 @@ nat.flow.summary.in.file <- "naturalized-flows-summary.csv"
 
 raw.owdm.in.dir <- "raw/owdm"
 
-owdm.water.purveyors.in.file <- "Modified subbasins 2019.11.29/okanagan_selected_wateruse_areas.csv"
+owdm.water.purveyors.in.file <- "okanagan_selected_wateruse_areas_20191129.csv"
 
-owdm.other.in.file <- "Modified subbasins 2019.11.29/okanagan_surface_demands_other_wateruse_areas.csv"
+owdm.other.in.file <- "okanagan_surface_demands_other_wateruse_areas_20191129.csv"
 
-owdm.node.subbasin.file <- "Water use area source node _ request subbasin.xlsx"
+owdm.node.subbasin.file <- "Water use area source node _ request subbasin_20191129.xlsx"
 
 ##-----------------------------------
 ## PARAMETER CODES & PRIMARY TEMPLATES
@@ -211,9 +211,9 @@ max.lai.processed.file <- "lai/manual-max-lai.csv"
 ## OWDM MODEL DATA
 ##-----------------------------------
 
-procedd.owdm.dir <- "processed/owdm"
+processed.owdm.dir <- "processed/owdm"
 
-owdm.water.demand.in.file <- "OWDM_water_demands_timeseries.csv"
+owdm.water.demand.in.file <- "OWDM_water_demands_timeseries.2020-06-17.csv"
 
 
 #####################################

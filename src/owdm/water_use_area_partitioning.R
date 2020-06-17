@@ -5,7 +5,8 @@
 #####
 #####################################################################
 
-rm(list = ls())
+## Source file configuration
+source("/var/obwb-hydro-modelling/file-config.R")
 
 library(dplyr)
 library(lubridate)
@@ -13,17 +14,19 @@ library(reshape2)
 library(data.table)
 library(readxl)
 
-# read in 'other water use area' water demand data
-setwd("P:/20188215/00_HYDRO_MODELING/Environmental_Sciences/04.00_Environmental_Assessments/02_Model Setup/Data/Raw/OWDM Data/Modified subbasins 2019.11.29")
+########################################
+##
+## Read in owdm node & subbasin look-up, and owdm raw data
+##
+########################################
 
-# get sheet names of worksheet with water use areas & source nodes sent to Ron
-snames <- excel_sheets("P:/20188215/00_HYDRO_MODELING/Environmental_Sciences/04.00_Environmental_Assessments/02_Model Setup/Data/Raw/OWDM Data/Water use area source node _ request subbasin.xlsx")
+## get sheet names of worksheet with water use areas & source nodes sent to Ron
+snames <- excel_sheets(file.path(global.input.dir, raw.owdm.in.dir, owdm.node.subbasin.file))
 
-
-other_df <- fread("okanagan_surface_demands_other_wateruse_areas.csv") %>% as.data.frame()
-purveyors <- fread("okanagan_selected_wateruse_areas.csv")
-subbasin_df <- read_xlsx("P:/20188215/00_HYDRO_MODELING/Environmental_Sciences/04.00_Environmental_Assessments/02_Model Setup/Data/Raw/OWDM Data/Water use area source node _ request subbasin.xlsx",
-                         sheet = grep("^Purveyor.*$|^Pruveyor.*$", snames))
+## Read in OWDM raw data and node/subbasin lookup
+other_df <- fread(file.path(global.input.dir, raw.owdm.in.dir, owdm.other.in.file)) %>% as.data.frame()
+purveyors <- fread(file.path(global.input.dir, raw.owdm.in.dir, owdm.water.purveyors.in.file))
+subbasin_df <- read_xlsx(file.path(global.input.dir, raw.owdm.in.dir, owdm.node.subbasin.file), sheet = grep("^Purveyor.*$|^Pruveyor.*$", snames))
 
 # get column names from subbasin demand request workbook  
 sbbsn_cnames <- colnames(subbasin_df)
@@ -87,7 +90,7 @@ colnames(purveyors)
 p1 <- purveyors[, c(1:3, 8, 11, 16)]
 p2 <- purveyors[, c(1:3, 12, 15, 16)]
 
-p1 %>% filter(is.na(Subbasin_ID)) %>% View()
+p1 %>% dplyr::filter(is.na(Subbasin_ID)) %>% View()
 
 # compute the source 1 and source 2 volumes
 # and drop the source 2 rows that are NA
@@ -108,14 +111,14 @@ colnames(p2) <- c("wateruseid", "year", "day", "Subbasin_ID", "%", "total_demand
 p1 <- p1[, -c(5:6)]
 p2 <- p2[, -c(5:6)]
 p_df <- rbind(p1, p2) %>%
-  filter(!is.na(extraction.total)) %>%
-  filter(!is.na(Subbasin_ID))
+  dplyr::filter(!is.na(extraction.total)) %>%
+  dplyr::filter(!is.na(Subbasin_ID))
 
 head(p_df)
 unique(p_df$Subbasin_ID)
 summary(p_df)
 
-p_df %>% filter(Subbasin_ID == "Mill Creek1925" & year == 1994 & day == 0)
+# p_df %>% filter(Subbasin_ID == "Mill Creek1925" & year == 1994 & day == 0)
 
 # summarize water use area demands
 p_df <- p_df %>%
@@ -183,8 +186,7 @@ length(unique(paste(out_df$Subbasin_ID, out_df$day, out_df$year)))
 length(unique(paste(test$Subbasin_ID, test$day, test$year)))
 
 # write output of water demand per subbasin ID per day
-setwd("C:/Users/szeitza/Documents/Projects/20188215/Water_demand/")
-fwrite(out_df, "./OWDM_water_demands_timeseries.csv")
+fwrite(out_df, file.path(global.input.dir, processed.owdm.dir, paste("OWDM_water_demands_timeseries", Sys.Date(), "csv", sep = ".")))
 
 colnames(out_df)
 length(grep(0, out_df$day))
@@ -193,23 +195,23 @@ length(grep(0, out_df$day))
 ##### QAQC  ####
 ####  of new auto-partitioning version of the script's output vs. 
 ####  the previous output
-setwd("C:/Users/szeitza/Documents/Projects/20188215/Water_demand/")
-out_df <- fread("./OWDM_water_demands_timeseries.csv")
-old_df <- fread("./graveyard/OWDM_water_demands_timeseries_old.csv")
-
-qaqc <- data.frame("sb" = unique(old_df$Subbasin_ID))
-qaqc <- anti_join(data.frame("sb" = unique(out_df$Subbasin_ID)),
-                  qaqc, by = "sb")
-
-summary(out_df)
-summary(old_df)
-
-diff_df <- anti_join(out_df, old_df, by = "Subbasin_ID")
-
-diff_df <- left_join(out_df, old_df, by = c("Subbasin_ID", "year", "day"),
-                     suffix = c(".new", ".old")) %>%
-  mutate(extraction.diff = extraction.total.new - extraction.total.old) %>%
-  filter(extraction.diff != 0) %>%
-  mutate(pcnt.diff = (extraction.total.new - extraction.total.old)/extraction.total.old * 100)
-
-summary(diff_df)
+# setwd("C:/Users/szeitza/Documents/Projects/20188215/Water_demand/")
+# out_df <- fread("./OWDM_water_demands_timeseries.csv")
+# old_df <- fread("./graveyard/OWDM_water_demands_timeseries_old.csv")
+# 
+# qaqc <- data.frame("sb" = unique(old_df$Subbasin_ID))
+# qaqc <- anti_join(data.frame("sb" = unique(out_df$Subbasin_ID)),
+#                   qaqc, by = "sb")
+# 
+# summary(out_df)
+# summary(old_df)
+# 
+# diff_df <- anti_join(out_df, old_df, by = "Subbasin_ID")
+# 
+# diff_df <- left_join(out_df, old_df, by = c("Subbasin_ID", "year", "day"),
+#                      suffix = c(".new", ".old")) %>%
+#   mutate(extraction.diff = extraction.total.new - extraction.total.old) %>%
+#   filter(extraction.diff != 0) %>%
+#   mutate(pcnt.diff = (extraction.total.new - extraction.total.old)/extraction.total.old * 100)
+# 
+# summary(diff_df)

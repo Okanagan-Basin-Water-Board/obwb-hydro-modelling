@@ -25,7 +25,7 @@ RVI.template <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir,
   
 subbasins <- read.csv(file.path(global.input.dir, raw.parameter.codes.in.dir, SB.in.file))
   
-owdm <- read.csv(file.path(global.input.dir, raw.owdm.in.dir, owdm.water.demand.in.file))
+owdm <- read.csv(file.path(global.input.dir, processed.owdm.dir, owdm.water.demand.in.file))
   
 colnames(owdm) <- c("subbasin", "day", "year", "extraction.total")
 
