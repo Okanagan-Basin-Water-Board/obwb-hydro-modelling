@@ -88,7 +88,7 @@ for(i in 1:length(unique.HRU)){
   
   HRU.output[i,"AREA"] <- round((length(index) * 19.80255838 * 19.80255838) / (1000 * 1000), 4)
   
-  ## #TD13: 17062020 - Raven expects HRU elevations to be the MEAN elevation. Confirmed with James Craig on June 17, 2020.
+  ## #TD14: 17062020 - Raven expects HRU elevations to be the MEAN elevation. Confirmed with James Craig on June 17, 2020.
   ## Median was originally used as it is more commonly used as an elevation of interest in hydrology assessment. However, now updated to mean reflect Raven requirements.
   HRU.output[i, "ELEVATION"] <- round(mean(HRU.table[index,"elevation"]), 2)
   
