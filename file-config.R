@@ -40,7 +40,7 @@ tasmin.raw.in.file <- "tasmin.downscaled_05052020.nc"
 
 raw.custom.timeseries.in.dir <- "raw/custom-timeseries"
 
-custom.timeseres.in.file <- "custom_timeseries_mission_res_v1.1.0-cal2.xlsx"
+custom.timeseres.in.file <- "custom_timeseries_06222020.xlsx"
 
 diversion.rules.in.file <- "diversion_rules_summary_05052020.csv"
 
