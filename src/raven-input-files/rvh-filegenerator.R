@@ -9,6 +9,10 @@
 ## Source file configuration
 source("/var/obwb-hydro-modelling/file-config.R")
 
+warning(paste("Ensure that ", okanagan.hru.table.file, " is the latest processed HRU table", sep = ""))
+
+Sys.sleep(10)
+
 ## Generate required functions
 source("/var/obwb-hydro-modelling/src/functions.R")
 
