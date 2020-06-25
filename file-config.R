@@ -101,7 +101,7 @@ OST.template.in.file <- "OST-Template_05052020.csv"
 AR.in.file <- "annual_runoff_05052020.csv"
 AQ.in.file <- "aquifer_codes_05052020.csv"
 LC.in.file <- "landcover_codes_05052020.csv"
-SB.in.file <- "subbasin_codes_testing.csv"
+SB.in.file <- "subbasin_codes_05052020.csv"
 Veg.in.file <- "vegetation_codes_05052020.csv"
 
 ##-----------------------------------
@@ -166,10 +166,10 @@ hydat.read.me.file <- "README.txt"
 
 processed.climate.dir <- "processed/climate"
 
-precip.processed.file <- "pr.HRU.timeseries.2020-05-12.nc"
-tasmax.processed.file <- "tasmax.HRU.timeseries.2020-05-12.nc"
-tasmin.processed.file <- "tasmin.HRU.timeseries.2020-05-12.nc"
-spatial.grid.data.processed.file <- "spatial.grid.data.2020-05-12.RData"
+precip.processed.file <- "pr.HRU.timeseries.2020-06-25.nc"
+tasmax.processed.file <- "tasmax.HRU.timeseries.2020-06-25.nc"
+tasmin.processed.file <- "tasmin.HRU.timeseries.2020-06-25.nc"
+spatial.grid.data.processed.file <- "spatial.grid.data.2020-06-25.RData"
 climate.processed.read.me.file <- "README.txt"
 
 ##-----------------------------------
@@ -178,15 +178,15 @@ climate.processed.read.me.file <- "README.txt"
 
 processed.spatial.dir <- "processed/spatial"
 
-okanagan.hru.table.file <- "okanagan_hru.2020-05-11.RData"
+okanagan.hru.table.file <- "okanagan_hru.2020-06-25.RData"
 
 
-aspect.bin.processed.file <- "aspect-bin.2020-05-11.tif" # NOT INPUT FILE
-elevation.bin.processed.file <- "elevation-bin.2020-05-11.tif" # NOT INPUT FILE
-landcover.bin.processed.file <- "landcover-bin.2020-05-11.tif" # NOT INPUT FILE
-raw.hru.processed.file <- "raw-HRU-id.2020-05-11.tif" # NOT INPUT FILE
-subbasin.processed.file <- "subbasin.2020-05-11.tif"
-tidy.hru.processed.file <- "tidy-HRU-id.2020-05-11.tif"
+aspect.bin.processed.file <- "aspect-bin.2020-06-25.tif" # NOT INPUT FILE
+elevation.bin.processed.file <- "elevation-bin.2020-06-25.tif" # NOT INPUT FILE
+landcover.bin.processed.file <- "landcover-bin.2020-06-25.tif" # NOT INPUT FILE
+raw.hru.processed.file <- "raw-HRU-id.2020-06-25.tif" # NOT INPUT FILE
+subbasin.processed.file <- "subbasin.2020-06-25.tif"
+tidy.hru.processed.file <- "tidy-HRU-id.2020-06-25.tif"
 
 ## SOIL
 soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
@@ -199,11 +199,11 @@ soil.thickness.range.calibration.file <- "soils/soil-thickness-ranges-calibratio
 soil.profile.table.calibration.file <- "soils/soil-profile-table-calibration.csv"
 
 ## SNOW
-snow.course.locations.processed.file <- "snow/snow-course-locations-model-domain.2020-05-13.csv"
-snow.pillow.locations.processed.file <- "snow/snow-pillow-locations-model-domain.2020-05-13.csv"
+snow.course.locations.processed.file <- "snow/snow-course-locations-model-domain.2020-06-25.csv"
+snow.pillow.locations.processed.file <- "snow/snow-pillow-locations-model-domain.2020-06-25.csv"
 
 ## LAI
-seasonal.lai.processed.file <- "lai/seasonal-lai.csv"
+seasonal.lai.processed.file <- "lai/seasonal-lai.2020-06-25.csv"
 max.lai.processed.file <- "lai/manual-max-lai.csv"
 
 
@@ -246,6 +246,6 @@ mpirun.dir <- "/usr/bin/mpirun"
 #####################################
 #####################################
 
-master.natural.rvh.file <- "Master_natural.2020-05-12.rvh"
+master.natural.rvh.file <- "Master_natural.2020-06-25.rvh"
 
-master.residual.rvh.file <- "Master_residual.2020-05-12.rvh"
+master.residual.rvh.file <- "Master_residual.2020-06-25.rvh"
