@@ -23,15 +23,15 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "reservoir-configuration-05062020"
+ws.interest <- "Andras-functions"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
 # include.watersheds <- c("Whiteman", "Trout", "Coldstream", "Vaseux")
-include.watersheds <- "Mission"
+include.watersheds <- "Mill"
 
 ## Specify a run number to associated with outputs
-run.number <- "Mission-11"
+run.number <- "Mill-01"
 
 ## Add comments to README file.
 run.comments <- "Working on writing of ReservoirDemandMultiplier under difference calibration scenarios"
@@ -41,7 +41,7 @@ disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
 # disable.subbasins <- c(2423, 2422, 2421, 1421, 256) # For Residuals, only disable the diversions.
 
 ## Specify whether Ostrich templates and input files should be written for this run
-run.ostrich <- TRUE
+run.ostrich <- FALSE
 
 ## Specify whether the model is being run for validation purposes
 validate.model <- FALSE
@@ -50,7 +50,7 @@ validate.model <- FALSE
 recreate.rvh <- FALSE
 
 ## Should water demand information be included in the model run?
-include.water.demand <- TRUE
+include.water.demand <- FALSE
 
 ## Define the date that water demand should begin.
 demand.start.date <- "1996-01-01"
@@ -59,10 +59,10 @@ demand.start.date <- "1996-01-01"
 calibrate.reservoir.parameters <- FALSE
 
 # Should individual reservoir demand multipliers be calibrated?
-calibrate.reservoir.supply <- TRUE
+calibrate.reservoir.supply <- FALSE
 
 ## Should reservoirs be managed to satisfy downstream demand?
-manage.reservoirs <- TRUE
+manage.reservoirs <- FALSE
 
 ## Should soil thicknesses be calibrated?
 calibrate.soil.thicknesses <- FALSE
