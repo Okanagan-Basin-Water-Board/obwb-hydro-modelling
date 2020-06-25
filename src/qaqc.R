@@ -3,7 +3,7 @@
 ## This script runs simple QA/QC tasks of spatial information
 ##
 ############################################################################################################
-
+## LB change
 ## Source file configuration
 source("/var/obwb-hydro-modelling/file-config.R")
 
