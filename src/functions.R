@@ -588,6 +588,10 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   
     hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
     
+    # adjust the date index of the hydrograph xts object so that the observed streamflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    index(hydrographs$hyd) <- index(hydrographs$hyd) - 86400
+    
     ## Identify which columns have obsrved data available
     subs.obs <- colnames(hydrographs$hyd[,hydrographs$obs.flag == TRUE])
     
