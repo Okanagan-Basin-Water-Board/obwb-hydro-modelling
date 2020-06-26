@@ -262,7 +262,59 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
   return(TRUE)
 }
 
+# Generate Year/Week timeseries which is consistent with the OWDM approach 
+# i.e., 8 day last week of year, and 8 day Feb 29. week in leap years). 
+AWDM.weeks <- function(start.date = "1996-01-01", end.date = "2010-12-31", weeks.wanted = c(1:52)){
 
+  ## Generate a sequence of years which matches the naturalized streamflow datasets (i.e, 1996-2010)
+  Years <- seq(as.numeric(substr(start.date, 1, 4)), as.numeric(substr(end.date, 1, 4)), 1)
+  
+  ## Generate Months sequence between 1996-01-01 - 2010-12-31 (Dates of available naturalized streamflows)
+  Months <- seq(base::as.Date(start.date), base::as.Date(end.date), by = "month")
+  
+  ## Generate a sequence of weeks which matches the naturalized streamflow datasets (i.e., 1-52)
+  Weeks <- paste("Week", seq(1, 52, 1))
+  
+  ## Generate Days sequence between 1996-01-01 - 2010-12-31 (Dates of available naturalized streamflows)
+  Days <- seq(base::as.Date(start.date), base::as.Date(end.date), by = "day")
+  
+  ## Develop a vector of 365 days to represent a "Regular Year", broken into weeks which match the OWDM model setup (i.e., 8-day last week)
+  RegularYear <- c(rep(1:51, each = 7), rep(52, each = 8))
+  
+  ## Develop a vector of 366 days to represent a "Leap Year", broken into weeks which match the OWDM model setup (i.e., 8-day Feb 29. and last week)
+  LeapYear <- c(rep(1:8, each = 7), rep(9, each = 8), rep(10:51, each = 7), rep(52, each = 8))
+  
+  ## Generate a timeseries of years between start and end dates
+  Year.timeseries <- data.frame()
+  
+  for(i in 1:length(Years)){
+    ifelse(lubridate::leap_year(Years[i]) == T,
+           Y <- rep(Years[i], each = 366),
+           Y <- rep(Years[i], each = 365))
+    Y <- data.frame(Y)
+    Year.timeseries <- rbind(Year.timeseries, Y)
+  }
+
+  # Attach a timeseries of weeks to the Year.timeseries and save the combined as "Output"
+  Times <- data.frame()
+  
+  for(i in 1:length(Years)){
+    Z <- as.data.frame(Year.timeseries[Year.timeseries$Y == Years[i],])
+    ifelse(lubridate::leap_year(Years[i]) == T, Z$Week <- LeapYear, Z$Week <- RegularYear)
+    
+    Times <- rbind(Times,Z)
+  }
+  
+  colnames(Times) <- c("Year", "Week")
+  
+  # Add date column - this is used to merge dates with Raven Output
+  Times$date <- Days
+
+  # Filter to keep only the weeks wanted
+  Times <- Times[which(Times$Week %in% weeks.wanted), ]
+   
+  return(Times)
+}
 
 # function to plot model run results
 plot.results <- function(ws.interest, run.number, subbasins.present){
