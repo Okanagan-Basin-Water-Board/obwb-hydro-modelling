@@ -978,20 +978,35 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
 aggregate.output <- function(ws.interest, run.number, subbasin.subset,  
                              AWDM.weeks = c(1:52), ISO.weeks = c(1:52), months = c(1:12), years = c(1996:2010)){
  
-  # create output directory and base directory object for easy output filename generation
-  if(dir.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-")))){
-    dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output")))
-    base.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output"))
+  # check to see if the aggregation is being applied to an OSTRICH run or not. 
+  # No variable definition required in the function as run.ostrich will be defined
+  # in the parent environment
+  if(run.ostrich == FALSE){
+    # create output directory and base directory object for easy output filename generation
+    if(dir.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-")))){
+      dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output")))
+      
+      base.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"))
+      out.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output"))
+    }
+  } else if(run.ostrich == TRUE){
+    # create output directory and base directory object for easy output filename generation
+    if(dir.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model"))){
+      dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model"))
+      
+      base.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model")
+      out.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste0("aggregated_output"))
+    }
   }
   
   # create AWDM weeks time series. Assume full period of record, 1996 - 2010
   awdm.w <- make.AWDM.weeks(weeks.wanted = AWDM.weeks)
   
   # aggregate hydrographs
-  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
+  if(file.exists(file.path(base.dir, paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
     
     ## Read-in modelled hydrographs
-    hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    hydrographs <- hyd.read(file.path(base.dir, paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
     
     # adjust the date index of the hydrograph xts object so that the observed streamflow
     # is aligned with its day of observation (Period beginning vs. period ending Raven output)
@@ -1015,7 +1030,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, Week, ISO.Week)) %>%
         dplyr::group_by(Year) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "Annual.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Hydrographs", "Annual.csv", sep = "-"))
       data.table::fwrite(hyd.year, out.fn)
     }
     if(exists('months') & !is.null(months)){
@@ -1023,7 +1038,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Week, ISO.Week)) %>%
         dplyr::group_by(Year, Month) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "Monthly.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Hydrographs", "Monthly.csv", sep = "-"))
       data.table::fwrite(hyd.months, out.fn)
     }
     if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
@@ -1031,7 +1046,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, ISO.Week)) %>%
         dplyr::group_by(Year, Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "AWDM-Weeks.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Hydrographs", "AWDM-Weeks.csv", sep = "-"))
       data.table::fwrite(hyd.AWDM, out.fn)
     }
     if(exists('ISO.weeks') & !is.null(ISO.weeks)){
@@ -1039,16 +1054,16 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, Week)) %>%
         dplyr::group_by(Year, ISO.Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "ISO-Weeks.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Hydrographs", "ISO-Weeks.csv", sep = "-"))
       data.table::fwrite(hyd.ISO, out.fn)
     }
   } # end hydrograph aggregation
   
   # aggregate watershed storage
-  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
+  if(file.exists(file.path(base.dir, paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
     
     # read in watershed storage output
-    ws.storage <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")),
+    ws.storage <- read.csv(file.path(base.dir, paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")),
                            check.names = FALSE, stringsAsFactors = FALSE)
     
     cnames <- colnames(ws.storage)
@@ -1067,7 +1082,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, Week, ISO.Week)) %>%
         dplyr::group_by(Year) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "Annual.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "WatershedStorage", "Annual.csv", sep = "-"))
       data.table::fwrite(ws.storage.year, out.fn)
     }
     if(exists('months') & !is.null(months)){
@@ -1075,7 +1090,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Week, ISO.Week)) %>%
         dplyr::group_by(Year, Month) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "Monthly.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "WatershedStorage", "Monthly.csv", sep = "-"))
       data.table::fwrite(ws.storage.months, out.fn)
     }
     if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
@@ -1083,7 +1098,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, ISO.Week)) %>%
         dplyr::group_by(Year, Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "AWDM-Weeks.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "WatershedStorage", "AWDM-Weeks.csv", sep = "-"))
       data.table::fwrite(ws.storage.AWDM, out.fn)
     }
     if(exists('ISO.weeks') & !is.null(ISO.weeks)){
@@ -1091,17 +1106,17 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, Week)) %>%
         dplyr::group_by(Year, ISO.Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "ISO-Weeks.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "WatershedStorage", "ISO-Weeks.csv", sep = "-"))
       data.table::fwrite(ws.storage.ISO, out.fn)
     }
   } # end watershed storage aggregation 
   
   # aggregate reservoir stages
-  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
+  if(file.exists(file.path(base.dir, paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
     
     ## Read-in modelled reservoir stages
     reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
-    reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    reservoir.stage <- res.read(file.path(base.dir, paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
     # adjust the date index of the reservoir xts object so that the observed outflow
     # is aligned with its day of observation (Period beginning vs. period ending Raven output)
@@ -1127,7 +1142,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, Week, ISO.Week)) %>%
         dplyr::group_by(Year) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "Annual.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "ReservoirStage", "Annual.csv", sep = "-"))
       data.table::fwrite(res.year, out.fn)
     }
     if(exists('months') & !is.null(months)){
@@ -1135,7 +1150,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Week, ISO.Week)) %>%
         dplyr::group_by(Year, Month) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "Monthly.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "ReservoirStage", "Monthly.csv", sep = "-"))
       data.table::fwrite(res.months, out.fn)
     }
     if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
@@ -1143,7 +1158,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, ISO.Week)) %>%
         dplyr::group_by(Year, Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "AWDM-Weeks.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "ReservoirStage", "AWDM-Weeks.csv", sep = "-"))
       data.table::fwrite(res.AWDM, out.fn)
     }
     if(exists('ISO.weeks') & !is.null(ISO.weeks)){
@@ -1151,7 +1166,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
         dplyr::select(-c(date, Month, Week)) %>%
         dplyr::group_by(Year, ISO.Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
-      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "ISO-Weeks.csv", sep = "-"))
+      out.fn <- file.path(out.dir, paste(ws.interest, run.number, "ReservoirStage", "ISO-Weeks.csv", sep = "-"))
       data.table::fwrite(res.ISO, out.fn)
     }
   } # end reservoir aggregation
