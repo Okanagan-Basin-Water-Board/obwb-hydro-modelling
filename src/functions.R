@@ -262,8 +262,10 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
   return(TRUE)
 }
 
+
+
 # function to plot model run results
-plot.results <- function(ws.interest, run.number, subbasins.present) {
+plot.results <- function(ws.interest, run.number, subbasins.present){
   
   ###############################
   ##
@@ -404,6 +406,10 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
     
     reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
+    # adjust the date index of the reservoir xts object so that the observed outflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    index(reservoir.stage$res) <- index(reservoir.stage$res) - 86400
+    
     for(i in 1:length(reservoir.subbasins)){
       
       col.name <- gsub(' ','_',reservoir.subbasins[i])
@@ -425,6 +431,12 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
     
     ## Read-in modelled snow
     snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
+    
+    # TODO: fix custom output time index to be period starting rather than period ending
+    #       this is only relevant when the custom output is CONINTUOUS not DAILY
+    # adjust the date index of the reservoir xts object so that the observed outflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    # index(snow) <- index(snow) - 86400
     
     dates <- index(snow)
     
@@ -505,6 +517,12 @@ plot.results <- function(ws.interest, run.number, subbasins.present) {
     # CALIBRATION FILE LOC
     # snow <- custom.read(file.path("/var/obwb-hydro-modelling/simulations", ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
     snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
+    
+    # TODO: fix custom output time index to be period starting rather than period ending
+    #       this is only relevant when the custom output is CONINTUOUS not DAILY
+    # adjust the date index of the reservoir xts object so that the observed outflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    # index(snow) <- index(snow) - 86400
     
     dates <- index(snow)
     
@@ -719,6 +737,10 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
     
     reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
+    # adjust the date index of the reservoir xts object so that the observed outflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    index(reservoir.stage$res) <- index(reservoir.stage$res) - 86400
+    
     for(i in 1:length(reservoir.subbasins)){
       
       col.name <- gsub(' ','_',reservoir.subbasins[i])
@@ -740,6 +762,12 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
      
     ## Read-in modelled snow
     snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_ByHRUGroup.csv", sep = "")))
+    
+    # TODO: fix custom output time index to be period starting rather than period ending
+    #       this is only relevant when the custom output is CONINTUOUS not DAILY
+    # adjust the date index of the reservoir xts object so that the observed outflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    # index(snow) <- index(snow) - 86400
     
     dates <- index(snow)
     
@@ -818,6 +846,12 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
     
     ## Read-in modelled snow
     snow <- custom.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_SNOW_Daily_Average_BySubbasin.csv", sep = "")))
+    
+    # TODO: fix custom output time index to be period starting rather than period ending
+    #       this is only relevant when the custom output is CONINTUOUS not DAILY
+    # adjust the date index of the reservoir xts object so that the observed outflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    # index(snow) <- index(snow) - 86400
     
     dates <- index(snow)
     
