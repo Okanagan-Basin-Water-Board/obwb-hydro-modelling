@@ -8,7 +8,7 @@ getmode <- function(v) {
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
 
-# functio to distribute percentage values that don't quite sum to 100%
+# function to distribute percentage values that don't quite sum to 100%
 round_percent <- function(x) { 
   x <- x/sum(x)*100  # Standardize result
   res <- floor(x)    # Find integer bits
@@ -264,7 +264,7 @@ ECflow.rvt.tidy.single.obs <- function(ff,master,dir,include.watersheds,run.numb
 
 # Generate Year/Week timeseries which is consistent with the OWDM approach 
 # i.e., 8 day last week of year, and 8 day Feb 29. week in leap years). 
-AWDM.weeks <- function(start.date = "1996-01-01", end.date = "2010-12-31", weeks.wanted = c(1:52)){
+make.AWDM.weeks <- function(start.date = "1996-01-01", end.date = "2010-12-31", weeks.wanted = c(1:52)){
 
   ## Generate a sequence of years which matches the naturalized streamflow datasets (i.e, 1996-2010)
   Years <- seq(as.numeric(substr(start.date, 1, 4)), as.numeric(substr(end.date, 1, 4)), 1)
@@ -973,6 +973,189 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   
 } # End function
 
+# aggregate output
+# specify the time bins to use for aggregating the Raven output. Set value to NULL if not wanted.
+aggregate.output <- function(ws.interest, run.number, subbasin.subset,  
+                             AWDM.weeks = c(1:52), ISO.weeks = c(1:52), months = c(1:12), years = c(1996:2010)){
+ 
+  # create output directory and base directory object for easy output filename generation
+  if(dir.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-")))){
+    dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output")))
+    base.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output"))
+  }
+  
+  # create AWDM weeks time series. Assume full period of record, 1996 - 2010
+  awdm.w <- make.AWDM.weeks(weeks.wanted = AWDM.weeks)
+  
+  # aggregate hydrographs
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))){
+    
+    ## Read-in modelled hydrographs
+    hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
+    
+    # adjust the date index of the hydrograph xts object so that the observed streamflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    index(hydrographs$hyd) <- index(hydrographs$hyd) - 86400
+    
+    hyd <- as.data.frame(hydrographs$hyd[-1, ])
+    
+    cnames <- colnames(hyd)
+    
+    hyd <- hyd %>%
+      dplyr::mutate(date = lubridate::ymd(rownames(hyd))) %>%
+      left_join(awdm.w, by = "date") %>%
+      dplyr::mutate(ISO.Week = lubridate::week(date),
+                    Month = lubridate::month(date)) %>%
+      dplyr::select(date, Year, Month, Week, ISO.Week, cnames)
+    
+    # aggregate hydrographs. Retain only the time grouping variable, summarize all 
+    # subbasins as the mean of the time grouping variable (i.e., by year)
+    if(exists('years') & !is.null(years)){
+      hyd.year <- hyd %>%
+        dplyr::select(-c(date, Month, Week, ISO.Week)) %>%
+        dplyr::group_by(Year) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "Annual.csv", sep = "-"))
+      data.table::fwrite(hyd.year, out.fn)
+    }
+    if(exists('months') & !is.null(months)){
+      hyd.months <- hyd %>%
+        dplyr::select(-c(date, Week, ISO.Week)) %>%
+        dplyr::group_by(Year, Month) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "Monthly.csv", sep = "-"))
+      data.table::fwrite(hyd.months, out.fn)
+    }
+    if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
+      hyd.AWDM <- hyd %>%
+        dplyr::select(-c(date, Month, ISO.Week)) %>%
+        dplyr::group_by(Year, Week) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "AWDM-Weeks.csv", sep = "-"))
+      data.table::fwrite(hyd.AWDM, out.fn)
+    }
+    if(exists('ISO.weeks') & !is.null(ISO.weeks)){
+      hyd.ISO <- hyd %>%
+        dplyr::select(-c(date, Month, Week)) %>%
+        dplyr::group_by(Year, ISO.Week) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "Hydrographs", "ISO-Weeks.csv", sep = "-"))
+      data.table::fwrite(hyd.ISO, out.fn)
+    }
+  } # end hydrograph aggregation
+  
+  # aggregate watershed storage
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")))){
+    
+    # read in watershed storage output
+    ws.storage <- read.csv(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_WatershedStorage.csv", sep = "")),
+                           check.names = FALSE, stringsAsFactors = FALSE)
+    
+    cnames <- colnames(ws.storage)
+    
+    ws.storage <- ws.storage %>%
+      dplyr::mutate(date = lubridate::ymd(date)) %>%
+      left_join(awdm.w, by = "date") %>%
+      dplyr::mutate(ISO.Week = lubridate::week(date),
+                    Month = lubridate::month(date)) %>%
+      dplyr::select(date, Year, Month, Week, ISO.Week, cnames)
+    
+    # aggregate hydrographs. Retain only the time grouping variable, summarize all 
+    # subbasins as the mean of the time grouping variable (i.e., by year)
+    if(exists('years') & !is.null(years)){
+      ws.storage.year <- res %>%
+        dplyr::select(-c(date, Month, Week, ISO.Week)) %>%
+        dplyr::group_by(Year) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "Annual.csv", sep = "-"))
+      data.table::fwrite(ws.storage.year, out.fn)
+    }
+    if(exists('months') & !is.null(months)){
+      ws.storage.months <- res %>%
+        dplyr::select(-c(date, Week, ISO.Week)) %>%
+        dplyr::group_by(Year, Month) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "Monthly.csv", sep = "-"))
+      data.table::fwrite(ws.storage.months, out.fn)
+    }
+    if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
+      ws.storage.AWDM <- res %>%
+        dplyr::select(-c(date, Month, ISO.Week)) %>%
+        dplyr::group_by(Year, Week) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "AWDM-Weeks.csv", sep = "-"))
+      data.table::fwrite(ws.storage.AWDM, out.fn)
+    }
+    if(exists('ISO.weeks') & !is.null(ISO.weeks)){
+      ws.storage.ISO <- res %>%
+        dplyr::select(-c(date, Month, Week)) %>%
+        dplyr::group_by(Year, ISO.Week) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "WatershedStorage", "ISO-Weeks.csv", sep = "-"))
+      data.table::fwrite(ws.storage.ISO, out.fn)
+    }
+  } # end watershed storage aggregation 
+  
+  # aggregate reservoir stages
+  if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
+    
+    ## Read-in modelled reservoir stages
+    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
+    reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    
+    # adjust the date index of the reservoir xts object so that the observed outflow
+    # is aligned with its day of observation (Period beginning vs. period ending Raven output)
+    index(reservoir.stage$res) <- index(reservoir.stage$res) - 86400
+    
+    # drop first row as it is 1996-05-31, due to the fix of the time index from period ending
+    # to period starting
+    res <- as.data.frame(reservoir.stage$res[-1, ])
+    
+    cnames <- colnames(res)
+    
+    res <- res %>%
+      dplyr::mutate(date = lubridate::ymd(rownames(res))) %>%
+      left_join(awdm.w, by = "date") %>%
+      dplyr::mutate(ISO.Week = lubridate::week(date),
+                    Month = lubridate::month(date)) %>%
+      dplyr::select(date, Year, Month, Week, ISO.Week, cnames)
+    
+    # aggregate hydrographs. Retain only the time grouping variable, summarize all 
+    # subbasins as the mean of the time grouping variable (i.e., by year)
+    if(exists('years') & !is.null(years)){
+      res.year <- res %>%
+        dplyr::select(-c(date, Month, Week, ISO.Week)) %>%
+        dplyr::group_by(Year) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "Annual.csv", sep = "-"))
+      data.table::fwrite(res.year, out.fn)
+    }
+    if(exists('months') & !is.null(months)){
+      res.months <- res %>%
+        dplyr::select(-c(date, Week, ISO.Week)) %>%
+        dplyr::group_by(Year, Month) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "Monthly.csv", sep = "-"))
+      data.table::fwrite(res.months, out.fn)
+    }
+    if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
+      res.AWDM <- res %>%
+        dplyr::select(-c(date, Month, ISO.Week)) %>%
+        dplyr::group_by(Year, Week) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "AWDM-Weeks.csv", sep = "-"))
+      data.table::fwrite(res.AWDM, out.fn)
+    }
+    if(exists('ISO.weeks') & !is.null(ISO.weeks)){
+      res.ISO <- res %>%
+        dplyr::select(-c(date, Month, Week)) %>%
+        dplyr::group_by(Year, ISO.Week) %>%
+        dplyr::summarize_all(mean, na.rm = TRUE)
+      out.fn <- file.path(base.dir, paste(ws.interest, run.number, "ReservoirStage", "ISO-Weeks.csv", sep = "-"))
+      data.table::fwrite(res.ISO, out.fn)
+    }
+  } # end reservoir aggregation
+}
 
 ## Function to remove the :SuppressOutput command from the rvi file to facilitate plotting of calibration results
 rewrite.output <- function(ws.interest, run.number){
