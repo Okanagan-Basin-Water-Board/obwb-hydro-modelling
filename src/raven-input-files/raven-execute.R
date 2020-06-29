@@ -23,7 +23,7 @@ cores <- detectCores() - 1
 ptm <- proc.time()
 
 ## Specify the name to be associated with output files - note that this could be "Multi" if multiple watersheds to be modelled. Spaces must be omitted.
-ws.interest <- "Andras-functions"
+ws.interest <- "LB-functions"
 
 ## Specify the watersheds to be modelled. If multiple, generate a string using c("WS1", "WS2"...WSn")
 # include.watersheds <- c("Coldstream", "Equesis", "Inkaneep", "McDougall", "McLean", "Mill", "Mission", "Naramata", "Naswhito", "Penticton", "Powers", "Shingle", "Shorts", "Shuttleworth", "Trepanier", "Trout", "Vaseux", "Vernon", "Whiteman")
@@ -31,10 +31,10 @@ ws.interest <- "Andras-functions"
 include.watersheds <- "Mill"
 
 ## Specify a run number to associated with outputs
-run.number <- "Mill-01"
+run.number <- "Mill-1"
 
 ## Add comments to README file.
-run.comments <- "Working on writing of ReservoirDemandMultiplier under difference calibration scenarios"
+run.comments <- "Updating reservoir stage plot function to account for disabled subbasins"
 
 # Specify individual subbasins that should be disabled (e.g., Lambly Lake & Contributing area under natural conditions, and all diversions)
 disable.subbasins <- c(2407, 2408, 2423, 2422, 2421, 1421, 256)
@@ -368,6 +368,11 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
     
   dev.off()
 
+  # aggregate the model output by Year, Year-month, Year-AWDM-week, and Year-ISO-Week.
+  # By default, it will aggregate for the full model period, for all years, months, and weeks.
+  # Set time groups that aren't wanted = NULL, e.g., years = NULL
+  aggregate.output(ws.interest, run.number, subbasins.present,
+                   AWDM.weeks = c(1:52), ISO.weeks = c(1:52), months = c(1:12), years = c(1996:2010))
  
   ## If calculate.diversions = TRUE, calculate the diversion timeseries for the given watershed(s)
   if(calculate.diversions == TRUE){
@@ -426,6 +431,13 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   pdf(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "-Output.pdf", sep = "")), width = 8.5, height = 11)
 
   plot.results(ws.interest, run.number, subbasins.present)
+  
+  # aggregate the model output by Year, Year-month, Year-AWDM-week, and Year-ISO-Week.
+  # By default, it will aggregate for the full model period, for all years, months, and weeks.
+  # Set time groups that aren't wanted = NULL, e.g., years = NULL
+  aggregate.output(ws.interest, run.number, subbasins.present,
+                   AWDM.weeks = c(1:52), ISO.weeks = c(1:52), months = c(1:12), years = c(1996:2010))
+  
   
   source(file.path(global.src.dir, "naturalized-flows/naturalized-flow-processing.R"))
     
