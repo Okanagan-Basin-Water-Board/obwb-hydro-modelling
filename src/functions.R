@@ -454,8 +454,16 @@ plot.results <- function(ws.interest, run.number, subbasins.present){
   
   if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
     
-    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
     
+    ## #TD15 - Update plotting function to remove any reservoir that might be included as a disabled subbasin.
+    ## First, identify the reservoirs that are present by checking their Subbasin ID is not in the disable.subbasins object. Remove Null.
+    ## Then, continue as before, by identifying subbasin names for these subbasins, now using the reservoirs.present object.
+    reservoirs.present <- subbasins.present[!subbasins.present$Subbasin_ID %in% disable.subbasins, "Reservoir_name"]
+    
+    reservoirs.present <- reservoirs.present[reservoirs.present != "<Null>"]
+    
+    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name %in% reservoirs.present, "SubBasin_name"]
+
     reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
     # adjust the date index of the reservoir xts object so that the observed outflow
@@ -785,9 +793,16 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
   
   if(file.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
     
-    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
+    ## #TD15 - Update plotting function to remove any reservoir that might be included as a disabled subbasin.
+    ## First, identify the reservoirs that are present by checking their Subbasin ID is not in the disable.subbasins object. Remove Null.
+    ## Then, continue as before, by identifying subbasin names for these subbasins, now using the reservoirs.present object.
+    reservoirs.present <- subbasins.present[!subbasins.present$Subbasin_ID %in% disable.subbasins, "Reservoir_name"]
     
-    reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
+    reservoirs.present <- reservoirs.present[reservoirs.present != "<Null>"]
+    
+    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name %in% reservoirs.present, "SubBasin_name"]
+    
+    reservoir.stage <- res.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))    
     
     # adjust the date index of the reservoir xts object so that the observed outflow
     # is aligned with its day of observation (Period beginning vs. period ending Raven output)
@@ -1078,7 +1093,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
     # aggregate hydrographs. Retain only the time grouping variable, summarize all 
     # subbasins as the mean of the time grouping variable (i.e., by year)
     if(exists('years') & !is.null(years)){
-      ws.storage.year <- res %>%
+      ws.storage.year <- ws.storage %>%
         dplyr::select(-c(date, Month, Week, ISO.Week)) %>%
         dplyr::group_by(Year) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
@@ -1086,7 +1101,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
       data.table::fwrite(ws.storage.year, out.fn)
     }
     if(exists('months') & !is.null(months)){
-      ws.storage.months <- res %>%
+      ws.storage.months <- ws.storage %>%
         dplyr::select(-c(date, Week, ISO.Week)) %>%
         dplyr::group_by(Year, Month) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
@@ -1094,7 +1109,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
       data.table::fwrite(ws.storage.months, out.fn)
     }
     if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
-      ws.storage.AWDM <- res %>%
+      ws.storage.AWDM <- ws.storage %>%
         dplyr::select(-c(date, Month, ISO.Week)) %>%
         dplyr::group_by(Year, Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
@@ -1102,7 +1117,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
       data.table::fwrite(ws.storage.AWDM, out.fn)
     }
     if(exists('ISO.weeks') & !is.null(ISO.weeks)){
-      ws.storage.ISO <- res %>%
+      ws.storage.ISO <- ws.storage %>%
         dplyr::select(-c(date, Month, Week)) %>%
         dplyr::group_by(Year, ISO.Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
@@ -1115,7 +1130,15 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset,
   if(file.exists(file.path(base.dir, paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))){
     
     ## Read-in modelled reservoir stages
-    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name != "<Null>", "SubBasin_name"]
+    ## #TD15 - Update plotting function to remove any reservoir that might be included as a disabled subbasin.
+    ## First, identify the reservoirs that are present by checking their Subbasin ID is not in the disable.subbasins object. Remove Null.
+    ## Then, continue as before, by identifying subbasin names for these subbasins, now using the reservoirs.present object.
+    reservoirs.present <- subbasins.present[!subbasins.present$Subbasin_ID %in% disable.subbasins, "Reservoir_name"]
+    
+    reservoirs.present <- reservoirs.present[reservoirs.present != "<Null>"]
+    
+    reservoir.subbasins <- subbasins.present[subbasins.present$Reservoir_name %in% reservoirs.present, "SubBasin_name"]
+    
     reservoir.stage <- res.read(file.path(base.dir, paste(ws.interest, "-", run.number, "_ReservoirStages.csv", sep = "")))
     
     # adjust the date index of the reservoir xts object so that the observed outflow
