@@ -102,6 +102,8 @@ if(length(stations.included) > 1){
      cat("The following Response Variables are available to be optimized through calibration:", paste(available.response.vars, " ; "), "\n",
           "Please enter the corresponding weighting value for each Response Variable (separated by commas)...")
       
+     user_receive <- readLines(con = "stdin", 1)
+     
       response.variable.weights <- str_trim(strsplit(user_receive, ",")[[1]], side = "both")
       
       # response.variables <- matrix(c(available.response.vars, response.variable.weights), nrow = length(available.response.vars))
