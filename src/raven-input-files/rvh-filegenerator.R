@@ -670,6 +670,15 @@ HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean
 HRU.output.clean[HRU.output.clean[, "SOIL_PROFILE"] != "LAKE" & HRU.output.clean[, "LAND_USE_CLASS"] == "WATER", "SOIL_PROFILE"] <- "LAKE"
 
 
+##################################################################################################
+##
+## #B4: 03072020 - Overwrite the slope for Lakes/reservoirs/open water to be ZERO
+## - There are a few HRUs that are converted to WATER during naturalization (in Vernon Creek watershed) - convert these slopes to 0
+##
+##################################################################################################
+
+HRU.output.clean[HRU.output.clean[, "LAND_USE_CLASS"] == "LAKE" | HRU.output.clean[, "LAND_USE_CLASS"] == "WATER", "SLOPE"] <- 0
+
 ##############################################################################################
 ##
 ## Write Natural RVH file
