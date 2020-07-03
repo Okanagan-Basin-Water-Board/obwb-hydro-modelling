@@ -40,7 +40,7 @@ tasmin.raw.in.file <- "tasmin.downscaled_05052020.nc"
 
 raw.custom.timeseries.in.dir <- "raw/custom-timeseries"
 
-custom.timeseres.in.file <- "custom_timeseries_06222020.xlsx"
+custom.timeseres.in.file <- "custom_timeseries_ISFS.xlsx"
 
 diversion.rules.in.file <- "diversion_rules_summary_05052020.csv"
 
@@ -93,15 +93,15 @@ owdm.node.subbasin.file <- "Water use area source node _ request subbasin_201911
 
 raw.parameter.codes.in.dir <- "raw/parameter-codes"
 
-RVP.template.in.file <- "mission-nat-v1.1.0-cal2.csv"
-RVI.template.in.file <- "RVI-Template_05152020.csv"
-OST.template.in.file <- "OST-Template_05052020.csv"
+RVP.template.in.file <- "RVP-Template_ISFS.csv"
+RVI.template.in.file <- "RVI-Template_ISFS.csv"
+OST.template.in.file <- "OST-Template_ISFS.csv"
 
 ## Additional Template files
 AR.in.file <- "annual_runoff_05052020.csv"
 AQ.in.file <- "aquifer_codes_05052020.csv"
 LC.in.file <- "landcover_codes_05052020.csv"
-SB.in.file <- "subbasin_codes_05052020.csv"
+SB.in.file <- "subbasin_codes_29062020.csv"
 Veg.in.file <- "vegetation_codes_05052020.csv"
 
 ##-----------------------------------
@@ -110,7 +110,7 @@ Veg.in.file <- "vegetation_codes_05052020.csv"
 
 raw.reservoir.in.dir <- "raw/reservoirs"
 
-reservoir.in.file <- "mission-nat-reservoirs-v1.1.0-cal2.xlsx"
+reservoir.in.file <- "raven-reservoirs_ISFS.xlsx"
 reservoir.read.me.file <- "README.txt"
 
 ##-----------------------------------
@@ -191,11 +191,11 @@ tidy.hru.processed.file <- "tidy-HRU-id.2020-06-25.tif"
 ## SOIL
 soils.processed.file <- "soils/Soils_final.tif" # This is a rasterized version of the Soil_type.shp file that is generated based on an ArcMap look-up between Soil_Clip and soils-output.csv from soil processing step.
 soil.attribute.in.file <- "soils/soil_attributes_05052020.csv" # This is the attribute table that corresponds to the above Soils_final.tif raster and accompanying shape file.
-soil.profile.table.in.file <- "soils/mission-nat-soils-v1.1.0-cal2.csv" # This will be date stamped when soils are re-processed.
+soil.profile.table.in.file <- "soils/soil-profile-table_ISFS.csv" # This will be date stamped when soils are re-processed.
 soil.class.table.in.file <- "soils/soil-class-table.csv" # This will be date stamped when soils are re-processed.
 processed.soil.image <- "soils/post-process-image.RData" ## TODO: renames to soil-post-process-image.DATE.RData
 
-soil.thickness.range.calibration.file <- "soils/soil-thickness-ranges-calibration.csv"
+soil.thickness.range.calibration.file <- "soils/soil-thickness-ranges-calibration_ISFS.csv" # Minimum soil thickness updated to 0.05 m, not 0.
 soil.profile.table.calibration.file <- "soils/soil-profile-table-calibration.csv"
 
 ## SNOW
@@ -246,6 +246,6 @@ mpirun.dir <- "/usr/bin/mpirun"
 #####################################
 #####################################
 
-master.natural.rvh.file <- "Master_natural.2020-06-25.rvh"
+master.natural.rvh.file <- "Master_natural.2020-07-03.rvh" # Rvh files regenerated to correct 4 HRUs in Vernon Creek with non-zero slopes on WATER landuse
 
-master.residual.rvh.file <- "Master_residual.2020-06-25.rvh"
+master.residual.rvh.file <- "Master_residual.2020-07-03.rvh" # Rvh files regenerated to correct 4 HRUs in Vernon Creek with non-zero slopes on WATER landuse
