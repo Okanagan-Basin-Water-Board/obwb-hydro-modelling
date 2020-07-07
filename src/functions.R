@@ -991,8 +991,8 @@ plot.calibration.results <- function(ws.interest, run.number, subbasin.subset) {
 
 # aggregate output
 # specify the time bins to use for aggregating the Raven output. Set value to NULL if not wanted.
-aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.weeks = c(1:52),
-                             ISO.weeks = c(1:52), months = c(1:12), agg.start = 1996, agg.end = 2010){
+aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.weeks = c(1:52), ISO.weeks = c(1:52), 
+                             months = c(1:12), agg.start = 1996, agg.end = 2010, plot.output = TRUE){
  
   # check to see if the aggregation is being applied to an OSTRICH run or not. 
   # No variable definition required in the function as run.ostrich will be defined
@@ -1001,6 +1001,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
     # create output directory and base directory object for easy output filename generation
     if(dir.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-")))){
       dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output")))
+      if(plot.output == TRUE){dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output/plots")))}
       
       base.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"))
       out.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste0("aggregated_output"))
@@ -1008,10 +1009,12 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
   } else if(run.ostrich == TRUE){
     # create output directory and base directory object for easy output filename generation
     if(dir.exists(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model"))){
-      dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model"))
+      dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model/aggregated_output"))
+      if(plot.output == TRUE){dir.create(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model/aggregated_output/plots"))}
       
       base.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model")
       out.dir <- file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste0("aggregated_output"))
+      
     }
   }
   
@@ -1041,7 +1044,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
       dplyr::mutate(ISO.Week = lubridate::week(date),
                     Month = lubridate::month(date)) %>%
       dplyr::select(date, Year, Month, Week, ISO.Week, cnames)
-    
+  
     # aggregate hydrographs. Retain only the time grouping variable, summarize all 
     # subbasins as the mean of the time grouping variable (i.e., by year)
     if(exists('agg.years') & !is.null(agg.years)){
@@ -1082,6 +1085,215 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         dplyr::summarize_all(mean, na.rm = TRUE)
       out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Hydrographs", "ISO-Weeks.csv", sep = "-"))
       data.table::fwrite(hyd.ISO, out.fn)
+    }
+    
+    # generate plot output
+    if(plot.output == TRUE){
+      # check if these are naturalized or residual streamflows being plotted.
+      # generate plot labels accordingly
+      if(include.water.demand == TRUE){
+        nat_res <- "residual"
+        Nat_Res <- "Residual"
+      } else {
+        nat_res <- "naturalized"
+        Nat_Res <- "Naturalized"
+      }
+     
+      # find subbasins with observed flows, and use that to find corresponding modelled columns
+      obs_col <- grep("obs", colnames(hyd))
+      mod_lkup <- paste0("^", gsub("_obs", "", colnames(hyd)[obs_col]), "$")
+      mod_col <- as.numeric(sapply(mod_lkup, grep, colnames(hyd)))
+      
+      # get the subbasin names for dataframe melting
+      obs_subbsn <- colnames(hyd)[obs_col]
+      mod_subbsn <- colnames(hyd)[mod_col]
+      
+      # make plot title and subtitle
+      subtitle_lbl = paste0("Modelled ", Nat_Res, " Streamflow")
+      
+      # begin plotting
+      if(exists(hyd.year)){
+        # make title label
+        title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - Annual")
+        
+        # set labels for plotting
+        obs_lbl <- paste0("Mean annual ", nat_res, "\nstreamflow estimate")
+        mod_lbl <- paste0("Mean annual modelled\n", nat_res," streamflow")
+        
+        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_annual.png", sep = "-"))
+        
+        # set plot height based on number of panels to plot
+        hgt = length(obs_col)*6
+        
+        # melt data and plot
+        plot_df <- reshape2::melt(hyd.year, id.vars = c("Year"),
+                                  measure.vars = c(obs_subbsn, mod_subbsn),
+                                  variable.name = "obs_mod", value.name = "flow") %>%
+          dplyr::mutate(clr = case_when(obs_mod %in% obs_subbsn ~ obs_lbl,
+                                        obs_mod %in% mod_subbsn ~ mod_lbl),
+                        subbasin = gsub("_obs", "", obs_mod))
+        
+        plot_df %>%
+          ggplot(aes(x = Year, y = flow, colour = clr)) +
+          geom_line(aes(group = obs_mod)) +
+          theme_bw() +
+          labs(x = "", y = expression("Discharge ("*m^3*"/s)"), colour = "",
+               title = title_lbl, subtitle = subtitle_lbl) +
+          #scale_x_date(date_minor_breaks = "2 months", expand = c(0, 0)) +
+          scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+          scale_colour_manual(values = c("red", "#A3A3A3")) +
+          facet_wrap(~ subbasin, ncol = 1, scales = "free_y", strip.position = "right") +
+          theme(legend.position = "bottom",
+                strip.text = element_text(size = 10),
+                axis.text = element_text(size = 10),
+                legend.text = element_text(size = 11),
+                axis.title.y = element_text(size = 11),
+                panel.grid.major.y = element_blank(),
+                panel.grid.minor.y = element_blank(),
+                panel.grid.major.x = element_line(linetype = 2),
+                panel.grid.minor.x = element_line(linetype = 2))
+        ggsave(out.fn, width = 24, height = hgt, units = "cm")
+        
+      }
+      if(exists(hyd.months)){
+        # make title label
+        title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - Monthly")
+        
+        # set labels for plotting
+        obs_lbl <- paste0("Mean monthly ", nat_res, "\nstreamflow estimate")
+        mod_lbl <- paste0("Mean monthly modelled\n", nat_res," streamflow")
+        
+        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_monthly.png", sep = "-"))
+        
+        # set plot height based on number of panels to plot
+        hgt = length(obs_col)*6
+        
+        # melt data and plot
+        plot_df <- reshape2::melt(hyd.months, id.vars = c("Year", "Month"),
+                                  measure.vars = c(obs_subbsn, mod_subbsn),
+                                  variable.name = "obs_mod", value.name = "flow") %>%
+          dplyr::mutate(clr = case_when(obs_mod %in% obs_subbsn ~ obs_lbl,
+                                        obs_mod %in% mod_subbsn ~ mod_lbl),
+                        subbasin = gsub("_obs", "", obs_mod),
+                        Month = as.character(Month),
+                        Month = case_when(nchar(Month) > 1 ~ Month,
+                                         nchar(Month) == 1 ~ paste0("0", Month)),
+                        year.month = lubridate::ymd(paste0(Year, "-", Month, "-01")))
+        
+        plot_df %>%
+          ggplot(aes(x = year.month, y = flow, colour = clr)) +
+          geom_line(aes(group = obs_mod)) +
+          theme_bw() +
+          labs(x = "", y = expression("Discharge ("*m^3*"/s)"), colour = "",
+               title = title_lbl, subtitle = subtitle_lbl) +
+          scale_x_date(date_minor_breaks = "2 months", expand = c(0, 0)) +
+          scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+          scale_colour_manual(values = c("red", "#A3A3A3")) +
+          facet_wrap(~ subbasin, ncol = 1, scales = "free_y", strip.position = "right") +
+          theme(legend.position = "bottom",
+                strip.text = element_text(size = 10),
+                axis.text = element_text(size = 10),
+                legend.text = element_text(size = 11),
+                axis.title.y = element_text(size = 11),
+                panel.grid.major.y = element_blank(),
+                panel.grid.minor.y = element_blank(),
+                panel.grid.major.x = element_line(linetype = 2),
+                panel.grid.minor.x = element_line(linetype = 2))
+        ggsave(out.fn, width = 24, height = hgt, units = "cm")
+      }
+      if(exists(hyd.AWDM)){
+        # make title label
+        title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - AWDM weeks")
+        
+        # set labels for plotting
+        obs_lbl <- paste0("Mean weekly ", nat_res, "\nstreamflow estimate")
+        mod_lbl <- paste0("Mean weekly modelled\n", nat_res," streamflow")
+        
+        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_AWDM_Weeks.png", sep = "-"))
+        
+        # set plot height based on number of panels to plot
+        hgt = length(obs_col)*6
+        
+        # melt data and plot
+        plot_df <- reshape2::melt(hyd.AWDM, id.vars = c("Year", "Week"),
+                       measure.vars = c(obs_subbsn, mod_subbsn),
+                       variable.name = "obs_mod", value.name = "flow") %>%
+          dplyr::mutate(clr = case_when(obs_mod %in% obs_subbsn ~ obs_lbl,
+                                        obs_mod %in% mod_subbsn ~ mod_lbl),
+                        subbasin = gsub("_obs", "", obs_mod),
+                        Week = as.character(Week),
+                        Week = case_when(nchar(Week) > 1 ~ Week,
+                                         nchar(Week) == 1 ~ paste0("0", Week)),
+                        year.week = paste0(Year, "-", Week, "-1"))
+        plot_df$year.week <- as.Date(test$year.week, format = "%Y-%U-%u")
+        plot_df %>%
+          ggplot(aes(x = year.week, y = flow, colour = clr)) +
+          geom_line(aes(group = obs_mod)) +
+          theme_bw() +
+          labs(x = "", y = expression("Discharge ("*m^3*"/s)"), colour = "",
+               title = title_lbl, subtitle = subtitle_lbl) +
+          scale_x_date(date_minor_breaks = "2 months", expand = c(0, 0)) +
+          scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+          scale_colour_manual(values = c("red", "#A3A3A3")) +
+          facet_wrap(~ subbasin, ncol = 1, scales = "free_y", strip.position = "right") +
+          theme(legend.position = "bottom",
+                strip.text = element_text(size = 10),
+                axis.text = element_text(size = 10),
+                legend.text = element_text(size = 11),
+                axis.title.y = element_text(size = 11),
+                panel.grid.major.y = element_blank(),
+                panel.grid.minor.y = element_blank(),
+                panel.grid.major.x = element_line(linetype = 2),
+                panel.grid.minor.x = element_line(linetype = 2))
+        ggsave(out.fn, width = 24, height = hgt, units = "cm")
+        
+      }
+      if(exists(hyd.ISO)){
+        # make title label
+        title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - ISO weeks")
+        
+        # set labels for plotting
+        obs_lbl <- paste0("Mean weekly ", nat_res, "\nstreamflow estimate")
+        mod_lbl <- paste0("Mean weekly modelled\n", nat_res," streamflow")
+        
+        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_ISO_Weeks.png", sep = "-"))
+        
+        # set plot height based on number of panels to plot
+        hgt = length(obs_col)*6
+        
+        # melt data and plot
+        plot_df <- reshape2::melt(hyd.ISO, id.vars = c("Year", "ISO.Week"),
+                               measure.vars = c(obs_subbsn, mod_subbsn),
+                               variable.name = "obs_mod", value.name = "flow") %>%
+          dplyr::mutate(clr = case_when(obs_mod %in% obs_subbsn ~ obs_lbl,
+                                        obs_mod %in% mod_subbsn ~ mod_lbl),
+                        subbasin = gsub("_obs", "", obs_mod),
+                        ISO.Week = as.character(ISO.Week),
+                        ISO.Week = case_when(nchar(ISO.Week) > 1 ~ ISO.Week,
+                                         nchar(ISO.Week) == 1 ~ paste0("0", ISO.Week)),
+                        year.week = paste0(Year, "-", ISO.Week, "-1"))
+        plot_df$year.week <- as.Date(plot_df$year.week, format = "%Y-%U-%u")
+        plot_df %>%
+          ggplot(aes(x = year.week, y = flow, colour = clr)) +
+          geom_line(aes(group = obs_mod)) +
+          theme_bw() +
+          labs(x = "", y = expression("Discharge ("*m^3*"/s)"), colour = "",
+               title = title_lbl, subtitle = subtitle_lbl) +
+          scale_x_date(date_minor_breaks = "2 months", expand = c(0, 0)) +
+          scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+          scale_colour_manual(values = c("red", "#A3A3A3")) +
+          facet_wrap(~ subbasin, ncol = 1, scales = "free_y", strip.position = "right") +
+          theme(legend.position = "bottom",
+                strip.text = element_text(size = 10),
+                axis.text = element_text(size = 10),
+                legend.text = element_text(size = 11),
+                axis.title.y = element_text(size = 11),
+                panel.grid.major.y = element_blank(),
+                panel.grid.minor.y = element_blank(),
+                panel.grid.major.x = element_line(linetype = 2),
+                panel.grid.minor.x = element_line(linetype = 2))
+        ggsave(out.fn, width = 24, height = hgt, units = "cm")
+      }
     }
   } # end hydrograph aggregation
   
