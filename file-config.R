@@ -46,6 +46,8 @@ diversion.rules.in.file <- "diversion_rules_summary_05052020.csv"
 
 stirling.creek.flows.in.file <- "stirling_ck_mean_monthly_flows_05052020.csv"
 
+penticton.creek.model.output <- "natural-calibrations-penticton-nat-v1-1-1-cal2-validation_Hydrographs_07072020.csv"
+
 ##-----------------------------------
 ## NATURALIZED FLOWS DATA
 ##-----------------------------------
