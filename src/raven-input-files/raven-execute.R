@@ -371,8 +371,8 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   # aggregate the model output by Year, Year-month, Year-AWDM-week, and Year-ISO-Week.
   # By default, it will aggregate for the full model period, for all years, months, and weeks.
   # Set time groups that aren't wanted = NULL, e.g., years = NULL
-  # aggregate.output(ws.interest, run.number, subbasins.present, AWDM.weeks = c(1:52), 
-                   # ISO.weeks = c(1:52), months = c(1:12), agg.start = 1996, agg.end = 2010)
+  # aggregate.output(ws.interest, run.number, subbasins.present, AWDM.weeks = c(1:52), ISO.weeks = c(1:52),
+                   # months = c(1:12), agg.start = 1996, agg.end = 2010, plot.output = TRUE)
  
   ## If calculate.diversions = TRUE, calculate the diversion timeseries for the given watershed(s)
   if(calculate.diversions == TRUE){
@@ -435,8 +435,8 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   # aggregate the model output by Year, Year-month, Year-AWDM-week, and Year-ISO-Week.
   # By default, it will aggregate for the full model period, for all years, months, and weeks.
   # Set time groups that aren't wanted = NULL, e.g., years = NULL
-  aggregate.output(ws.interest, run.number, subbasins.present, AWDM.weeks = c(1:52),
-                   ISO.weeks = c(1:52), months = c(1:12), agg.start = 1996, agg.end = 2010)
+  aggregate.output(ws.interest, run.number, subbasins.present, AWDM.weeks = c(1:52), ISO.weeks = c(1:52), 
+                   months = c(1:12), agg.start = 1996, agg.end = 2010, plot.output = TRUE)
   
   
   source(file.path(global.src.dir, "naturalized-flows/naturalized-flow-processing.R"))
