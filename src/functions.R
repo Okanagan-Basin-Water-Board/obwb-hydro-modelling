@@ -1112,7 +1112,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
       subtitle_lbl = paste0("Modelled ", Nat_Res, " Streamflow")
       
       # begin plotting
-      if(exists(hyd.year)){
+      if(exists("hyd.year")){
         # make title label
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - Annual")
         
@@ -1155,7 +1155,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         ggsave(out.fn, width = 24, height = hgt, units = "cm")
         
       }
-      if(exists(hyd.months)){
+      if(exists("hyd.months")){
         # make title label
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - Monthly")
         
@@ -1201,7 +1201,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
                 panel.grid.minor.x = element_line(linetype = 2))
         ggsave(out.fn, width = 24, height = hgt, units = "cm")
       }
-      if(exists(hyd.AWDM)){
+      if(exists("hyd.AWDM")){
         # make title label
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - AWDM weeks")
         
@@ -1248,7 +1248,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         ggsave(out.fn, width = 24, height = hgt, units = "cm")
         
       }
-      if(exists(hyd.ISO)){
+      if(exists("hyd.ISO")){
         # make title label
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - ISO weeks")
         
