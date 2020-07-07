@@ -1018,8 +1018,13 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
     }
   }
   
+  ## Determin start and end days for AWDM weeks, based on agg.start and agg.end
+  agg.start.day <- as.character(paste(agg.start, "-01-01", sep = ""))
+  
+  agg.end.day <- as.character(paste(agg.end, "-12-31", sep = ""))
+  
   # create AWDM weeks time series. Assume full period of record, 1996 - 2010
-  awdm.w <- make.AWDM.weeks(weeks.wanted = AWDM.weeks)
+  awdm.w <- make.AWDM.weeks(start.date = agg.start.day, end.date = agg.end.day, weeks.wanted = AWDM.weeks)
   
   # create aggregation period year series
   agg.years <- agg.start:agg.end
@@ -1117,13 +1122,13 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - Annual")
         
         # set labels for plotting
-        obs_lbl <- paste0("Mean annual ", nat_res, "\nstreamflow estimate")
-        mod_lbl <- paste0("Mean annual modelled\n", nat_res," streamflow")
+        obs_lbl <- paste0("Mean annual observed\n", "streamflow")
+        mod_lbl <- paste0("Mean annual modelled\n", nat_res, " streamflow")
         
-        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_annual.png", sep = "-"))
+        out.fn <- file.path(out.dir, "plots", paste(ws.interest, run.number, "_Hydrographs_annual.png", sep = "-"))
         
         # set plot height based on number of panels to plot
-        hgt = length(obs_col)*6
+        hgt = length(obs_col)*8
         
         # melt data and plot
         plot_df <- reshape2::melt(hyd.year, id.vars = c("Year"),
@@ -1160,13 +1165,13 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - Monthly")
         
         # set labels for plotting
-        obs_lbl <- paste0("Mean monthly ", nat_res, "\nstreamflow estimate")
-        mod_lbl <- paste0("Mean monthly modelled\n", nat_res," streamflow")
+        obs_lbl <- paste0("Mean monthly observed\n", "streamflow")
+        mod_lbl <- paste0("Mean monthly modelled\n", nat_res, " streamflow")
         
-        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_monthly.png", sep = "-"))
+        out.fn <- file.path(out.dir, "plots", paste(ws.interest, run.number, "_Hydrographs_monthly.png", sep = "-"))
         
         # set plot height based on number of panels to plot
-        hgt = length(obs_col)*6
+        hgt = length(obs_col)*8
         
         # melt data and plot
         plot_df <- reshape2::melt(hyd.months, id.vars = c("Year", "Month"),
@@ -1206,13 +1211,13 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - AWDM weeks")
         
         # set labels for plotting
-        obs_lbl <- paste0("Mean weekly ", nat_res, "\nstreamflow estimate")
+        obs_lbl <- paste0("Mean weekly observed\n", "streamflow")
         mod_lbl <- paste0("Mean weekly modelled\n", nat_res," streamflow")
         
-        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_AWDM_Weeks.png", sep = "-"))
+        out.fn <- file.path(out.dir, "plots", paste(ws.interest, run.number, "_Hydrographs_AWDM_Weeks.png", sep = "-"))
         
         # set plot height based on number of panels to plot
-        hgt = length(obs_col)*6
+        hgt = length(obs_col)*8
         
         # melt data and plot
         plot_df <- reshape2::melt(hyd.AWDM, id.vars = c("Year", "Week"),
@@ -1225,7 +1230,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
                         Week = case_when(nchar(Week) > 1 ~ Week,
                                          nchar(Week) == 1 ~ paste0("0", Week)),
                         year.week = paste0(Year, "-", Week, "-1"))
-        plot_df$year.week <- as.Date(test$year.week, format = "%Y-%U-%u")
+        plot_df$year.week <- as.Date(plot_df$year.week, format = "%Y-%U-%u")
         plot_df %>%
           ggplot(aes(x = year.week, y = flow, colour = clr)) +
           geom_line(aes(group = obs_mod)) +
@@ -1253,13 +1258,13 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         title_lbl <- paste0(gsub("_", " ", gsub("[0-9]", "", mod_subbsn[1])), " - ISO weeks")
         
         # set labels for plotting
-        obs_lbl <- paste0("Mean weekly ", nat_res, "\nstreamflow estimate")
+        obs_lbl <- paste0("Mean weekly observed\n", "streamflow")
         mod_lbl <- paste0("Mean weekly modelled\n", nat_res," streamflow")
         
-        out.fn <- file.path(out.dir, paste(ws.interest, run.number, "_Hydrographs_ISO_Weeks.png", sep = "-"))
+        out.fn <- file.path(out.dir, "plots", paste(ws.interest, run.number, "_Hydrographs_ISO_Weeks.png", sep = "-"))
         
         # set plot height based on number of panels to plot
-        hgt = length(obs_col)*6
+        hgt = length(obs_col)*8
         
         # melt data and plot
         plot_df <- reshape2::melt(hyd.ISO, id.vars = c("Year", "ISO.Week"),
@@ -1440,7 +1445,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
   # aggregate demands
   if(file.exists(file.path(base.dir, paste(ws.interest, "-", run.number, "_Demands.csv", sep = "")))){
     
-    # read in watershed storage output
+    # read in watershed demands output
     demands <- read.csv(file.path(base.dir, paste(ws.interest, "-", run.number, "_Demands.csv", sep = "")),
                         check.names = FALSE, stringsAsFactors = FALSE)
     
@@ -1465,7 +1470,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         dplyr::group_by(Year) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
       out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Demands", "Annual.csv", sep = "-"))
-      data.table::fwrite(ws.storage.year, out.fn)
+      data.table::fwrite(demands.year, out.fn)
     }
     if(exists('months') & !is.null(months)){
       demands.months <- demands %>%
@@ -1475,7 +1480,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         dplyr::group_by(Year, Month) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
       out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Demands", "Monthly.csv", sep = "-"))
-      data.table::fwrite(ws.storage.months, out.fn)
+      data.table::fwrite(demands.months, out.fn)
     }
     if(exists('AWDM.weeks') & !is.null(AWDM.weeks)){
       demands.AWDM <- demands %>%
@@ -1485,7 +1490,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         dplyr::group_by(Year, Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
       out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Demands", "AWDM-Weeks.csv", sep = "-"))
-      data.table::fwrite(ws.storage.AWDM, out.fn)
+      data.table::fwrite(demands.AWDM, out.fn)
     }
     if(exists('ISO.weeks') & !is.null(ISO.weeks)){
       demands.ISO <- demands %>%
@@ -1495,7 +1500,7 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
         dplyr::group_by(Year, ISO.Week) %>%
         dplyr::summarize_all(mean, na.rm = TRUE)
       out.fn <- file.path(out.dir, paste(ws.interest, run.number, "Demands", "ISO-Weeks.csv", sep = "-"))
-      data.table::fwrite(ws.storage.ISO, out.fn)
+      data.table::fwrite(demands.ISO, out.fn)
     }
   } # end demands aggregation
   
