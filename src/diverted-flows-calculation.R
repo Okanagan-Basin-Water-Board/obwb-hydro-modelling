@@ -261,9 +261,18 @@ for(i in 1:length(include.watersheds)){
     # Stirling Creek discharge is assumed to be equivalent to the volume diverted into Mission.
     # A relationship between Stirling Creek flows and 241 Creek flows is established and applied
     # to estimate Stirling Creek flows for years where there is no record.
+    # UPDATE 07-07-2020 AJS: where no WSC data is available from 240 / 241 Creek, use the previously
+    # modelled Penticton Creek streamflow that is 'input data'. 
 
-    # switch hydrograph from xts object to dataframe for simplicity's sake
-    Q.df <- as.data.frame(Q.df$hyd)
+    # read in modelled Penticton Creek output that is now 'input' to generate diversion record
+    # for Mission Creek when it is run in isolation (i.e., no Penticton Creek model output otherwise
+    # available).
+    Q.df <- hyd.read(file.path(global.input.dir, raw.custom.timeseries.in.dir, penticton.creek.model.output))
+    
+    # apply offset to Raven hydrograph output so that the values are period starting not period ending,
+    # and drop the now unneeded first row
+    index(Q.df$hyd) <- index(Q.df$hyd) - 86400
+    Q.df <- as.data.frame(Q.df$hyd[-1, ])
     Q.df$Date <- ymd(row.names(Q.df)) 
     
     # read in Stirling Creek data that forms the basis of the Mission
