@@ -59,8 +59,11 @@ if(run.ostrich == TRUE){
   hydrographs <- hyd.read(file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), paste(ws.interest, "-", run.number, "_Hydrographs.csv", sep = "")))
 }
 
+#### TODO:  apply period-ending shift ? AJS 08-07-2020
 ## LB - Convert hydrographs to Q.df
-Q.df <- hydrographs$hyd
+index(hydrographs$hyd) <- index(hydrographs$hyd) - 86400
+Q.df <- as.data.frame(hydrographs$hyd[-1, ])
+Q.df$Date <- ymd(rownames(Q.df))
 
 
 for(i in 1:length(include.watersheds)){
@@ -100,10 +103,6 @@ for(i in 1:length(include.watersheds)){
     # days after the end and before the start
     ts.filt2 <- lubridate::yday(ts2) >= yday.end2 & lubridate::yday(ts2) <= yday.start2
     ts.filt2 <- ts2[!ts.filt2]
-    
-    # switch hydrograph from xts object to dataframe for simplicity's sake
-    Q.df <- as.data.frame(Q.df)
-    Q.df$Date <- ymd(row.names(Q.df)) 
     
     # get annual divertable volumes
     Q.div <- as.numeric(rules.df[r, "Diversion_(m^3)"])
@@ -444,11 +443,7 @@ for(i in 1:length(include.watersheds)){
     
     # filter time series to only include days of year
     ts.filt <- ts[lubridate::yday(ts) >= yday.start & lubridate::yday(ts) <= yday.end]
-    
-    # switch hydrograph from xts object to dataframe for simplicity's sake
-    Q.df <- as.data.frame(Q.df$hyd)
-    Q.df$Date <- ymd(row.names(Q.df)) 
-    
+
     # filter hydrograph to only include days in either diversion period.
     # add column of diversion volume
     Q.df.filt <- Q.df %>%
@@ -516,7 +511,9 @@ for(i in 1:length(include.watersheds)){
     writeData(wb = cts.wb, sheet = "Summary", x = cts.sum)
     
     saveWorkbook(wb = cts.wb, file = cts.fn, overwrite = TRUE)
-  } else if(include.watersheds[i] == "Trout"){
+  
+    #### Trout ####
+    } else if(include.watersheds[i] == "Trout"){
     
     # get the days of year that correspond to the diversion time period
     yday.start <- lubridate::yday(rules.df$Start[r])
@@ -528,11 +525,7 @@ for(i in 1:length(include.watersheds)){
     
     # filter time series to only include days of year
     ts.filt <- ts[lubridate::yday(ts) >= yday.start & lubridate::yday(ts) <= yday.end]
-    
-    # switch hydrograph from xts object to dataframe for simplicity's sake
-    Q.df <- as.data.frame(Q.df$hyd) 
-    Q.df$Date <- ymd(row.names(Q.df))
-    
+
     # filter hydrograph to only include days in either diversion period.
     # add column of diversion volume
     Q.df.filt <- Q.df %>%
@@ -604,8 +597,62 @@ for(i in 1:length(include.watersheds)){
     
     saveWorkbook(wb = cts.wb, file = cts.fn, overwrite = TRUE)
     
+    #### Shingle ####
+  } else if(include.watersheds[i] == "Shingle"){
+  
+    # find column index for the diversion subbasin
+    col <- grep("Shingle_Creek2504", colnames(Q.df))
     
-  }
+    # calculate the mean daily flows for the period of May 15 to June 15
+    Q.df <- Q.df[, c("Date", "Shingle_Creek2504")]
+      
+    Q.df.div <- Q.df %>%
+      dplyr::mutate(md = format.Date(Date, "%m-%d")) %>%
+      dplyr::filter(md >= "05-15" & md <= "06-15") %>%
+      dplyr::group_by(md) %>%
+      dplyr::summarize(daily_discharge = mean(Shingle_Creek2504))
+    
+    # calculte the diversion percentage (estimated diversion / mean daily flow from May 15 - June 15)
+    div.prop <- 0.143/mean(Q.df.div$daily_discharge)
+    
+    # make output dataframe to add to custom timeseries worksheet
+    out.df <- data.frame("From_Subbasin" = 2505, "To_Subbasin" = 2508, 
+                         "Diversion_Pct" = div.prop, "Qmin" = 0, "Julian_Start" = 135,
+                         "Julian_End" = 166)
+    
+    # generate output worksheet name
+    out.name.diversion <- paste(include.watersheds[i], "Brent_Div", sep = "_")
+    
+    # add output data to custom_timeseries workbook
+    # add worksheet name to workbook, and add surrogate irrigation and diversion
+    # data to both custom_timeseries
+    addWorksheet(cts.wb, sheetName = out.name.diversion)
+    writeData(cts.wb, sheet = out.name.diversion, x = out.df)
+    
+    ##### generate information to add two new rows of summary worksheet
+    data.type.div <- "DIVERSION_PCT"
+    
+    subbasin.div <- 2505
+    
+    # concatenate all info for the summary worksheet
+    sum.row.div <- c(include.watersheds[i], data.type.div, "Diversion",
+                     subbasin.div, out.name.diversion)
+    
+    # append row to summary worksheet dataframe and add to cts workbook. Iterate 
+    # twice to get both additions in
+    cts.nrow <- nrow(cts.sum)
+    cts.sum[cts.nrow + 1, ] <- sum.row.div
+    
+    ## Remove duplicates - if the summary row already exists, this removes duplicated entried
+    cts.sum <- distinct(cts.sum)
+    
+    
+    # add output dataframe to custom_timeseries.csv as a new worksheet
+    writeData(wb = cts.wb, sheet = "Summary", x = cts.sum)
+    
+    saveWorkbook(wb = cts.wb, file = cts.fn, overwrite = TRUE)
+    
+  } # end Shigle diversion.
   
 }
 
