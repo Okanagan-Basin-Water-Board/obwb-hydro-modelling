@@ -562,11 +562,23 @@ for(i in 1:length(include.watersheds)){
     # add output data to custom_timeseries workbook
     # add worksheet name to workbook, and add surrogate irrigation and diversion
     # data to both custom_timeseries
-    addWorksheet(cts.wb, sheetName = out.name.irrigation)
-    writeData(cts.wb, sheet = out.name.irrigation, x = out.df)
     
-    addWorksheet(cts.wb, sheetName = out.name.diversion)
-    writeData(cts.wb, sheet = out.name.diversion, x = out.df)
+    ## Check to see if they already exists - if not, create them
+      if(out.name.irrigation %in% cts.sheets){
+        writeData(cts.wb, sheet = out.name.irrigation, x = out.df)
+      } else {
+        addWorksheet(cts.wb, sheetName = out.name.irrigation)
+        writeData(cts.wb, sheet = out.name.irrigation, x = out.df)
+      }
+    
+    
+      if(out.name.diversion %in% cts.sheets){
+        writeData(cts.wb, sheet = out.name.diversion, x = out.df)
+      } else {
+        addWorksheet(cts.wb, sheetName = out.name.diversion)
+        writeData(cts.wb, sheet = out.name.diversion, x = out.df)
+      }
+
     
     ##### generate information to add two new rows of summary worksheet
     data.type.irr <- "IRRIGATION_DEMAND"
@@ -624,10 +636,13 @@ for(i in 1:length(include.watersheds)){
     out.name.diversion <- paste(include.watersheds[i], "Brent_Div", sep = "_")
     
     # add output data to custom_timeseries workbook
-    # add worksheet name to workbook, and add surrogate irrigation and diversion
-    # data to both custom_timeseries
-    addWorksheet(cts.wb, sheetName = out.name.diversion)
-    writeData(cts.wb, sheet = out.name.diversion, x = out.df)
+    # Check to see if the out.name.diversion sheet already exists - if not, create it.
+    if(out.name.diversion %in% cts.sheets){
+      writeData(cts.wb, sheet = out.name.diversion, x = out.df)
+    } else {
+      addWorksheet(cts.wb, sheetName = out.name.diversion)
+      writeData(cts.wb, sheet = out.name.diversion, x = out.df)
+    }
     
     ##### generate information to add two new rows of summary worksheet
     data.type.div <- "DIVERSION_PCT"
