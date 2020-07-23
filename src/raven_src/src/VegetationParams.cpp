@@ -23,7 +23,6 @@ inline double CalculateLeafConductance( const double       &max_leaf_cond,     /
 {
   double f1,f2,f3,f4;
   double hum_deficit;
-
   if (F==NULL){return 0.5*max_leaf_cond;}//arbitrary
 
   //light effects

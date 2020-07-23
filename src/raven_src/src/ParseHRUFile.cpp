@@ -360,12 +360,24 @@ bool ParseHRUPropsFile(CModel *&pModel, const optStruct &Options)
           if (pSB!=NULL){
             for (i=1;i<nParamStrings;i++){
               double in=AutoOrDouble(s[i]);
-              if(!aParamStrings[i].compare("TIME_CONC") && (in!=AUTO_COMPUTE) && (in!=USE_TEMPLATE_VALUE)){
+
+              //special handling of some parameters
+              if(!aParamStrings[i].compare("TIME_CONC")    && (in!=AUTO_COMPUTE) && (in!=USE_TEMPLATE_VALUE)){
                 in*=CGlobalParams::GetParameter("TOC_MULTIPLIER");
               }
               if(!aParamStrings[i].compare("TIME_TO_PEAK") && (in!=AUTO_COMPUTE) && (in!=USE_TEMPLATE_VALUE)){
                 in*=CGlobalParams::GetParameter("TOC_MULTIPLIER");
               }
+              if(!aParamStrings[i].compare("REACH_HRU_ID")) {
+                if(pModel->GetHRUByID((int)in)!=NULL) {
+                  in=pModel->GetHRUByID((int)in)->GetGlobalIndex(); //Convert ID to index
+                }
+                else {
+                  ExitGracefully("ParseHRUPropsFile::invalid REACH_HRU_ID in :SubBasinProperties command",BAD_DATA_WARN);
+                }
+              }
+              //end special handling 
+
               good_string=pSB->SetBasinProperties(aParamStrings[i],in);
               if (!good_string)
               {
@@ -772,7 +784,7 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
     else if(!strcmp(s[0],":DemandMultiplier"))
     {
       if(Options.noisy) { cout << ":DemandMultiplier" << endl; }
-      demand_mult=s_to_d(s[0]);;
+      demand_mult=s_to_d(s[1]);
     }
     //----------------------------------------------------------------------------------------------
     else if(!strcmp(s[0],":VolumeStageRelation"))
@@ -842,7 +854,7 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
         }
         else if(!strcmp(s[1],"LOOKUP_TABLE"))
         {
-         // type = CURVE_DATA;
+//          type = CURVE_DATA;
           p->Tokenize(s,Len);
           if(Len >= 1) { NA = s_to_i(s[0]); }
           aA = new double[NA];
@@ -991,7 +1003,7 @@ CReservoir *ReservoirParse(CParser *p,string name,int &HRUID,const optStruct &Op
     else if(!strcmp(s[0],":DZTRResservoirModel"))
     {/*:DZTRResservoirModel
        :MaximumStorage           Vmax(m3)
-       :MaximumChannelCapacity   Qmax(m3/s)
+       :MaximumChannelDischarge  Qmax(m3/s)
        :MonthlyMaxStorage        J F M A M J J A S N D  {or single constant value} (m3)
        :MonthlyNormalStorage     J F M A M J J A S N D  {or constant value} (m3)
        :MonthlyCriticalStorage   J F M A M J J A S N D  {or constant value} (m3)

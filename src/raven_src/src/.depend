@@ -22,7 +22,7 @@ ParseInput.o: ParseInput.cpp RavenInclude.h Properties.h Model.h \
  SoilWaterMovers.h SnowMovers.h VegetationMovers.h GlacierProcesses.h \
  Albedo.h CropGrowth.h DepressionProcesses.h OpenWaterEvap.h Advection.h \
  Convolution.h Decay.h LatAdvection.h PrairieSnow.h ProcessGroup.h \
- HeatConduction.h
+ HeatConduction.h SurfaceEnergyExchange.h
 Gauge.o: Gauge.cpp Gauge.h RavenInclude.h TimeSeries.h TimeSeriesABC.h \
  ParseLib.h Forcings.h
 Transport.o: Transport.cpp HydroProcessABC.h RavenInclude.h ModelABC.h \
@@ -223,6 +223,14 @@ ChannelXSect.o: ChannelXSect.cpp ChannelXSect.h RavenInclude.h
 SoilClass.o: SoilClass.cpp Properties.h RavenInclude.h \
  SoilAndLandClasses.h
 Assimilate.o: Assimilate.cpp RavenInclude.h Model.h ModelABC.h \
+ StateVariables.h HydroProcessABC.h HydroUnits.h Properties.h \
+ SoilAndLandClasses.h GlobalParams.h SoilProfile.h LateralExchangeABC.h \
+ SubBasin.h ChannelXSect.h TimeSeries.h TimeSeriesABC.h ParseLib.h \
+ Forcings.h Reservoir.h Gauge.h CustomOutput.h TransientParam.h \
+ Transport.h Diagnostics.h ForcingGrid.h ModelEnsemble.h \
+ GroundwaterClass.h SparseMatrix.h
+SurfaceEnergyExchange.o: SurfaceEnergyExchange.cpp \
+ SurfaceEnergyExchange.h RavenInclude.h Model.h ModelABC.h \
  StateVariables.h HydroProcessABC.h HydroUnits.h Properties.h \
  SoilAndLandClasses.h GlobalParams.h SoilProfile.h LateralExchangeABC.h \
  SubBasin.h ChannelXSect.h TimeSeries.h TimeSeriesABC.h ParseLib.h \
