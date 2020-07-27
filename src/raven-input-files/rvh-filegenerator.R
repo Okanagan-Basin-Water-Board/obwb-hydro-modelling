@@ -229,12 +229,13 @@ HRU.output.clean[HRU.output.clean[, "BASIN_ID"] %in% reservoirs, "SOIL_PROFILE"]
 rock.soil.profiles.basins <- HRU.output.clean[which(HRU.output.clean[, "SOIL_PROFILE"] == "ROCK"), "BASIN_ID"]
 
 unique.rock.soil.profiles.basins <- unique(rock.soil.profiles.basins)
+## #B5: 27072020 - ROCK Soils below canopies were not being replaced correctly. This process now loops over unique.rock.soil.profiles.basins correctly
 
 ## For each subbasin with rock soil profiles...
-for(i in 1:length(unique.missing.soil.profiles.basin)){
+for(i in 1:length(unique.rock.soil.profiles.basins)){
   
   ## create subset of all HRUs in given subbasin, listing only their area and soil profile information
-  sub <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == rock.soil.profiles.basins[i], c("AREA", "SOIL_PROFILE")]
+  sub <- HRU.output.clean[HRU.output.clean[, "BASIN_ID"] == unique.rock.soil.profiles.basins[i], c("AREA", "SOIL_PROFILE")]
   
   ## Convert to a dataframe
   sub.df <- as.data.frame(sub)
@@ -246,7 +247,7 @@ for(i in 1:length(unique.missing.soil.profiles.basin)){
   common.SP <- SP.proportion[which(SP.proportion$total == max(SP.proportion[SP.proportion$SOIL_PROFILE != "ROCK", "total"])), "SOIL_PROFILE"]
   
   ## Replace the missing soil information in the HRU.output.clean table for all HRUs with missing soil profiles for the given subbasin
-  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == rock.soil.profiles.basins[i] & HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN" & HRU.output.clean[, "LAND_USE_CLASS"] != "NON_VEGETATED"), "SOIL_PROFILE"] <- as.character(common.SP)
+  HRU.output.clean[which(HRU.output.clean[, "BASIN_ID"] == unique.rock.soil.profiles.basins[i] & HRU.output.clean[, "SOIL_PROFILE"] == "ROCK" & HRU.output.clean[, "LAND_USE_CLASS"] != "URBAN" & HRU.output.clean[, "LAND_USE_CLASS"] != "NON_VEGETATED"), "SOIL_PROFILE"] <- as.character(common.SP)
   
 }
 

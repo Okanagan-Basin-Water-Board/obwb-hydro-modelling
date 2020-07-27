@@ -248,6 +248,6 @@ mpirun.dir <- "/usr/bin/mpirun"
 #####################################
 #####################################
 
-master.natural.rvh.file <- "Master_natural.2020-07-03.rvh" # Rvh files regenerated to correct 4 HRUs in Vernon Creek with non-zero slopes on WATER landuse
+master.natural.rvh.file <- "Master_natural.2020-07-27.rvh" # Rvh files regenerated to correct the replacement ROCK soil profiles below HRUs with a canopy.
 
-master.residual.rvh.file <- "Master_residual.2020-07-03.rvh" # Rvh files regenerated to correct 4 HRUs in Vernon Creek with non-zero slopes on WATER landuse
+master.residual.rvh.file <- "Master_residual.2020-07-27.rvh" # Rvh files regenerated to correct the replacement ROCK soil profiles below HRUs with a canopy.
