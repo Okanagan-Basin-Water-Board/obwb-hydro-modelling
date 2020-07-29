@@ -16,6 +16,7 @@ require(tools)
 require(filesstrings)
 require(mailR)
 require(data.table)
+require(ggplot2)
 
 cores <- detectCores() - 1
 
@@ -123,6 +124,10 @@ cat(file = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.
 
       paste("- Run completed on ", Sys.time()), "\n",
       paste("- Run completed by ", Sys.getenv("LOGNAME")), "\n",
+      paste("- Raven Revision Number: ", system2("svn", paste("info ", file.path(global.src.dir, raven.executable.directory), "|grep Revision: |cut -c11-", sep = ""), stdout = TRUE), sep = ""), "\n",
+      paste("- Raven Revision Date: ", system2("svn", paste("info ", file.path(global.src.dir, raven.executable.directory), "|grep Date: |cut -c20-", sep = ""), stdout = TRUE), sep = ""), "\n",
+      paste("- Raven Repository UUID: ", system2("svn", paste("info ", file.path(global.src.dir, raven.executable.directory), "|grep UUID: |cut -c18-", sep = ""), stdout = TRUE), sep = ""), "\n",
+    
       if(recreate.rvh == FALSE){paste("- *.rvh file generated on ", file.info(file.path(global.simulation.dir,  master.natural.rvh.file))$mtime, " was used for this model run")} # Note: Master_natural.rvh and Master_residual.rvh are generated at the same time, so the file.info is the same, regardless of which one is used for the current model run.
     else {"- New *.rvh file generated"}, "\n",
       if(run.ostrich == FALSE){"- Ostrich was not used for model calibration"}
