@@ -332,7 +332,7 @@ for(j in 1:length(include.watersheds)){
         ##-------------------------------------------------
         ## #TD3 - 28052020: Maximum timeseries can now be specified for individual reservoirs. Timeseries are currently assumed constant through time, and defined in the reservoir.in.file by adding "MaxStage" to the parameter list.
         ## If MaxStage is not defined (As it is not for most reservoirs at the moment), no :ReservoirMaxStage timeseries is written. It is expected that this feature will be used more in future. Timeseries can currently be estimated,
-        ## assuming that the MaxStage is 1 m above AbsoluteCrestHeight. Specific estimates can be handled by defining the estimated number in the reservoir.in.file (Rather than including "ESTIMATED").
+        ## assuming that the MaxStage is 1 m above AbsoluteCrestHeight. Specific estimates can be handled by defining the estimated number in the reservoir.in.file (Rather than including "ESTIMATED"/"ASSUMED").
         
           if(!"MaxStage" %in% parameters$PARAMETER){ ## If MaxStage is not defined in any way for the reservoir, no maximum stage timeseries is written.
             
@@ -342,11 +342,11 @@ for(j in 1:length(include.watersheds)){
             
             print(paste("No :ReservoirMaxStage timeseries is included for", reservoirs[i], "Reservoir."))
             
-          } else if(parameters$VALUE[parameters$PARAMETER == "MaxStage"] == "ESTIMATED"){ ## If "ESTIMATED", maximum stage timeseries is estimated to be 1 m above the AbsoluteCrestHeight
+          } else if(parameters$VALUE[parameters$PARAMETER == "MaxStage"] == "ESTIMATED" | parameters$VALUE[parameters$PARAMETER == "MaxStage"] == "ASSUMED"){ ## If "ESTIMATED" or "ASSUMED" , maximum stage timeseries is estimated to be 1 m above the AbsoluteCrestHeight
             
             MaxStage <- as.numeric(as.character(parameters$VALUE[parameters$PARAMETER == "AbsoluteCrestHeight"])) + 1
             
-            print(paste(":ReservoirMaxStage timeseries is ESTIMATED for", reservoirs[i], "Reservoir. :ReservoirMaxStage is ESTIMATED to be 1 m above the AbsoluteCrestHeight and will be included as", MaxStage, "."))
+            print(paste(":ReservoirMaxStage timeseries is ESTIMATED/ASSUMED for", reservoirs[i], "Reservoir. :ReservoirMaxStage is ESTIMATED/ASSUMED to be 1 m above the AbsoluteCrestHeight and will be included as", MaxStage, "."))
             
             cat(file=ReservoirRVToutFile, append=T, sep="",
                 "\n",
@@ -363,7 +363,7 @@ for(j in 1:length(include.watersheds)){
                 ":EndReservoirMaxStage", "\n"
             )
             
-          } else { ## If not "NONE" or "ESTIMATED", maximum stage timeseries is written as per value provided.
+          } else { ## If not "NONE" or "ESTIMATED"/"ASSUMED", maximum stage timeseries is written as per value provided.
             
             MaxStage <- parameters$VALUE[parameters$PARAMETER == "MaxStage"]
             
