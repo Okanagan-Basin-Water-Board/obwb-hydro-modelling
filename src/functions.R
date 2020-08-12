@@ -1043,6 +1043,22 @@ aggregate.output <- function(ws.interest, run.number, subbasin.subset, AWDM.week
     
     cnames <- colnames(hyd)
     
+    # check if there are any columns with duplicated names. Apply a suffix to create unique column names.
+    multi_cnames <- cnames[duplicated(cnames)]
+    if(length(multi_cnames >= 1)){
+      for(i in 1:length(multi_cnames)){
+        # get the number of times the current duplicated name is repeated
+        # append alphabet letter to make unique column names
+        # apply new column names
+        n_dups <- length(which(cnames == multi_cnames[i]))
+        new_cnames <- paste0(multi_cnames[i], paste0("_", LETTERS[1:n_dups]))
+        colnames(hyd)[which(cnames == multi_cnames[i])] <- new_cnames
+      }
+      
+      # set cnames again, now without duplicated names  
+      cnames <- colnames(hyd)
+    }
+    
     hyd <- hyd %>%
       dplyr::mutate(date = lubridate::ymd(rownames(hyd))) %>%
       left_join(awdm.w, by = "date") %>%
