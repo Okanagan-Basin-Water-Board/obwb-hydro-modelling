@@ -46,7 +46,7 @@ The Okanagan Basin Water Board welcomes contributions to OHME.  To ensure that c
 
 ## Administrators
 
-For access to OHME, users should contact [Nelson Jatel](nelson.jatel@obwb.ca).
+For access to OHME, users should contact [Nelson Jatel](mailto:nelson.jatel@obwb.ca).
 
 ## License
 
