@@ -46,11 +46,7 @@ The Okanagan Basin Water Board welcomes contributions to OHME.  To ensure that c
 
 ## Administrators
 
-The primary administrators of OHME are:
-
--[Lawrence Bird](birdl@ae.ca)
-
--[Jeremy Fyke](fykej@ae.ca)
+For access to OHME, users should contact [Nelson Jatel](nelson.jatel@obwb.ca).
 
 ## License
 
