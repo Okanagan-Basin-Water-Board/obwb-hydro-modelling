@@ -387,15 +387,15 @@ if(run.ostrich == TRUE & exists("stations.included") == TRUE){
   }
   
   
-  send.mail(from = "birdl@ae.ca",
-            to =  "birdl@ae.ca",
+  send.mail(from = "USER_EMAIL",
+            to =  "USER_EMAIL",
             subject = "Calibration Complete",
             body = paste("Model run", run.number, "has completed. The VM has been turned off."),
             authenticate = TRUE,
             smtp = list(host.name = "smtp.office365.com",
                         port = 587,
-                        user.name = "birdl@ae.ca",
-                        passwd = "Winter202",
+                        user.name = "USER_EMAIL_USERNAME",
+                        passwd = "USER_EMAIL_PASSWORD",
                         tls = TRUE),
             attach.files = file.path(global.simulation.dir, ws.interest, paste(ws.interest, run.number, sep = "-"), "processor_0/model", paste(ws.interest, "-", run.number, "_Diagnostics.csv", sep = "")))
   
